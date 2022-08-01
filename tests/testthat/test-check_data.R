@@ -37,11 +37,11 @@ test_data_14$SampleID[c(1,2,3,7,8,9,10,11,34,55,59,61,66,70,71,72)] <- NA
 test_data_14$ReplicateID[c(12,15,19,20,21,22,31,32,33)] <- NA
 
 test_data_15 <- test_data_2
+setorder(test_data_15, SampleID, ReplicateID)
 test_data_15$`Roche Cobas`[1:60] <- NA
 test_data_15$`Ortho CD Vitros`[98] <- "<. "
 
-
-
+check_data(test_data_15)
 
 actual_1 <- check_data(test_data_1,1)
 actual_2 <- check_data(test_data_2,1)
@@ -195,9 +195,9 @@ expected_15_for_computer_checks <- list("valid_mandatory_id_columns" = TRUE,
                                         "acceptable_number_nas_ReplicateID" = TRUE)
 
 expected_1_for_human_validity_checks <- "perfect"
-expected_2_for_human_validity_checks <- "not acceptable"
+expected_2_for_human_validity_checks <- "questionable"
 expected_3_for_human_validity_checks <- "not acceptable"
-expected_4_for_human_validity_checks <- "not acceptable"
+expected_4_for_human_validity_checks <- "questionable"
 expected_5_for_human_validity_checks <- "perfect"
 expected_6_for_human_validity_checks <- "perfect"
 expected_7_for_human_validity_checks <- "not acceptable"
@@ -208,7 +208,7 @@ expected_11_for_human_validity_checks <- "perfect"
 expected_12_for_human_validity_checks <- "acceptable"
 expected_13_for_human_validity_checks <- "acceptable"
 expected_14_for_human_validity_checks <- "acceptable"
-expected_15_for_human_validity_checks <- "not acceptable"
+expected_15_for_human_validity_checks <- "questionable"
 
 test_that(desc = "Testing for computer checks", code = {
   expect_identical(actual_1$for_computer_checks, expected_1_for_computer_checks)

@@ -11,7 +11,6 @@
 check_data <- function(data, silence = 1, type = "cs"){
 
   numeric_column_names <- NULL
-  ..numeric_column_names <- NULL
   setDT(data)
   data_contain <- names(data)
   expected_id_cols <- c("SampleID", "ReplicateID")
@@ -50,41 +49,36 @@ check_data <- function(data, silence = 1, type = "cs"){
 
     numeric_column_names <- setdiff(names(data), expected_id_cols)
     numeric_column_ids <- which(names(data) %in% numeric_column_names)
-    stripped_data <- copy(data)[,..numeric_column_names]
+    stripped_data <- copy(data)
+    stripped_data <- stripped_data[ , names(data) %in% numeric_column_names, with = FALSE]
     column_wise_numeric <- unlist(lapply(X = as.list(stripped_data), FUN = is.numeric))
     if(!all(column_wise_numeric)){
       valid_numeric_columns <- FALSE
     }
     column_wise_number_nas <- unlist(lapply(X = as.list(stripped_data), FUN = function(x) sum(is.na(x))))
     column_wise_fraction_nas <- unlist(lapply(X = as.list(stripped_data), FUN = function(x) sum(is.na(x)) / length(x)))
-    small_amount_nas <- which(column_wise_fraction_nas > 0 & column_wise_fraction_nas < 0.10)
-    moderate_amount_nas <- which(column_wise_fraction_nas >= 0.10 & column_wise_fraction_nas < 0.20)
-    large_amount_nas <- which(column_wise_fraction_nas >= 0.20 & column_wise_fraction_nas < 0.40)
-    insane_amount_nas <- which(column_wise_fraction_nas >= 0.40)
+    small_amount_nas <- which(column_wise_fraction_nas > 0 & column_wise_fraction_nas <= 0.05)
+    moderate_amount_nas <- which(column_wise_fraction_nas > 0.05 & column_wise_fraction_nas <= 0.15)
+    large_amount_nas <- which(column_wise_fraction_nas > 0.15 & column_wise_fraction_nas <= 0.25)
+    insane_amount_nas <- which(column_wise_fraction_nas > 0.25)
 
     na_affected_numeric_columns <- NULL
     remaining_numeric_columns <- length(column_wise_numeric)
     valid_number_remaining_numeric_columns <- TRUE
+
 
     if(length(small_amount_nas) > 0){
       which_small_amount_nas <- names(stripped_data)[small_amount_nas]
     }
     if(length(moderate_amount_nas) > 0){
       which_moderate_amount_nas <- names(stripped_data)[moderate_amount_nas]
-      if(silence == 0){
-        cat("--------------------- Note ------------------------------", "\n",
-            "## Suggestion: Consider removing ", paste(names(stripped_data)[moderate_amount_nas], collapse = ", "), " if problems appear, " ,"\n",
-            "## because between 10% and 20% of the relevant values were NA-values in this(these) columns", "\n",
-            "--------------------- Note end--------------------------------", "\n", "\n", sep = "")
-      }
     }
     if(length(large_amount_nas) > 0){
       which_large_amount_nas <- names(data)[large_amount_nas]
-      valid_number_nas <- FALSE
       if(silence == 0){
         cat("--------------------- Note ------------------------------", "\n",
-            "## Warning: Remove ", paste(names(stripped_data)[large_amount_nas], collapse = ", "), " to get valid results, " ,"\n",
-            "## because between 20% and 40% of the relevant values were NA-values in this(these)", "\n",
+            "## Warning: Remove ", paste(names(stripped_data)[large_amount_nas], collapse = ", "), " to get more reliable results, " ,"\n",
+            "## because between 15% and 25% of the relevant values were NA-values in this(these)", "\n",
             "--------------------- Note end--------------------------------", "\n", "\n" ,sep = "")
       }
     }
@@ -105,7 +99,7 @@ check_data <- function(data, silence = 1, type = "cs"){
       if(silence == 0){
         cat("--------------------- Note ------------------------------", "\n",
             "## Serious warning: Remove ", paste(names(stripped_data)[insane_amount_nas], collapse = ", "), " to get valid or any results at all, " ,"\n",
-            "## because at least 40% of the relevant values were NA-values in this(these) columns!", "\n",
+            "## because more than 25% of the relevant values were NA-values in this(these) columns!", "\n",
             "--------------------- Note end--------------------------------", "\n", "\n", sep = "")
       }
     }
@@ -169,8 +163,11 @@ check_data <- function(data, silence = 1, type = "cs"){
 
     id_cols_na_exclusions <- sort(union(na_id_SampleID, na_id_ReplicateID))
     na_fraction_id_cols <- length(id_cols_na_exclusions) / length(data$SampleID)
+    id_na_nu_cols <- lapply(stripped_data, FUN = function(x) which(is.na(x)))
+    joint_id_na_nu_cols <- lapply(id_na_nu_cols, FUN = union, id_cols_na_exclusions)
+    effe_samp_size <- lapply(joint_id_na_nu_cols, FUN = function(x) if(length(x)>0){length(unique(data[-x, ]$SampleID))}else{length(unique(data$SampleID))})
 
-    if(na_fraction_id_cols >= 0.05 & type == "cs"){
+    if(na_fraction_id_cols > 0.05 & type == "cs"){
       if(na_fraction_id_cols > 0.25){
         perfect_number_nas_ReplicateID <- FALSE
         perfect_number_nas_SampleID <- FALSE
@@ -239,6 +236,13 @@ check_data <- function(data, silence = 1, type = "cs"){
                                      "NA_indices_of_ReplicateID" = if(length(na_id_ReplicateID) > 0){na_id_ReplicateID}else{NA},
                                      "NA_indices_must_exclude" = if(length(id_cols_na_exclusions) > 0){id_cols_na_exclusions}else{NA})
 
+    minimal_data <- all(valid_mandatory_id_columns, valid_number_remaining_numeric_columns,
+                        acceptable_number_nas_ReplicateID, acceptable_number_nas_SampleID)
+
+    if(!valid_numeric_columns | !valid_number_nas){
+      questionable_data <- minimal_data
+    }
+
     acceptable_data <- all(valid_mandatory_id_columns, valid_numeric_columns,
                            valid_number_nas, valid_number_remaining_numeric_columns,
                            acceptable_number_nas_SampleID, acceptable_number_nas_ReplicateID)
@@ -247,13 +251,15 @@ check_data <- function(data, silence = 1, type = "cs"){
                         valid_number_nas, valid_number_remaining_numeric_columns,
                         perfect_number_nas_SampleID, perfect_number_nas_ReplicateID)
 
-    for_human <- list("validity of input data is :" = if(perfect_data){"perfect"}else if(acceptable_data){"acceptable"}else{"not acceptable"},
+    for_human <- list("validity of input data is :" = if(perfect_data){"perfect"}else if(acceptable_data){"acceptable"}else if(questionable_data){"questionable"}else{"not acceptable"},
                       "column name" = names(column_wise_fraction_nas),
                       "number NAs" = unname(column_wise_number_nas),
-                      "fraction NAs" = unname(round(column_wise_fraction_nas, 3)))
+                      "fraction NAs" = unname(round(column_wise_fraction_nas, 3)),
+                      "effective unique CSs" = unname(unlist(effe_samp_size)))
 
     for_human$`validity of input data is :` <- c(for_human$`validity of input data is :`,
                                               rep(NA, length(column_wise_fraction_nas) - 1))
+    for_human$`effective unique CSs` <- c(rep(NA, 2), for_human$`effective unique CSs`)
 
     out <- list("for_computer_checks" = for_computer_checks,
                 "for_computer_information" = for_computer_information,
@@ -294,7 +300,8 @@ check_data <- function(data, silence = 1, type = "cs"){
   for_human <- list("validity of input data is :" = "not acceptable",
                     "column name" = NA,
                     "number NAs" = NA,
-                    "fraction NAs" = NA)
+                    "fraction NAs" = NA,
+                    "effective unique CSs" = NA)
 
   out <- list("for_computer_checks" = for_computer_checks,
               "for_computer_information" = for_computer_information,
