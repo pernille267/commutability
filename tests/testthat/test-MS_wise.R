@@ -82,3 +82,4 @@ test_that(desc = "Testing whether error is thrown", code = {
   expect_error(MS_wise(test_data_2))
 })
 
+

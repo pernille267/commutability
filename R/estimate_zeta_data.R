@@ -61,7 +61,7 @@ estimate_zeta_data <- function(data, B = 2e3, type = "percentile", level = 0.95,
   }
   zeta_criticals <- lapply(X = data_list, FUN = function(x) zeta_critical)
   zeta_conclusion <- mapply(FUN = function(x, y) as.integer(x >= y), original_zetas, zeta_criticals, SIMPLIFY = FALSE)
-  out <- mapply(FUN = function(x, y, z, w) list("zeta" = x, "lwr" = max(0.25, y[1]), "upr" = max(y[2], 0.5), "zeta_critical" = z, "zeta_conclusion" = w),
+  out <- mapply(FUN = function(x, y, z, w) list("zeta" = x, "lwr" = max(0, y[1]), "upr" = max(y[2], 0), "zeta_critical" = z, "zeta_conclusion" = w),
                 original_zetas, bootstrap_cis, zeta_criticals, zeta_conclusion, SIMPLIFY = FALSE)
   out <- rbindlist(l = out, idcol = "comparison")
   return(out)

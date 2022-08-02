@@ -6,6 +6,7 @@ Author: Pernille Kjeilen Fauskanger <pernille.fauskanger@noklus.no>
 Maintainer: Pernille Kjeilen Fauskanger <pernille.fauskanger@noklus.no>
 Description: Simplifies tidious commutability evaluation calculations.
 License: MIT + file LICENSE
+Year: 2022
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.1
