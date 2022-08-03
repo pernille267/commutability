@@ -9,6 +9,7 @@ you can use the even more user-friendly app named "Commutability evaluation of e
   - **estimate_imprecison_data()**: Estimates bootstrap confidence intervals and more concerning the imprecision estimate
   - **estimate_prediction_data()**: Estimates prediction intervals and prediction bands based on clinical sample data and potentially EQAM data
   - **do_commutability_evaluation()**: Combines the previous three functions for repaired and NA-free clinical sample data and EQAM data to get summary results for the data analysis regarding the commutability evaluation experiment
+  - **transform_data()**: Does simple transformations to the numeric columns of clinical sample data or EQAM data such as log and square root.
   
 # Future functions
 
@@ -16,7 +17,6 @@ The following functions are required for the package to be complete:
 
   - **perform_assessment_tests()**: Normality and heteroscedasticity tests regarding the validness of regression models with test strengths estimated by bootstrap
   - **plot_assessment()**: Plots model assessment plots for visiualization to be used in addition to the formal tests from **perform_assessment_tests()**.
-  - **transform_data()**: Does simple transformations to the numeric columns of clinical sample data or EQAM data such as log and square root.
   - **MS_wise_imprecision()** Alternates the layout of the output of **estimate_imprecision_data** so that each IVD-MD's imprecision estimates will be given in one row.
 
 # Installation instructions
