@@ -26,6 +26,48 @@ estimate_prediction_data <- function(data, new_data = NULL, method = "fg", level
                             FUN = function(x) list("MP_B" = x$MP_B) |> setDT()) |>
       rbindlist(idcol = "comparison")
   }
+  if(is.character(new_data)){
+    converted_string <- stri_split(new_data, regex = "[:punct:]")[[1]][which(stri_split(new_data, regex = "[:punct:]")[[1]] != "")]
+    if(length(converted_string) != 2){
+      stop("if new_data is passed as character, it must not be divided into something other than two elements. Calculations are terminated")
+    }
+    if(converted_string[1] == "gen"){
+      n_gens <- converted_string[2]
+      if(stri_detect(str = n_gens, regex = "[:digit:]")){
+        n_gens <- round(as.numeric(n_gens))
+        if(n_gens >= 1e4){
+          n_gens <- 1e4
+        }
+      }
+      else{
+        warning("gen[:punct:]* was not a valid number")
+        n_gens <- 1e2
+      }
+      new_data <- lapply(X = split(data, by = "comparison", keep.by = FALSE),
+                         FUN = function(x) list("MP_B" = seq(min(x$MP_B), max(x$MP_B), length.out = n_gens)) |> setDT()) |>
+        rbindlist(idcol = "comparison")
+    }
+    else if(converted_string[2] == "gen"){
+      n_gens <- converted_string[1]
+      if(stri_detect(str = n_gens, regex = "[:digit:]")){
+        n_gens <- round(as.numeric(n_gens))
+        if(n_gens >= 1e4){
+          n_gens <- 1e4
+        }
+      }
+      else{
+        warning("gen[:punct:]#: # was not a valid number, and 100 is used by default")
+        n_gens <- 1e2
+      }
+      new_data <- lapply(X = split(data, by = "comparison", keep.by = FALSE),
+                         FUN = function(x) list("MP_B" = seq(min(x$MP_B), max(x$MP_B), length.out = n_gens)) |> setDT()) |>
+        rbindlist(idcol = "comparison")
+    }
+    else{
+      stop("If new_data is passed as character, it must be on the form gen[:punct:]#, where # is a whole number. This was not the case and calculations are terminated")
+    }
+  }
+
 
   if(!is.data.table(new_data)){
     if(is.data.frame(new_data) | is.list(new_data)){
