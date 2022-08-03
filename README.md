@@ -7,12 +7,14 @@ you can use the even more user-friendly app named "Commutability evaluation of e
   - **MS_wise()**: Converts a data on wide format to the equivalent data on long format keyed by unique IVD-MD comparisons, **comparison**
   - **estimate_zeta_data()**: Estimates bootstrap confidence intervals and more concerning the difference in non-selectivity measure $\zeta$
   - **estimate_imprecison_data()**: Estimates bootstrap confidence intervals and more concerning the imprecision estimate
+  - **estimate_prediction_data()**: Estimates prediction intervals and prediction bands based on clinical sample data and potentially EQAM data
+  - **do_commutability_evaluation()**: Combines the previous three functions for repaired and NA-free clinical sample data and EQAM data to get summary results for the data analysis regarding the commutability evaluation experiment
 
 # Installation instructions
 
 The following packages **must** be installed before installing *commutability*:
 
   - devtools
-  - fasteqa (install by using devtools)
+  - fasteqa (install by running devtools::install_github("pernille267/fasteqa")
 
-The remaining required packages will be requested if you do not have them installed already.
+The remaining required packages will be requested automatically by Rstudio if you do not have them installed already.
