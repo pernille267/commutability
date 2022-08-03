@@ -16,8 +16,9 @@ you can use the even more user-friendly app named "Commutability evaluation of e
 The following functions are required for the package to be complete:
 
   - **perform_assessment_tests()**: Normality and heteroscedasticity tests regarding the validness of regression models with test strengths estimated by bootstrap
-  - **plot_assessment()**: Plots model assessment plots for visiualization to be used in addition to the formal tests from **perform_assessment_tests()**.
+  - **plot_assessment_plots()**: Plots model assessment plots for visiualization to be used in addition to the formal tests from **perform_assessment_tests()**. The plots are constructed by the **ggplot()** package.
   - **MS_wise_imprecision()** Alternates the layout of the output of **estimate_imprecision_data** so that each IVD-MD's imprecision estimates will be given in one row.
+  - **plot_commutability_evaluation_plots()** Plot standard commutability evaluation plots using popular **ggplot()** package.
 
 # Installation instructions
 
