@@ -19,11 +19,11 @@ test_data_3 <- MS_wise(data = T_LPK2020_CS)
 test_data_4 <- MS_wise(data = T_TPK2020_CS)
 test_data_5 <- MS_wise(data = T_HDLCXXX_CS)
 
-actual_1 <- estimate_imprecision_data(data = test_data_1, type = testing_type)
-actual_2 <- estimate_imprecision_data(data = test_data_2, type = testing_type)
-actual_3 <- estimate_imprecision_data(data = test_data_3, type = testing_type)
-actual_4 <- estimate_imprecision_data(data = test_data_4, type = testing_type)
-actual_5 <- estimate_imprecision_data(data = test_data_5, type = testing_type)
+actual_1 <- estimate_imprecision_data(data = test_data_1, type = testing_type, B = 200)
+actual_2 <- estimate_imprecision_data(data = test_data_2, type = testing_type, B = 200)
+actual_3 <- estimate_imprecision_data(data = test_data_3, type = testing_type, B = 200)
+actual_4 <- estimate_imprecision_data(data = test_data_4, type = testing_type, B = 200)
+actual_5 <- estimate_imprecision_data(data = test_data_5, type = testing_type, B = 200)
 
 expected_order <- c("comparison","CV_A", "CV_A_lwr", "CV_A_upr", "CV_B", "CV_B_lwr", "CV_B_upr", "lambda", "lambda_lwr", "lambda_upr", "Var_A", "Var_A_lwr", "Var_A_upr", "Var_B", "Var_B_lwr", "Var_B_upr")
 
@@ -57,11 +57,11 @@ test_that(desc = "Testing output class", code = {
 })
 
 test_that(desc = "Testing for only positive values", code = {
-  expect_true(all(unlist(lapply(X = actual_1[,-"comparison"], FUN = function(x) all(x >= 0)))))
-  expect_true(all(unlist(lapply(X = actual_2[,-"comparison"], FUN = function(x) all(x >= 0)))))
-  expect_true(all(unlist(lapply(X = actual_3[,-"comparison"], FUN = function(x) all(x >= 0)))))
-  expect_true(all(unlist(lapply(X = actual_4[,-"comparison"], FUN = function(x) all(x >= 0)))))
-  expect_true(all(unlist(lapply(X = actual_5[,-"comparison"], FUN = function(x) all(x >= 0)))))
+  expect_true(all(unlist(lapply(X = actual_1[,-"comparison"], FUN = function(x) all(x >= 0 | is.na(x))))))
+  expect_true(all(unlist(lapply(X = actual_2[,-"comparison"], FUN = function(x) all(x >= 0 | is.na(x))))))
+  expect_true(all(unlist(lapply(X = actual_3[,-"comparison"], FUN = function(x) all(x >= 0 | is.na(x))))))
+  expect_true(all(unlist(lapply(X = actual_4[,-"comparison"], FUN = function(x) all(x >= 0 | is.na(x))))))
+  expect_true(all(unlist(lapply(X = actual_5[,-"comparison"], FUN = function(x) all(x >= 0 | is.na(x))))))
 })
 
 sub_actual_1 <- actual_1[,c("Var_A", "Var_B", "lambda")]

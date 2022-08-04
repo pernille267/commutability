@@ -20,7 +20,11 @@
 
 estimate_imprecision_data <- function(data, B = 2e3, type = "percentile", level = 0.95){
 
-  setDT(data)
+  if(!is.data.table(data)){
+    if(is.data.frame(data) | is.list(data)){
+      setDT(data)
+    }
+  }
 
   type_numeric <- if(type=="percentile"){3}else if(type=="basic"){2}else if(type=="normal"){1}else{3}
   bootstrap_ci <- BCa_bootstrap_ci <- global_precision_estimates <- leave_one_out <- resample_samples <- NULL
@@ -43,21 +47,19 @@ estimate_imprecision_data <- function(data, B = 2e3, type = "percentile", level 
                                  boot_imps[[i]], orig_imps[[i]], SIMPLIFY = FALSE)
   }
   boot_imps_cis_tabled <- lapply(X = boot_imps_cis,
-                                 FUN = function(x) list("Var_A_lwr" = max(1e-9, x$Var_A[1]),
-                                                        "Var_A_upr" = x$Var_A[2],
-                                                        "Var_B_lwr" = max(1e-9, x$Var_B[1]),
-                                                        "Var_B_upr" = x$Var_B[2],
-                                                        "CV_A_lwr" = max(1e-9, x$CV_A[1]),
-                                                        "CV_A_upr" = x$CV_A[2],
-                                                        "CV_B_lwr" = max(1e-9, x$CV_B[1]),
-                                                        "CV_B_upr" = x$CV_B[2],
-                                                        "lambda_lwr" = max(1e-9, x$lambda[1]),
-                                                        "lambda_upr" = x$lambda[2])) |>
+                                 FUN = function(x) list("Var_A_lwr" = if(x$Var_A[1] < 0){NA}else{max(1e-12, x$Var_A[1])},
+                                                        "Var_A_upr" = if(x$Var_A[2] < 0){NA}else if(x$Var_A[2] < x$Var_A[1]){NA}else{max(1e-12, x$Var_A[2])},
+                                                        "Var_B_lwr" = if(x$Var_B[1] < 0){NA}else{max(1e-12, x$Var_B[1])},
+                                                        "Var_B_upr" = if(x$Var_B[2] < 0){NA}else if(x$Var_B[2] < x$Var_B[1]){NA}else{max(1e-12, x$Var_B[2])},
+                                                        "CV_A_lwr" = if(x$CV_A[1] < 0){NA}else{max(1e-12, x$CV_A[1])},
+                                                        "CV_A_upr" = if(x$CV_A[2] < 0){NA}else if(x$CV_A[2] < x$CV_A[1]){NA}else{max(1e-12, x$CV_A[2])},
+                                                        "CV_B_lwr" = if(x$CV_B[1] < 0){NA}else{max(1e-12, x$CV_B[1])},
+                                                        "CV_B_upr" = if(x$CV_B[2] < 0){NA}else if(x$CV_B[2] < x$CV_B[1]){NA}else{max(1e-12, x$CV_B[2])},
+                                                        "lambda_lwr" = if(x$lambda[1] < 0){NA}else{max(1e-12, x$lambda[1])},
+                                                        "lambda_upr" = if(x$lambda[2] < 0){NA}else if(x$lambda[2] < x$lambda[1]){NA}else{max(1e-12, x$lambda[1])})) |>
     lapply(setDT) |> rbindlist(idcol = "comparison")
-
-  out <- lapply(orig_imps, setDT) |>
-    rbindlist(idcol = "comparison") |>
-    merge(boot_imps_cis_tabled, by = "comparison", sort = FALSE)
+  orig_imps <- lapply(orig_imps, setDT) |> rbindlist(idcol = "comparison")
+  out <- merge(orig_imps, boot_imps_cis_tabled, by = "comparison", sort = FALSE)
 
   setcolorder(x = out, neworder = c("comparison","CV_A", "CV_A_lwr", "CV_A_upr", "CV_B", "CV_B_lwr", "CV_B_upr", "lambda", "lambda_lwr", "lambda_upr", "Var_A", "Var_A_lwr", "Var_A_upr", "Var_B", "Var_B_lwr", "Var_B_upr"))
 

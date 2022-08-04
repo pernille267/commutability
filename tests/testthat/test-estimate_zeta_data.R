@@ -17,11 +17,11 @@ T_LPK2020_CS <- MS_wise(data = T_LPK2020_CS)
 T_MCV2020_CS <- MS_wise(data = T_TPK2020_CS)
 T_HDLCXXX_CS <- MS_wise(data = T_HDLCXXX_CS)
 
-A_EPK2020_CS <- estimate_zeta_data(data = T_EPK2020_CS, type = "percentile", zeta_critical = 2.22)
-A_HB2020_CS <- estimate_zeta_data(data = T_HB2020_CS, type = "percentile", zeta_critical = 2.22)
-A_LPK2020_CS <- estimate_zeta_data(data = T_LPK2020_CS, type = "percentile", zeta_critical = 2.22)
-A_MCV2020_CS <- estimate_zeta_data(data = T_MCV2020_CS, type = "percentile", zeta_critical = 2.22)
-A_HDLCXXX_CS <- estimate_zeta_data(data = T_HDLCXXX_CS, type = "percentile", zeta_critical = 2.22)
+A_EPK2020_CS <- estimate_zeta_data(data = T_EPK2020_CS, type = "percentile", zeta_critical = 2.22, B = 500)
+A_HB2020_CS <- estimate_zeta_data(data = T_HB2020_CS, type = "percentile", zeta_critical = 2.22, B = 500)
+A_LPK2020_CS <- estimate_zeta_data(data = T_LPK2020_CS, type = "percentile", zeta_critical = 2.22, B = 500)
+A_MCV2020_CS <- estimate_zeta_data(data = T_MCV2020_CS, type = "percentile", zeta_critical = 2.22, B = 500)
+A_HDLCXXX_CS <- estimate_zeta_data(data = T_HDLCXXX_CS, type = "percentile", zeta_critical = 2.22, B = 500)
 
 test_that(desc = "Testing for valid names", code = {
   expect_named(object = A_EPK2020_CS, expected = c("comparison", "zeta", "lwr", "upr", "zeta_critical", "zeta_conclusion"), ignore.order = TRUE)
