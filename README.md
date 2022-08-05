@@ -25,6 +25,9 @@ The following functions are required for the package to be complete:
 The following packages **must** be installed before installing *commutability*:
 
   - devtools
+  ```{r}
+  install.packages("devtools")
+  ```
   - fasteqa
   - fasteqa may be installed after installing devtools using
   ```{r}
