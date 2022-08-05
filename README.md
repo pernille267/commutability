@@ -28,8 +28,7 @@ The following packages **must** be installed before installing *commutability*:
   ```{r}
   install.packages("devtools")
   ```
-  - fasteqa
-  - fasteqa may be installed after installing devtools using
+  - fasteqa (after installing devtools)
   ```{r}
   devtools::install_github("pernille267/fasteqa")  
   ```
