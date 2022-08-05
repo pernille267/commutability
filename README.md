@@ -27,9 +27,9 @@ The following packages **must** be installed before installing *commutability*:
   - devtools
   - fasteqa
   - fasteqa may be installed after installing devtools using
-  '''{r}
+  ```{r}
   devtools::install_github("pernille267/fasteqa")  
-  '''
+  ```
   
 The remaining required packages will be requested automatically by Rstudio if you do not have them installed already.
 
