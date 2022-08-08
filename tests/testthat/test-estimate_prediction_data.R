@@ -432,7 +432,31 @@ test_that(desc = "Relationship between zeta > 1 and difference between clsi and 
   expect_equal(object = sum(which_zeta_larger_than_1_7 %in% which_fg_larger_than_clsi_7), expected = 6)
 })
 
-estimate_zeta_data(data = test_data_1, type = "BCa", zeta_critical = 2.22)
+ce_data_1 <- estimate_prediction_data(data = test_data_1, new_data = eqam_1, method = "clsi", B = 100)
+ce_data_2 <- estimate_prediction_data(data = test_data_2, new_data = eqam_2, method = "fg", B = 100)
+ce_data_3 <- estimate_prediction_data(data = test_data_3, new_data = eqam_3, method = "clsi", B = 100)
+ce_data_4 <- estimate_prediction_data(data = test_data_4, new_data = eqam_4, method = "fg", B = 100)
+ce_data_5 <- estimate_prediction_data(data = test_data_5, new_data = eqam_5, method = "clsi", B = 100)
+ce_data_6 <- estimate_prediction_data(data = test_data_6, new_data = eqam_6, method = "fg", B = 100)
+ce_data_7 <- estimate_prediction_data(data = test_data_7, new_data = eqam_7, method = "clsi", B = 1e3)
 
+test_that(desc = "Testing correctness for calculation of inside rates", code = {
+  expect_true(object = all(ce_data_1$inside_rate <= 1 | ce_data_1$inside_rate >= 0))
+  expect_true(object = all(ce_data_2$inside_rate <= 1 | ce_data_2$inside_rate >= 0))
+  expect_true(object = all(ce_data_3$inside_rate <= 1 | ce_data_3$inside_rate >= 0))
+  expect_true(object = all(ce_data_4$inside_rate <= 1 | ce_data_4$inside_rate >= 0))
+  expect_true(object = all(ce_data_5$inside_rate <= 1 | ce_data_5$inside_rate >= 0))
+  expect_true(object = all(ce_data_6$inside_rate <= 1 | ce_data_6$inside_rate >= 0))
+  expect_true(object = all(ce_data_7$inside_rate <= 1 | ce_data_7$inside_rate >= 0))
+})
 
-
+test_that(desc = "Testing output names for ce_data with inside rates", code = {
+  expect_named(object = ce_data_1, expected = c("comparison", "SampleID", "MP_B", "MP_A", "prediction", "lwr", "upr", "inside",  "inside_rate"), ignore.order = FALSE)
+  expect_named(object = ce_data_2, expected = c("comparison", "SampleID", "MP_B", "MP_A", "prediction", "lwr", "upr", "inside",  "inside_rate"), ignore.order = FALSE)
+  expect_named(object = ce_data_3, expected = c("comparison", "SampleID", "MP_B", "MP_A", "prediction", "lwr", "upr", "inside",  "inside_rate"), ignore.order = FALSE)
+  expect_named(object = ce_data_4, expected = c("comparison", "SampleID", "MP_B", "MP_A", "prediction", "lwr", "upr", "inside",  "inside_rate"), ignore.order = FALSE)
+  expect_named(object = ce_data_5, expected = c("comparison", "SampleID", "MP_B", "MP_A", "prediction", "lwr", "upr", "inside",  "inside_rate"), ignore.order = FALSE)
+  expect_named(object = ce_data_6, expected = c("comparison", "SampleID", "MP_B", "MP_A", "prediction", "lwr", "upr", "inside",  "inside_rate"), ignore.order = FALSE)
+  expect_named(object = ce_data_7, expected = c("comparison", "SampleID", "MP_B", "MP_A", "prediction", "lwr", "upr", "inside",  "inside_rate"), ignore.order = FALSE)
+  expect_true(object = TRUE)
+})

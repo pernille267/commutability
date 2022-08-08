@@ -16,23 +16,23 @@
 #' @examples print(1)
 
 do_commutability_evaluation <- function(data, new_data, method_pi = "fg", method_bs = "percentile", level_pi = 0.99, level_bs = 0.95, M = 0, upper_zeta = 2.25, output = "sufficient"){
-  pb_data <- estimate_prediction_data(data = data, new_data = "gen_1e3", method = method_pi, level = level_pi, rounding = 3L)
-  ce_data <- estimate_prediction_data(data = data, new_data = new_data, method = method_pi, level = level_pi, rounding = 3L)
+  pb_data <- estimate_prediction_data(data = data, new_data = "gen_250", method = method_pi, level = level_pi, rounding = 3L)
+  ce_data <- estimate_prediction_data(data = data, new_data = new_data, method = method_pi, level = level_pi, rounding = 3L, B = 1e3)
   impr_data <- estimate_imprecision_data(data = data, type = method_bs, level = level_bs)
   if(all(is.null(upper_zeta)) | all(upper_zeta < 1) | all(is.na(upper_zeta)) | any(!(is.double(upper_zeta) | is.integer(upper_zeta)))){
-    if(M < 0.01){M <- 0.01}
+    if(M < 0.001){warning(paste0("Chosen M, that is, ", M, " is unrealistically small (< 0.1%)")); M <- 0.001}
     zeta_data <- estimate_zeta_data(data = data, type = method_bs, level = level_bs, M = M, zeta_critical = upper_zeta)
     merged_results <- merge_results(pb_data = pb_data,
                                     ce_data = ce_data,
                                     imprecision_data = impr_data,
                                     zeta_data = zeta_data,
-                                    rounding = 3,
-                                    include_imprecision_estimates = FALSE,
-                                    cv_percent = TRUE)
+                                    rounding = 3L,
+                                    include_imprecision_estimates = if(output=="complete"){TRUE}else{FALSE})
     merged_results$merged_pb_data |> setDT()
-    merged_results$merged_ce_data |> setDT()
+    merged_results$merged_ce_data <- merge(merged_results$merged_ce_data, ce_data[,c("comparison", "SampleID", "inside_rate")], by = c("comparison", "SampleID")) |> setDT()
     return(merged_results)
   }
+
   else{
     if(M > 0 | M < 0){M <- 0}
     zeta_data <- estimate_zeta_data(data = data, type = method_bs, level = level_bs, M = M, zeta_critical = upper_zeta)
@@ -40,11 +40,10 @@ do_commutability_evaluation <- function(data, new_data, method_pi = "fg", method
                                     ce_data = ce_data,
                                     imprecision_data = impr_data,
                                     zeta_data = zeta_data,
-                                    rounding = 3,
-                                    include_imprecision_estimates = FALSE,
-                                    cv_percent = TRUE)
+                                    rounding = 3L,
+                                    include_imprecision_estimates = if(output=="complete"){TRUE}else{FALSE})
     merged_results$merged_pb_data |> setDT()
-    merged_results$merged_ce_data |> setDT()
+    merged_results$merged_ce_data <- merge(merged_results$merged_ce_data, ce_data[,c("comparison", "SampleID", "inside_rate")], by = c("comparison", "SampleID")) |> setDT()
     return(merged_results)
   }
 }

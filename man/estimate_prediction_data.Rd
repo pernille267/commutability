@@ -7,15 +7,18 @@
 estimate_prediction_data(
   data,
   new_data = NULL,
+  B = NULL,
   method = "fg",
   level = 0.99,
   rounding = 3L
 )
 }
 \arguments{
-\item{data}{\code{list}, \code{data table} or \code{data frame} - Data containing clinical samples' measurements}
+\item{data}{\code{list} - \code{data table} or \code{data frame} - Data containing clinical samples' measurements}
 
-\item{new_data}{\code{list}, \code{data table} or \code{data frame} - Data containing either external quality assessment materials' measurements or new values for \code{MP_B}. Including \code{SampleID}, \code{MP_A}, \code{MP_B} will create commutability evaluation data based on control material measurements, whereas having only \code{MP_B} yields prediction band data}
+\item{new_data}{\code{list} - \code{data table} or \code{data frame} - Data containing either external quality assessment materials' measurements or new values for \code{MP_B}. Including \code{SampleID}, \code{MP_A}, \code{MP_B} will create commutability evaluation data based on control material measurements, whereas having only \code{MP_B} yields prediction band data}
+
+\item{B}{\code{integer} - How many bootstrap resamples should be used to estimate the inside rates for the external quality assessment materials? Set \code{B = NULL} for not including "inside-pi" rates.}
 
 \item{method}{\code{character} - 1 x 1 character signifying which method should be applied for estimating the prediction intervals}
 

@@ -16,7 +16,8 @@ Imports:
     stringi,
     utils,
     readxl,
-    microbenchmark
+    microbenchmark,
+    ggplot2
 Remotes: pernille267/fasteqa
 Suggests: 
     testthat (>= 3.0.0)

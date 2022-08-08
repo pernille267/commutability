@@ -47,16 +47,16 @@ estimate_imprecision_data <- function(data, B = 2e3, type = "percentile", level 
                                  boot_imps[[i]], orig_imps[[i]], SIMPLIFY = FALSE)
   }
   boot_imps_cis_tabled <- lapply(X = boot_imps_cis,
-                                 FUN = function(x) list("Var_A_lwr" = if(x$Var_A[1] < 0){NA}else{max(1e-12, x$Var_A[1])},
-                                                        "Var_A_upr" = if(x$Var_A[2] < 0){NA}else if(x$Var_A[2] < x$Var_A[1]){NA}else{max(1e-12, x$Var_A[2])},
-                                                        "Var_B_lwr" = if(x$Var_B[1] < 0){NA}else{max(1e-12, x$Var_B[1])},
-                                                        "Var_B_upr" = if(x$Var_B[2] < 0){NA}else if(x$Var_B[2] < x$Var_B[1]){NA}else{max(1e-12, x$Var_B[2])},
-                                                        "CV_A_lwr" = if(x$CV_A[1] < 0){NA}else{max(1e-12, x$CV_A[1])},
-                                                        "CV_A_upr" = if(x$CV_A[2] < 0){NA}else if(x$CV_A[2] < x$CV_A[1]){NA}else{max(1e-12, x$CV_A[2])},
-                                                        "CV_B_lwr" = if(x$CV_B[1] < 0){NA}else{max(1e-12, x$CV_B[1])},
-                                                        "CV_B_upr" = if(x$CV_B[2] < 0){NA}else if(x$CV_B[2] < x$CV_B[1]){NA}else{max(1e-12, x$CV_B[2])},
-                                                        "lambda_lwr" = if(x$lambda[1] < 0){NA}else{max(1e-12, x$lambda[1])},
-                                                        "lambda_upr" = if(x$lambda[2] < 0){NA}else if(x$lambda[2] < x$lambda[1]){NA}else{max(1e-12, x$lambda[1])})) |>
+                                 FUN = function(x) list("Var_A_lwr" = if(x$Var_A[1] < 0 | is.na(x$Var_A[1])){NA}else{max(1e-12, x$Var_A[1])},
+                                                        "Var_A_upr" = if(x$Var_A[2] < 0 | is.na(x$Var_A[2])){NA}else if(x$Var_A[2] < x$Var_A[1]){NA}else{max(1e-12, x$Var_A[2])},
+                                                        "Var_B_lwr" = if(x$Var_B[1] < 0 | is.na(x$Var_B[1])){NA}else{max(1e-12, x$Var_B[1])},
+                                                        "Var_B_upr" = if(x$Var_B[2] < 0 | is.na(x$Var_B[2])){NA}else if(x$Var_B[2] < x$Var_B[1]){NA}else{max(1e-12, x$Var_B[2])},
+                                                        "CV_A_lwr" = if(x$CV_A[1] < 0 | is.na(x$CV_A[1])){NA}else{max(1e-12, x$CV_A[1])},
+                                                        "CV_A_upr" = if(x$CV_A[2] < 0 | is.na(x$CV_A[2])){NA}else if(x$CV_A[2] < x$CV_A[1]){NA}else{max(1e-12, x$CV_A[2])},
+                                                        "CV_B_lwr" = if(x$CV_B[1] < 0 | is.na(x$CV_B[1])){NA}else{max(1e-12, x$CV_B[1])},
+                                                        "CV_B_upr" = if(x$CV_B[2] < 0 | is.na(x$CV_B[2])){NA}else if(x$CV_B[2] < x$CV_B[1]){NA}else{max(1e-12, x$CV_B[2])},
+                                                        "lambda_lwr" = if(x$lambda[1] < 0 | is.na(x$lambda[1])){NA}else{max(1e-12, x$lambda[1])},
+                                                        "lambda_upr" = if(x$lambda[2] < 0 | is.na(x$lambda[2])){NA}else if(x$lambda[2] < x$lambda[1]){NA}else{max(1e-12, x$lambda[1])})) |>
     lapply(setDT) |> rbindlist(idcol = "comparison")
   orig_imps <- lapply(orig_imps, setDT) |> rbindlist(idcol = "comparison")
   out <- merge(orig_imps, boot_imps_cis_tabled, by = "comparison", sort = FALSE)
