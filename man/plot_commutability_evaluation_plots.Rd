@@ -4,14 +4,36 @@
 \alias{plot_commutability_evaluation_plots}
 \title{Plots commutability evaluation plots based on ce_data, pb_data and ce_data}
 \usage{
-plot_commutability_evaluation_plots(cs_data, pb_data, ce_data)
+plot_commutability_evaluation_plots(
+  cs_data,
+  pb_data,
+  ce_data,
+  exclude_rings = FALSE,
+  exclude_cs = FALSE,
+  additional_arguments = NULL
+)
 }
 \arguments{
-\item{cs_data}{\code{list}, \code{data table} or \code{data frame} - Data containing clinical samples' measurements}
+\item{cs_data}{A \code{list}, \code{data table} or \code{data frame} - Data containing clinical samples' measurements.}
 
-\item{pb_data}{\code{list}, \code{data table} or \code{data frame} - Data containing prediction band data}
+\item{pb_data}{A \code{list}, \code{data table} or \code{data frame} - Data containing prediction band data.}
 
-\item{ce_data}{\code{list}, \code{data table} or \code{data frame} - Data containing prediction evaluation data for evaluated control materials}
+\item{ce_data}{A \code{list}, \code{data table} or \code{data frame} - Data containing prediction evaluation data for evaluated control materials.}
+
+\item{exclude_rings}{\code{Logical} - Remove circles that signify strengths of commutability evaluation conclusions. Default is \code{FALSE}.}
+
+\item{exclude_cs}{\code{Logical} - Remove clinical sample data from plots. Default is \code{FALSE}.}
+
+\item{additional_arguments}{\code{List} - Additional arguments for the output plot. Default is \code{NULL}, which implies that default plot settings are used. Optinal additional arguments include
+\itemize{
+  \item{\code{main_title}: }{Main title of the plot}
+  \item{\code{sub_title}: }{Sub title of the plot}
+  \item{\code{x_name}: }{Title of the x-axis}
+  \item{\code{y_name}: }{Title of the y-axis}
+  \item{\code{n_breaks}: }{Number of axis-breaks}
+  \item{\code{comparison_fill}: }{Fill color for the individual plot labels listing the IVD-MD comparisons. Must be a valid color name or HEX code}
+  \item{\code{legend_fill}: }{Fill color for the legend regions. Must be a valid color name or HEX code}
+}}
 }
 \value{
 \code{ggplot2} object that is a grid of plots having dimensions corresponding to the number of unique IVD-MD comparisons
