@@ -11,10 +11,21 @@
 repair_data <- function(data, data_check, silence = 1L){
   global_status <- data_check$for_human$`validity of input data is :`[1]
   if(global_status == "not acceptable"){
-    warning("data is not possible to repair")
+    warning("Data is not possible to repair. Input data is returned as output")
     return(data)
   }
-  setDT(data)
+  if(!is.data.table(data)){
+    if(is.data.frame(data)){
+      data <- as.data.table(data)
+    }
+    else if(is.list(data)){
+      setDT(data)
+    }
+    else{
+      warning("Data is not a list, data table or data frame. Tread carefully, dear user")
+    }
+  }
+
   id_cols <- c("SampleID", "ReplicateID")
   wb <- typo_suggestions()
   id_col_status <- data_check$for_computer_checks$valid_mandatory_id_columns
@@ -32,10 +43,15 @@ repair_data <- function(data, data_check, silence = 1L){
       warning("check_data says that data is repairable, but it is not! How?")
       return(data)
     }
+
     names(data)[id_SampleID] <- "SampleID"
     names(data)[id_ReplicateID] <- "ReplicateID"
+    ss_dt_id <- data[,id_cols,with=FALSE]
+    ss_dt_nu <- data[,-id_cols,with=FALSE]
+    setcolorder(ss_dt_nu, order(names(ss_dt_nu)))
+    data <- cbind(ss_dt_id, ss_dt_nu)
     if(silence == 0L){
-      cat("ID column names were repaired!", "\n", sep = "")
+      cat("ID column names were repaired and sorted alphabetically in numeric columns!", "\n", sep = "")
     }
   }
   data$SampleID <- as.character(data$SampleID)
@@ -76,7 +92,7 @@ repair_data <- function(data, data_check, silence = 1L){
   exclude_both <- all(c(exclude_rows, exclude_cols))
   more_na_than_expected <- sum(c(is.na(exclude_these_rows), is.na(exclude_these_cols))) > 2
   if(more_na_than_expected){
-    warning("More than two NA values are found in chech_data's output. This should not be possible")
+    warning("More than two NA values are found in check_data's output. This should not be possible")
   }
 
   if(exclude_both){

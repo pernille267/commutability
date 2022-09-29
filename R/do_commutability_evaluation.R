@@ -19,7 +19,7 @@ do_commutability_evaluation <- function(data, new_data, method_pi = "fg", method
   pb_data <- estimate_prediction_data(data = data, new_data = "gen_250", method = method_pi, level = level_pi, rounding = 3L)
   ce_data <- estimate_prediction_data(data = data, new_data = new_data, method = method_pi, level = level_pi, rounding = 3L, B = 1e3)
   impr_data <- estimate_imprecision_data(data = data, type = method_bs, level = level_bs)
-  if(all(is.null(upper_zeta)) | all(upper_zeta < 1) | all(is.na(upper_zeta)) | any(!(is.double(upper_zeta) | is.integer(upper_zeta)))){
+  if(any(is.null(upper_zeta)) | any(upper_zeta < 1) | any(is.na(upper_zeta)) | any(!(is.double(upper_zeta) | is.integer(upper_zeta)))){
     if(M < 0.001){warning(paste0("Chosen M, that is, ", M, " is unrealistically small (< 0.1%)")); M <- 0.001}
     zeta_data <- estimate_zeta_data(data = data, type = method_bs, level = level_bs, M = M, zeta_critical = upper_zeta)
     merged_results <- merge_results(pb_data = pb_data,
