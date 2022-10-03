@@ -19,9 +19,48 @@ do_commutability_evaluation <- function(data, new_data, method_pi = "fg", method
   pb_data <- estimate_prediction_data(data = data, new_data = "gen_250", method = method_pi, level = level_pi, rounding = 3L)
   ce_data <- estimate_prediction_data(data = data, new_data = new_data, method = method_pi, level = level_pi, rounding = 3L, B = 1e3)
   impr_data <- estimate_imprecision_data(data = data, type = method_bs, level = level_bs)
-  if(any(is.null(upper_zeta)) | any(upper_zeta < 1) | any(is.na(upper_zeta)) | any(!(is.double(upper_zeta) | is.integer(upper_zeta)))){
-    if(M < 0.001){warning(paste0("Chosen M, that is, ", M, " is unrealistically small (< 0.1%)")); M <- 0.001}
-    zeta_data <- estimate_zeta_data(data = data, type = method_bs, level = level_bs, M = M, zeta_critical = upper_zeta)
+  simulate_zeta_upper <- FALSE
+
+  if(length(upper_zeta) > 1){
+    upper_zeta <- upper_zeta[1]
+  }
+  if(is.character(upper_zeta)){
+    upper_zeta <- stri_replace_all_regex(str = upper_zeta, pattern = "[^[:digit:].]", replacement = "")
+    number_detected <- !stri_detect(regex = "[^[:digit:].]")
+    if(number_detected){
+      test_1 <- stri_sub(upper_zeta, from = 1L, to = 1L) |> stri_detect(regex = "[^[:digit:]]") |> isFALSE()
+      test_2 <- stri_sub(upper_zeta, from = -1L, to = -1L) |> stri_detect(regex = "[^[:digit:]]") |> isFALSE()
+      if(all(test_1, test_2)){
+        upper_zeta <- paste0(stri_sub(upper_zeta, from = 1L, to = 1L), ".", stri_sub(upper_zeta, from = -1L, to = -1L)) |> as.numeric()
+        if(upper_zeta < 1 | upper_zeta > 20){
+          simulate_zeta_upper <- TRUE
+        }
+        else{
+          warning(paste0(upper_zeta, " is used as upper zeta. If this was not your intention, make sure you enter the upper zeta value correctly!"))
+        }
+      }
+    }
+    else{
+      simulate_zeta_upper <- TRUE
+    }
+  }
+
+  else if(is.null(upper_zeta)){
+    simulate_zeta_upper <- TRUE
+  }
+  else if(length(upper_zeta) == 0){
+    simulate_zeta_upper <- TRUE
+  }
+  else if(is.na(upper_zeta)){
+    simulate_zeta_upper <- TRUE
+  }
+
+
+  if(simulate_zeta_upper){
+    if(M < 0){
+      M <- 0
+    }
+    zeta_data <- estimate_zeta_data(data = data, type = method_bs, level = level_bs, M = M, zeta_critical = NULL)
     merged_results <- merge_results(pb_data = pb_data,
                                     ce_data = ce_data,
                                     imprecision_data = impr_data,
@@ -34,8 +73,7 @@ do_commutability_evaluation <- function(data, new_data, method_pi = "fg", method
   }
 
   else{
-    if(M > 0 | M < 0){M <- 0}
-    zeta_data <- estimate_zeta_data(data = data, type = method_bs, level = level_bs, M = M, zeta_critical = upper_zeta)
+    zeta_data <- estimate_zeta_data(data = data, type = method_bs, level = level_bs, M = 0, zeta_critical = upper_zeta)
     merged_results <- merge_results(pb_data = pb_data,
                                     ce_data = ce_data,
                                     imprecision_data = impr_data,

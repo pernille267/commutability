@@ -11,7 +11,16 @@
 check_data <- function(data, silence = 1, type = "cs"){
 
   numeric_column_names <- NULL
-  setDT(data)
+
+  if(!is.data.table(data)){
+    if(is.data.frame(data)){
+      data <- as.data.table(data)
+    }
+    else if(is.list(data)){
+      setDT(data)
+    }
+  }
+
   data_contain <- names(data)
   expected_id_cols <- c("SampleID", "ReplicateID")
 
