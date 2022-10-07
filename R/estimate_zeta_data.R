@@ -65,7 +65,7 @@ estimate_zeta_data <- function(data, B = 2e3, type = "percentile", level = 0.95,
     bootstrap_cis <- mapply(FUN = function(x, y) bootstrap_ci(x, y, 3, level), bootstrapped_zetas, original_zetas, SIMPLIFY = FALSE)
   }
 
-  if(is.null(zeta_critical) || (!is.double(zeta_critical)) || is.na(zeta_critical)){
+  if(is.null(zeta_critical) || (!is.numeric(zeta_critical)) || is.na(zeta_critical)){
     simulation_parameters <- lapply(X = data_list, FUN = function(x) list(n = length(unique(x$SampleID)), R = length(unique(x$ReplicateID))))
     simulated_data <- lapply(X = simulation_parameters, FUN = function(x) replicate(n = 1e4, expr = setDT(simulate_eqa_data(x)), simplify = FALSE))
     simulated_zetas <-  lapply(X = simulated_data, FUN = function(x) unname(unlist(lapply(X = x, FUN = estimate_zeta))))

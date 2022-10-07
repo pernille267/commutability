@@ -28,7 +28,7 @@ check_equivalence <- function(cs_data, eq_data, silence = 1L){
       cat("External quality assessment material data do not have the required id columns.", "\n", sep = "")
     }
   }
-  if(!all(nu_columns_cs %in% nu_columns_eq)){
+  if((!all(nu_columns_cs %in% nu_columns_eq)) & (length(nu_columns_cs) == length(nu_columns_eq))){
     equivalent_column_names <- FALSE
     if(silence < 1L){
       cat("Clinical sample data and external quality assessment material data does not have the same column names.", "\n", sep = "")
