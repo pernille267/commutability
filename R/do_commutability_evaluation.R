@@ -2,6 +2,8 @@
 #'
 #' @param data \code{list}, \code{data table} or \code{data frame} - Clinical sample data (CS data) for the commutability assessment experiment
 #' @param new_data \code{list}, \code{data table} or \code{data frame} - Evaluated samples' data (EQAM / CRM data) for the commutability assessment experiment
+#' @param B Integer - How many bootstrap replicates should be used to calculate confidence intervals for bootstrap confidence intervals
+#' @param N Integer - How many bootstrap replicates should be used to calculate inside rates
 #' @param method_pi \code{character} - Which method should be used to estimate the Deming prediction intervals. Default is \code{fg} which is Fuller and Gillard's approach. Alternatively, \code{clsi} may be used for EP14's approach
 #' @param method_bs \code{character} - Which bootstrap method should be used to estimated the confidence levels of zeta and imprecision estimates
 #' @param level_pi \code{double} - Number between 0 and 1, which is the required confidence level for the estimated prediction intervals
@@ -15,10 +17,10 @@
 #'
 #' @examples print(1)
 
-do_commutability_evaluation <- function(data, new_data, method_pi = "fg", method_bs = "percentile", level_pi = 0.99, level_bs = 0.95, M = 0, upper_zeta = 2.25, output = "sufficient"){
+do_commutability_evaluation <- function(data, new_data, B = 2e3L, N = 1e3L, method_pi = "fg", method_bs = "percentile", level_pi = 0.99, level_bs = 0.95, M = 0, upper_zeta = 2.25, output = "sufficient"){
   pb_data <- estimate_prediction_data(data = data, new_data = "gen_250", method = method_pi, level = level_pi, rounding = 3L)
-  ce_data <- estimate_prediction_data(data = data, new_data = new_data, method = method_pi, level = level_pi, rounding = 3L, B = 1e3)
-  impr_data <- estimate_imprecision_data(data = data, type = method_bs, level = level_bs)
+  ce_data <- estimate_prediction_data(data = data, new_data = new_data, method = method_pi, level = level_pi, rounding = 3L, B = N)
+  impr_data <- estimate_imprecision_data(data = data, type = method_bs, level = level_bs, B = B)
   simulate_zeta_upper <- FALSE
 
   if(length(upper_zeta) > 1){
@@ -60,7 +62,7 @@ do_commutability_evaluation <- function(data, new_data, method_pi = "fg", method
     if(M < 0){
       M <- 0
     }
-    zeta_data <- estimate_zeta_data(data = data, type = method_bs, level = level_bs, M = M, zeta_critical = NULL)
+    zeta_data <- estimate_zeta_data(data = data, B = B, type = method_bs, level = level_bs, M = M, zeta_critical = NULL)
     merged_results <- merge_results(pb_data = pb_data,
                                     ce_data = ce_data,
                                     imprecision_data = impr_data,
@@ -73,7 +75,7 @@ do_commutability_evaluation <- function(data, new_data, method_pi = "fg", method
   }
 
   else{
-    zeta_data <- estimate_zeta_data(data = data, type = method_bs, level = level_bs, M = 0, zeta_critical = upper_zeta)
+    zeta_data <- estimate_zeta_data(data = data, type = method_bs, level = level_bs, M = 0, zeta_critical = upper_zeta, B = B)
     merged_results <- merge_results(pb_data = pb_data,
                                     ce_data = ce_data,
                                     imprecision_data = impr_data,

@@ -7,6 +7,8 @@
 do_commutability_evaluation(
   data,
   new_data,
+  B = 2000L,
+  N = 1000L,
   method_pi = "fg",
   method_bs = "percentile",
   level_pi = 0.99,
@@ -20,6 +22,10 @@ do_commutability_evaluation(
 \item{data}{\code{list}, \code{data table} or \code{data frame} - Clinical sample data (CS data) for the commutability assessment experiment}
 
 \item{new_data}{\code{list}, \code{data table} or \code{data frame} - Evaluated samples' data (EQAM / CRM data) for the commutability assessment experiment}
+
+\item{B}{Integer - How many bootstrap replicates should be used to calculate confidence intervals for bootstrap confidence intervals}
+
+\item{N}{Integer - How many bootstrap replicates should be used to calculate inside rates}
 
 \item{method_pi}{\code{character} - Which method should be used to estimate the Deming prediction intervals. Default is \code{fg} which is Fuller and Gillard's approach. Alternatively, \code{clsi} may be used for EP14's approach}
 
