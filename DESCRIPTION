@@ -17,7 +17,8 @@ Imports:
     utils,
     readxl,
     microbenchmark,
-    ggplot2
+    ggplot2,
+    skedastic
 Remotes: pernille267/fasteqa
 Suggests: 
     testthat (>= 3.0.0)

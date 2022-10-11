@@ -41,7 +41,9 @@ estimate_zeta_data <- function(data, B = 2e3, type = "percentile", level = 0.95,
   if(typeof(data$ReplicateID) != "character"){
     data$ReplicateID <- as.character(data$ReplicateID)
   }
-
+  if(!any("comparison" == names(data))){
+    stop("comparison was not found in data. Make sure it is included. Are you sure data is on long format?")
+  }
   data_list <- split(data, by = "comparison")
   original_zetas <- lapply(X = data_list, FUN = function(x) unname(unlist(estimate_zeta(x))))
   resampled_data <- lapply(X = data_list, FUN = function(x) replicate(n = B, expr = setDT(resample_samples(data = x, silence = 1)), simplify = FALSE))

@@ -17,14 +17,14 @@ test_eqam_2 <- test_data_2[SampleID %in% c("29", "15"), ] |> MS_wise()
 test_data_1 <- test_data_1[!SampleID %in% c("23", "6"), ] |> MS_wise()
 test_data_2 <- test_data_2[!SampleID %in% c("29", "15"), ] |> MS_wise()
 
-imprecision_data_1 <- estimate_imprecision_data(data = test_data_1, B = 2e3)[,-c("Var_A","Var_A_lwr","Var_A_upr", "Var_B","Var_B_lwr","Var_B_upr")]
-imprecision_data_2 <- estimate_imprecision_data(data = test_data_2, B = 2e3)[,-c("Var_A","Var_A_lwr","Var_A_upr", "Var_B","Var_B_lwr","Var_B_upr")]
+imprecision_data_1 <- estimate_imprecision_data(data = test_data_1, B = 2e2)[,-c("Var_A","Var_A_lwr","Var_A_upr", "Var_B","Var_B_lwr","Var_B_upr")]
+imprecision_data_2 <- estimate_imprecision_data(data = test_data_2, B = 2e2)[,-c("Var_A","Var_A_lwr","Var_A_upr", "Var_B","Var_B_lwr","Var_B_upr")]
 
-zeta_data_1 <- estimate_zeta_data(data = test_data_1, B = 2e3, zeta_critical = 2.16)
-zeta_data_2 <- estimate_zeta_data(data = test_data_2 |> na.omit(), B = 2e3, zeta_critical = 2.01)
+zeta_data_1 <- estimate_zeta_data(data = test_data_1, B = 2e2, zeta_critical = 2.16)
+zeta_data_2 <- estimate_zeta_data(data = test_data_2 |> na.omit(), B = 2e2, zeta_critical = 2.01)
 
 prediction_ce_data_1 <- estimate_prediction_data(data = test_data_1, new_data = test_eqam_1, B = 2e3)
-prediction_ce_data_2 <- estimate_prediction_data(data = test_data_2 |> na.omit(), new_data = test_eqam_2, B = 2e3)
+prediction_ce_data_2 <- estimate_prediction_data(data = test_data_2 |> na.omit(), new_data = test_eqam_2, B = 2e2)
 
 prediction_pb_data_1 <- estimate_prediction_data(data = test_data_1, new_data = "gen_250")
 prediction_pb_data_2 <- estimate_prediction_data(data = test_data_2 |> na.omit(), new_data = "gen_250")

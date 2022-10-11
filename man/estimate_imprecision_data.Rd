@@ -13,13 +13,13 @@ estimate_imprecision_data(data, B = 2000, type = "percentile", level = 0.95)
 
 \item{type}{Type of bootstrap confidence interval. There are four options:
 \itemize{
-  \item{\code{normal}: }{Standard normal bootstrap confidence interval}
-  \item{\code{basic}: }{Basic bootstrap confidence interval}
-  \item{\code{percentile}: }{Percentile bootstrap confidence interval}
-  \item{\code{BCa}: }{Not yet available}
+  \item{\code{normal}: }{Standard normal bootstrap confidence intervals}
+  \item{\code{basic}: }{Basic bootstrap confidence intervals}
+  \item{\code{percentile}: }{Percentile bootstrap confidence intervals}
+  \item{\code{BCa}: }{Bias- and skewness-corrected bootstrap confidence intervals}
 }}
 
-\item{level}{Confidence level of bootstrap confidence interval. A 95 percent confidence level is the default}
+\item{level}{Confidence level of bootstrap confidence interval. A 95 percent confidence level is the default.}
 }
 \value{
 A \code{data table} with entries \code{CV_A}, \code{CV_A_lwr}, \code{CV_A_upr}, \code{CV_B}, \code{CV_B_lwr}, \code{CV_B_upr}, \code{lambda}, \code{lambda_lwr}, \code{lambda_upr}, \code{Var_A}, \code{Var_A_lwr}, \code{Var_A_upr}, \code{Var_B}, \code{Var_B_lwr}, \code{Var_B_upr}
