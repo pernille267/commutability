@@ -5,20 +5,20 @@ you can use the even more user-friendly app named "Commutability evaluation of e
   - **check_data()**: Checks whether input data is on the correct form
   - **repair_data()**: Repairs data so that it is on the correct form
   - **MS_wise()**: Converts a data on wide format to the equivalent data on long format keyed by unique IVD-MD comparisons, **comparison**
-  - **MS_wise_imprecision()** Modifies the layout of the output of **estimate_imprecision_data** so that each IVD-MD's imprecision estimates will be given in one row.
+  - **MS_wise_imprecision()** Modifies the layout of the output of **estimate_imprecision_data()** so that each IVD-MD's imprecision estimates will be given in one row.
   - **estimate_zeta_data()**: Estimates bootstrap confidence intervals and more concerning the difference in non-selectivity measure $\zeta$
   - **estimate_imprecison_data()**: Estimates bootstrap confidence intervals and more concerning the imprecision estimate
   - **estimate_prediction_data()**: Estimates prediction intervals and prediction bands based on clinical sample data and potentially EQAM data
   - **do_commutability_evaluation()**: Combines the previous three functions for repaired and NA-free clinical sample data and EQAM data to get summary results for the data analysis regarding the commutability evaluation experiment
   - **transform_data()**: Does simple transformations to the numeric columns of clinical sample data or EQAM data such as log and square root.
+  - **perform_assessment_tests()**: Normality and heteroscedasticity tests regarding the validness of regression models with test rejection rates estimated employing the bootstrap
+  - **plot_commutability_evaluation_plots()** Plot standard commutability evaluation plots using popular **ggplot()** package with a flexible theme constructor.
   
 # Future functions
 
-The following functions are required for the package to be complete:
+The following function(s) are required for the package to be complete:
 
-  - **perform_assessment_tests()**: Normality and heteroscedasticity tests regarding the validness of regression models with test strengths estimated by bootstrap
   - **plot_assessment_plots()**: Plots model assessment plots for visiualization to be used in addition to the formal tests from **perform_assessment_tests()**. The plots are constructed by the **ggplot()** package.
-  - **plot_commutability_evaluation_plots()** Plot standard commutability evaluation plots using popular **ggplot()** package.
 
 # Installation instructions
 
