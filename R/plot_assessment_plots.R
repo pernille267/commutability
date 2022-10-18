@@ -40,6 +40,8 @@
 
 plot_assessment_plots <- function(data, method = "fg", type = "residual_plot", draw_curves = "none", plot_theme = c("custom", "default", "noklus", "soft", "depression", "happy") , additional_arguments = NULL, testing = FALSE){
 
+  comparison <- x <- y <- `..density..` <- NULL;
+
   if(is.null(plot_theme)){
     plot_theme <- "custom"
   }
@@ -360,14 +362,14 @@ plot_assessment_plots <- function(data, method = "fg", type = "residual_plot", d
                                     fill = if(any("point_fill" == names(additional_arguments))){additional_arguments$point_fill}else{"violet"},
                                     color = if(any("point_border" == names(additional_arguments))){additional_arguments$point_border}else{"black"}) +
         facet_wrap(facets = . ~ comparison, scales = "free") +
-        labs(title = if(any("main_title" == names(additional_arguments))){additional_arguments$main_title}else{"Assessment plots for all IVD-MD comparisons"},
+        labs(title = if(any("main_title" == names(additional_arguments))){if(isTRUE(additional_arguments$main_title == "")){"Assessment plots for all IVD-MD comparisons"}else{additional_arguments$main_title}}else{"Assessment plots for all IVD-MD comparisons"},
              subtitle = if(any("sub_title" == names(additional_arguments))){additional_arguments$sub_title}else{NULL})
 
       if(type == "residual_plot"){
         plot_out <- base +
-          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){additional_arguments$x_name}else{"Fitted values"},
+          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){if(isTRUE(additional_arguments$x_name == "")){"Fitted values"}else{additional_arguments$x_name}}else{"Fitted values"},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
-          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){additional_arguments$y_name}else{"Standardized residuals"},
+          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){if(isTRUE(additional_arguments$y_name == "")){"Standardized residuals"}else{additional_arguments$y_name}}else{"Standardized residuals"},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
           theme_bw() +
           theme(plot.title = element_text(face = "bold",
@@ -388,9 +390,9 @@ plot_assessment_plots <- function(data, method = "fg", type = "residual_plot", d
 
       else if(type == "qq_plot"){
         plot_out <- base +
-          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){additional_arguments$x_name}else{"Theoretical N(0,1) quantiles"},
+          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){if(isTRUE(additional_arguments$x_name == "")){"Theoretical N(0,1) quantiles"}else{additional_arguments$x_name}}else{"Theoretical N(0,1) quantiles"},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
-          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){additional_arguments$y_name}else{"Empirical quantiles of standardized residuals"},
+          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){if(isTRUE(additional_arguments$y_name == "")){"Empirical quantiles of standardized residuals"}else{additional_arguments$y_name}}else{"Empirical quantiles of standardized residuals"},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
           theme_bw() +
           theme(plot.title = element_text(face = "bold",
@@ -442,14 +444,14 @@ plot_assessment_plots <- function(data, method = "fg", type = "residual_plot", d
                    fill = if(any("point_fill" == names(additional_arguments))){additional_arguments$point_fill}else{"violet"},
                    color = if(any("point_border" == names(additional_arguments))){additional_arguments$point_border}else{"black"}) +
         facet_wrap(facets = . ~ comparison, scales = "free") +
-        labs(title = if(any("main_title" == names(additional_arguments))){additional_arguments$main_title}else{"Assessment plots for all IVD-MD comparisons"},
+        labs(title = if(any("main_title" == names(additional_arguments))){if(isTRUE(additional_arguments$main_title == "")){"Assessment plots for all IVD-MD comparisons"}else{additional_arguments$main_title}}else{"Assessment plots for all IVD-MD comparisons"},
              subtitle = if(any("sub_title" == names(additional_arguments))){additional_arguments$sub_title}else{NULL})
 
       if(type == "residual_plot"){
         plot_out <- base +
-          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){additional_arguments$x_name}else{"Fitted values"},
+          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){if(isTRUE(additional_arguments$x_name == "")){"Fitted values"}else{additional_arguments$x_name}}else{"Fitted values"},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
-          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){additional_arguments$y_name}else{"Standardized residuals"},
+          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){if(isTRUE(additional_arguments$y_name == "")){"Standardized residuals"}else{additional_arguments$y_name}}else{"Standardized residuals"},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
           theme_bw() +
           theme(plot.title = element_text(face = "bold",
@@ -470,9 +472,9 @@ plot_assessment_plots <- function(data, method = "fg", type = "residual_plot", d
 
       else if(type == "qq_plot"){
         plot_out <- base +
-          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){additional_arguments$x_name}else{"Theoretical N(0,1) quantiles"},
+          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){if(isTRUE(additional_arguments$x_name == "")){"Theoretical N(0,1) quantiles"}else{additional_arguments$x_name}}else{"Theoretical N(0,1) quantiles"},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
-          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){additional_arguments$y_name}else{"Empirical quantiles of standardized residuals"},
+          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){if(isTRUE(additional_arguments$y_name == "")){"Empirical quantiles of standardized residuals"}else{additional_arguments$y_name}}else{"Empirical quantiles of standardized residuals"},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
           theme_bw() +
           theme(plot.title = element_text(face = "bold",
@@ -519,14 +521,14 @@ plot_assessment_plots <- function(data, method = "fg", type = "residual_plot", d
                    fill = if(any("point_fill" == names(additional_arguments))){additional_arguments$point_fill}else{"violet"},
                    color = if(any("point_border" == names(additional_arguments))){additional_arguments$point_border}else{"black"}) +
         facet_wrap(facets = . ~ comparison, scales = "free") +
-        labs(title = if(any("main_title" == names(additional_arguments))){additional_arguments$main_title}else{"Assessment plots for all IVD-MD comparisons"},
+        labs(title = if(any("main_title" == names(additional_arguments))){if(isTRUE(additional_arguments$main_title == "")){"Assessment plots for all IVD-MD comparisons"}else{additional_arguments$main_title}}else{"Assessment plots for all IVD-MD comparisons"},
              subtitle = if(any("sub_title" == names(additional_arguments))){additional_arguments$sub_title}else{NULL})
 
       if(type == "residual_plot"){
         plot_out <- base +
-          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){additional_arguments$x_name}else{"Fitted values"},
+          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){if(isTRUE(additional_arguments$x_name == "")){"Fitted values"}else{additional_arguments$x_name}}else{"Fitted values"},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
-          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){additional_arguments$y_name}else{"Standardized residuals"},
+          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){if(isTRUE(additional_arguments$y_name == "")){"Standardized residuals"}else{additional_arguments$y_name}}else{"Standardized residuals"},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
           theme_bw() +
           theme(plot.title = element_text(face = "bold",
@@ -548,9 +550,9 @@ plot_assessment_plots <- function(data, method = "fg", type = "residual_plot", d
 
       else if(type == "qq_plot"){
         plot_out <- base +
-          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){additional_arguments$x_name}else{"Theoretical N(0,1) quantiles"},
+          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){if(isTRUE(additional_arguments$x_name == "")){"Theoretical N(0,1) quantiles"}else{additional_arguments$x_name}}else{"Theoretical N(0,1) quantiles"},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
-          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){additional_arguments$y_name}else{"Empirical quantiles of standardized residuals"},
+          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){if(isTRUE(additional_arguments$y_name == "")){"Empirical quantiles of standardized residuals"}else{additional_arguments$y_name}}else{"Empirical quantiles of standardized residuals"},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
           theme_bw() +
           theme(plot.title = element_text(face = "bold",
@@ -706,14 +708,14 @@ plot_assessment_plots <- function(data, method = "fg", type = "residual_plot", d
                    fill = if(any("point_fill" == names(additional_arguments))){additional_arguments$point_fill}else{"violet"},
                    color = if(any("point_border" == names(additional_arguments))){additional_arguments$point_border}else{"black"}) +
         facet_wrap(facets = . ~ MS, scales = "free") +
-        labs(title = if(any("main_title" == names(additional_arguments))){additional_arguments$main_title}else{"Assessment plots for all IVD-MDs"},
+        labs(title = if(any("main_title" == names(additional_arguments))){if(isTRUE(additional_arguments$main_title == "")){"Assessment plots for all IVD-MDs"}else{additional_arguments$main_title}}else{"Assessment plots for all IVD-MDs"},
              subtitle = if(any("sub_title" == names(additional_arguments))){additional_arguments$sub_title}else{NULL})
 
       if(type == "sd_vs_concentration"){
         plot_out <- base +
-          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){additional_arguments$x_name}else{"Concentration values"},
+          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){if(isTRUE(additional_arguments$x_name == "")){"Concentration values"}else{additional_arguments$x_name}}else{"Concentration values"},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
-          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){additional_arguments$y_name}else{default_y_name},
+          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){if(isTRUE(additional_arguments$y_name == "")){default_y_name}else{additional_arguments$y_name}}else{default_y_name},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
           theme_bw() +
           theme(plot.title = element_text(face = "bold",
@@ -737,9 +739,9 @@ plot_assessment_plots <- function(data, method = "fg", type = "residual_plot", d
 
       else if(type == "cv_vs_concentration"){
         plot_out <- base +
-          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){additional_arguments$x_name}else{"Concentration values"},
+          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){if(isTRUE(additional_arguments$x_name == "")){"Concentration values"}else{additional_arguments$x_name}}else{"Concentration values"},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
-          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){additional_arguments$y_name}else{default_y_name},
+          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){if(isTRUE(additional_arguments$y_name == "")){default_y_name}else{additional_arguments$y_name}}else{default_y_name},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
           theme_bw() +
           theme(plot.title = element_text(face = "bold",
@@ -793,14 +795,14 @@ plot_assessment_plots <- function(data, method = "fg", type = "residual_plot", d
                    fill = if(any("point_fill" == names(additional_arguments))){additional_arguments$point_fill}else{"violet"},
                    color = if(any("point_border" == names(additional_arguments))){additional_arguments$point_border}else{"black"}) +
         facet_wrap(facets = . ~ MS, scales = "free") +
-        labs(title = if(any("main_title" == names(additional_arguments))){additional_arguments$main_title}else{"Assessment plots for all IVD-MDs"},
+        labs(title = if(any("main_title" == names(additional_arguments))){if(isTRUE(additional_arguments$main_title == "")){"Assessment plots for all IVD-MDs"}else{additional_arguments$main_title}}else{"Assessment plots for all IVD-MDs"},
              subtitle = if(any("sub_title" == names(additional_arguments))){additional_arguments$sub_title}else{NULL})
 
       if(type == "sd_vs_concentration"){
         plot_out <- base +
-          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){additional_arguments$x_name}else{"Concentration values"},
+          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){if(isTRUE(additional_arguments$x_name == "")){"Concentration values"}else{additional_arguments$x_name}}else{"Concentration values"},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
-          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){additional_arguments$y_name}else{default_y_name},
+          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){if(isTRUE(additional_arguments$y_name == "")){default_y_name}else{additional_arguments$y_name}}else{default_y_name},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
           theme_bw() +
           theme(plot.title = element_text(face = "bold",
@@ -822,9 +824,9 @@ plot_assessment_plots <- function(data, method = "fg", type = "residual_plot", d
 
       else if(type == "cv_vs_concentration"){
         plot_out <- base +
-          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){additional_arguments$x_name}else{"Concentration values"},
+          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){if(isTRUE(additional_arguments$x_name == "")){"Concentration values"}else{additional_arguments$x_name}}else{"Concentration values"},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
-          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){additional_arguments$y_name}else{default_y_name},
+          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){if(isTRUE(additional_arguments$y_name == "")){default_y_name}else{additional_arguments$y_name}}else{default_y_name},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
           theme_bw() +
           theme(plot.title = element_text(face = "bold",
@@ -869,14 +871,14 @@ plot_assessment_plots <- function(data, method = "fg", type = "residual_plot", d
                    fill = if(any("point_fill" == names(additional_arguments))){additional_arguments$point_fill}else{"violet"},
                    color = if(any("point_border" == names(additional_arguments))){additional_arguments$point_border}else{"black"}) +
         facet_wrap(facets = . ~ MS, scales = "free") +
-        labs(title = if(any("main_title" == names(additional_arguments))){additional_arguments$main_title}else{"Assessment plots for all IVD-MDs"},
+        labs(title = if(any("main_title" == names(additional_arguments))){if(isTRUE(additional_arguments$main_title == "")){"Assessment plots for all IVD-MDs"}else{additional_arguments$main_title}}else{"Assessment plots for all IVD-MDs"},
              subtitle = if(any("sub_title" == names(additional_arguments))){additional_arguments$sub_title}else{NULL})
 
       if(type == "sd_vs_concentration"){
         plot_out <- base +
-          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){additional_arguments$x_name}else{"Concentration values"},
+          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){if(isTRUE(additional_arguments$x_name == "")){"Concentration values"}else{additional_arguments$x_name}}else{"Concentration values"},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
-          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){additional_arguments$y_name}else{default_y_name},
+          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){if(isTRUE(additional_arguments$y_name == "")){default_y_name}else{additional_arguments$y_name}}else{default_y_name},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
           theme_bw() +
           theme(plot.title = element_text(face = "bold",
@@ -899,9 +901,9 @@ plot_assessment_plots <- function(data, method = "fg", type = "residual_plot", d
 
       else if(type == "cv_vs_concentration"){
         plot_out <- base +
-          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){additional_arguments$x_name}else{"Concentration values"},
+          scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){if(isTRUE(additional_arguments$x_name == "")){"Concentration values"}else{additional_arguments$x_name}}else{"Concentration values"},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
-          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){additional_arguments$y_name}else{default_y_name},
+          scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){if(isTRUE(additional_arguments$y_name == "")){default_y_name}else{additional_arguments$y_name}}else{default_y_name},
                              n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
           theme_bw() +
           theme(plot.title = element_text(face = "bold",
@@ -941,12 +943,12 @@ plot_assessment_plots <- function(data, method = "fg", type = "residual_plot", d
                      mapping = aes(x = x),
                      color = if(any("curve_color" == names(additional_arguments))){additional_arguments$curve_color}else{"black"}) +
         facet_wrap(facets = . ~ comparison, scales = "free") +
-        labs(title = if(any("main_title" == names(additional_arguments))){additional_arguments$main_title}else{"Residual histograms for all IVD-MD comparisons"},
+        labs(title = if(any("main_title" == names(additional_arguments))){if(isTRUE(additional_arguments$main_title == "")){"Residual histograms for all IVD-MD comparisons"}else{additional_arguments$main_title}}else{"Residual histograms for all IVD-MD comparisons"},
              subtitle = if(any("sub_title" == names(additional_arguments))){additional_arguments$sub_title}else{NULL},
              color = "lines") +
-        scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){additional_arguments$x_name}else{"Standardized residuals"},
+        scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){if(isTRUE(additional_arguments$x_name == "")){"Standardized residuals"}else{additional_arguments$x_name}}else{"Standardized residuals"},
                            n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
-        scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){additional_arguments$y_name}else{"Empirical / theoretical densities"},
+        scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){if(isTRUE(additional_arguments$y_name == "")){"Empirical density"}else{additional_arguments$y_name}}else{"Empirical density"},
                            n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
         theme_bw() +
         theme(plot.title = element_text(face = "bold",
@@ -978,12 +980,12 @@ plot_assessment_plots <- function(data, method = "fg", type = "residual_plot", d
                        fill = if(any("histogram_fill" == names(additional_arguments))){additional_arguments$histogram_fill}else{"#F9F9F9"},
                        color = if(any("histogram_border" == names(additional_arguments))){additional_arguments$histogram_border}else{"black"}) +
         facet_wrap(facets = . ~ comparison, scales = "free") +
-        labs(title = if(any("main_title" == names(additional_arguments))){additional_arguments$main_title}else{"Residual histograms for all IVD-MD comparisons"},
+        labs(title = if(any("main_title" == names(additional_arguments))){if(isTRUE(additional_arguments$main_title == "")){"Residual histograms for all IVD-MD comparisons"}else{additional_arguments$main_title}}else{"Residual histograms for all IVD-MD comparisons"},
              subtitle = if(any("sub_title" == names(additional_arguments))){additional_arguments$sub_title}else{NULL},
              color = "lines") +
-        scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){additional_arguments$x_name}else{"Standardized residuals"},
+        scale_x_continuous(name = if(any("x_name" == names(additional_arguments))){if(isTRUE(additional_arguments$x_name == "")){"Standardized residuals"}else{additional_arguments$x_name}}else{"Standardized residuals"},
                            n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
-        scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){additional_arguments$y_name}else{"Empirical / theoretical densities"},
+        scale_y_continuous(name = if(any("y_name" == names(additional_arguments))){if(isTRUE(additional_arguments$y_name == "")){"Empirical density"}else{additional_arguments$y_name}}else{"Empirical density"},
                            n.breaks = if(any("n_breaks" == names(additional_arguments))){additional_arguments$n_breaks}else{6}) +
         theme_bw() +
         theme(plot.title = element_text(face = "bold",

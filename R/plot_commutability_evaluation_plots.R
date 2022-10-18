@@ -38,6 +38,9 @@
 
 plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclude_rings = FALSE, exclude_cs = FALSE, plot_theme = c("custom", "default", "noklus", "soft", "depression", "happy"), additional_arguments = NULL, testing = FALSE){
 
+
+  MP_A <- MP_B <- MS_A <- MS_B <- SampleID <- dins_conclusion <- pi_conclusion_correctness <- pi_inside <- pi_lwr <- pi_upr <- predictor <- NULL;
+
   if(any("dins_conclusion" == names(pb_data))){
     pb_data$dins_conclusion <- ifelse(pb_data$dins_conclusion == 0, "acceptable", "not acceptable")
   }
