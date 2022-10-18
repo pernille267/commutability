@@ -10,7 +10,9 @@ plot_commutability_evaluation_plots(
   ce_data,
   exclude_rings = FALSE,
   exclude_cs = FALSE,
-  additional_arguments = NULL
+  plot_theme = c("custom", "default", "noklus", "soft", "depression", "happy"),
+  additional_arguments = NULL,
+  testing = FALSE
 )
 }
 \arguments{
@@ -24,16 +26,33 @@ plot_commutability_evaluation_plots(
 
 \item{exclude_cs}{\code{Logical} - Remove clinical sample data from plots. Default is \code{FALSE}.}
 
-\item{additional_arguments}{\code{List} - Additional arguments for the output plot. Default is \code{NULL}, which implies that default plot settings are used. Optinal additional arguments include
+\item{plot_theme}{\code{Character} - Which plotting theme should be used. Possible values are 'default', 'noklus', 'soft', 'depression' and 'happy'. Default is 'custom', which means that no particular theme is applied to the plots.}
+
+\item{additional_arguments}{\code{List} - Additional arguments for the output plot. Default is \code{NULL}, which implies that default plot settings are used. Optional additional arguments include
 \itemize{
   \item{\code{main_title}: }{Main title of the plot}
   \item{\code{sub_title}: }{Sub title of the plot}
   \item{\code{x_name}: }{Title of the x-axis}
   \item{\code{y_name}: }{Title of the y-axis}
   \item{\code{n_breaks}: }{Number of axis-breaks}
+  \item{\code{title_color}: }{Text color of 'main_title'. Default color is \code{'black'}}
+  \item{\code{sub_title_color}: }{Text color of 'sub_title'. Default color is \code{'black'}}
+  \item{\code{pb_fill:  }}{Fill color of prediction bands. Default fill color is \code{'green'}}
+  \item{\code{pb_border}:  }{Color of the border of the prediction bands. Default color is \code{'black'}}
+  \item{\code{curve}:  }{Should a curve be included to the clinical samples measurements. Default is \code{FALSE}}
+  \item{\code{curve_type}: }{Which type of curve should be included. Only relevant if \code{curve = TRUE}. Possible values are 'equivalence_curve', 'fitted_curve' and 'flexible_curve'}
+  \item{\code{curve_color}: }{Color of curve. Only relevant if \code{curve = TRUE}. Default is \code{'black'}.}
+  \item{\code{point_shape}: }{Shape of clinical sample points. Possible inputs are 'circle' (default), 'square', 'diamond' and 'triangle'}
+  \item{\code{point_size}: }{Size of clinical sample points. Possible inputs are of type \code{double} and must larger than 0. Default is automatically determined}
+  \item{\code{point_fill}: }{fill color of clinical sample points. May be a color defined in \code{colors()} or a HEX code}
+  \item{\code{point_border}: }{border color of clinical sample points. May be a color defined in \code{colors()} or a HEX code. Default color is \code{'black'}}
   \item{\code{comparison_fill}: }{Fill color for the individual plot labels listing the IVD-MD comparisons. Must be a valid color name or HEX code}
+  \item{\code{comparison_text_color}: }{Text color for the individual plot labels listing the IVD-MD comparisons. Must be a valid color name or HEX code}
   \item{\code{legend_fill}: }{Fill color for the legend regions. Must be a valid color name or HEX code}
+  \item{\code{legend_text_color}: }{Text color for the legends. Must be a valid color name or HEX code}
 }}
+
+\item{testing}{\code{Logical} - Should the function output be test-friendly? Only useful for maintainer, so the end-user should not change this parameter. Default is \code{FALSE}.}
 }
 \value{
 \code{ggplot2} object that is a grid of plots having dimensions corresponding to the number of unique IVD-MD comparisons
