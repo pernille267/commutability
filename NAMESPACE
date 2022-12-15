@@ -7,7 +7,7 @@ import(microbenchmark)
 import(fasteqa)
 import(ggplot2)
 import(skedastic)
-importFrom("stats", "quantile", "qqplot", "rnorm", "shapiro.test","na.omit")
+importFrom("stats", "quantile", "qqplot", "rnorm", "shapiro.test", "na.omit", "median", "qtukey", "sd", "var")
 importFrom("grDevices", "colors", "nclass.FD")
 importFrom("data.table", ":=")
 
