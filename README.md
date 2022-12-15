@@ -1,7 +1,7 @@
 # commutability
 An R package with C++ back-end for the purpose of commutability evaluation. Tools for differences in non-selectivity may also be found here. Are you you lazy, or do you not wish to do data analysis on a commutability study?
 Then, this package is for you. This package includes high-performance and user-friendly functions doing most of the analysis for you. The newest resarch on external quality assessment commutability included in this package. If your R skills are non-existing,
-you can use the even more user-friendly app named "Commutability evaluation of external quality assessment" found at http://qualitylife.shinyapps.io/Commutability-evaluation. The following functions is included in the commutability package:
+you can use the even more user-friendly app named "Commutability evaluation of external quality assessment" found at  https://qualitylife.shinyapps.io/commutabilityapplication/. The following functions is included in the commutability package:
   - **check_data()**: Checks whether input data is on the correct form
   - **repair_data()**: Repairs data so that it is on the correct form
   - **MS_wise()**: Converts a data on wide format to the equivalent data on long format keyed by unique IVD-MD comparisons, **comparison**
@@ -13,12 +13,13 @@ you can use the even more user-friendly app named "Commutability evaluation of e
   - **transform_data()**: Does simple transformations to the numeric columns of clinical sample data or EQAM data such as log and square root.
   - **perform_assessment_tests()**: Normality and heteroscedasticity tests regarding the validness of regression models with test rejection rates estimated employing the bootstrap
   - **plot_commutability_evaluation_plots()** Plot standard commutability evaluation plots using popular **ggplot()** package with a flexible theme constructor.
+  - **plot_assessment_plots()**: Plots model assessment plots for visiualization to be used in addition to the formal tests from **perform_assessment_tests()**. The plots are constructed by the **ggplot()** package.
   
 # Future functions
 
 The following function(s) are required for the package to be complete:
 
-  - **plot_assessment_plots()**: Plots model assessment plots for visiualization to be used in addition to the formal tests from **perform_assessment_tests()**. The plots are constructed by the **ggplot()** package.
+  - **do_outlier_analysis()** Do outlier analysis based on clinical sample data
 
 # Installation instructions
 
