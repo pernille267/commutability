@@ -1,15 +1,15 @@
 #' All calculations regarding imprecision
 #'
-#' @param data \code{list}, \code{data frame} or \code{data table} that is grouped by \code{"comparison"}. Furthermore, must contain the following columns: \code{comparison}, \code{SampleID}, \code{ReplicateID}, \code{MP_A} and \code{MP_B}
-#' @param B Number of bootstrap replicates used to estimate bootstrap confidence intervals. The default is 2000, which is the typical for bootstrap confidence intervals. Note that if you have more than five unique IVD-MDs in \code{data}, it may take approximately two seconds to run the resampling
-#' @param type Type of bootstrap confidence interval. There are four options:
+#' @param data \code{list}, \code{data frame} or \code{data table} that is grouped by \code{"comparison"}. Furthermore, must contain the following columns: \code{comparison}, \code{SampleID}, \code{ReplicateID}, \code{MP_A} and \code{MP_B}.
+#' @param B \code{Integer} - Number of bootstrap replicates used to estimate bootstrap confidence intervals. The default is 2000, which is the typical for bootstrap confidence intervals. Note that if you have more than five unique IVD-MDs in \code{data}, it may take approximately two seconds to run the resampling.
+#' @param type \code{Character} - Type of bootstrap confidence interval. There are four options:
 #' \itemize{
 #'   \item{\code{normal}: }{Standard normal bootstrap confidence intervals}
 #'   \item{\code{basic}: }{Basic bootstrap confidence intervals}
 #'   \item{\code{percentile}: }{Percentile bootstrap confidence intervals}
 #'   \item{\code{BCa}: }{Bias- and skewness-corrected bootstrap confidence intervals}
 #' }
-#' @param level Confidence level of bootstrap confidence interval. A 95 percent confidence level is the default.
+#' @param level \code{Numeric} - Confidence level of the bootstrap confidence intervals. A 95 percent confidence level is the default.
 #'
 #' @description Obtain all necessary information on imprecision data for each unique pair of IVD-MDs in your data. The output is on the form required by \code{merge_results}(), making it very useful.
 #'
@@ -18,7 +18,7 @@
 #'
 #' @examples print(1)
 
-estimate_imprecision_data <- function(data, B = 2e3, type = "percentile", level = 0.95){
+estimate_imprecision_data <- function(data, B = 2e3L, type = "percentile", level = 95/100){
 
   if(!is.data.table(data)){
 
@@ -47,6 +47,17 @@ estimate_imprecision_data <- function(data, B = 2e3, type = "percentile", level 
 
   data_list <- split(data, by = "comparison", keep.by = FALSE)
   orig_imps <- lapply(X = data_list, FUN = global_precision_estimates)
+
+  if(B < 50L & B >= 1L){
+    warning("B should be at least 2,000 to get fair bootstrap confidence interval estimates. Having B = ", B, "< 50 is not good enough.", "\n",
+            "No confidence intervals are attempted estimated. Choose B greater or equal to 50 to force estimation of confidence intervals.")
+    return(rbindlist(l = orig_imps, idcol = "comparison"))
+
+  }
+  else if(B < 1L){
+    return(rbindlist(l = orig_imps, idcol = "comparison"))
+  }
+
   rsml_data <- lapply(X = data_list, function(x) replicate(n = B,
                                                            expr = setDT(resample_samples(data = x)),
                                                            simplify = FALSE))

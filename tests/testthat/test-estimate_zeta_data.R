@@ -47,4 +47,3 @@ test_that(desc = "upr > lwr", code = {
   expect_true(all(A_HDLCXXX_CS$lwr <= A_HDLCXXX_CS$upr))
 })
 
-

@@ -6,17 +6,18 @@
 \usage{
 estimate_zeta_data(
   data,
-  B = 2000,
+  B = 2000L,
   type = "percentile",
-  level = 0.95,
+  level = 95/100,
   M = 0,
+  N = 10000L,
   zeta_critical = NA
 )
 }
 \arguments{
-\item{data}{\code{list} or \code{data table} grouped by \code{"comparison"}. Must contain \code{comparison}, \code{SampleID}, \code{ReplicateID}, \code{MP_A} and \code{MP_B}}
+\item{data}{\code{data table}, \code{data frame} or \code{list} - Clinical sample data grouped by 'comparison'. Data must be grouped by 'comparison' and contain \code{comparison}, \code{SampleID}, \code{ReplicateID}, \code{MP_A} and \code{MP_B}.}
 
-\item{B}{Number of bootstrap replicates used to estimate bootstrap confidence intervals. The default is 2000, which is the typical for bootstrap confidence intervals}
+\item{B}{\code{integer} - Number of bootstrap replicates used to estimate bootstrap confidence intervals. The default is 2000, which is the typical for bootstrap confidence intervals. Set B = 0 to avoid estimation of bootstrap confidence intervals and only to return the point estimates of zeta.}
 
 \item{type}{Type of bootstrap confidence interval. There are four options:
 \itemize{
@@ -26,11 +27,13 @@ estimate_zeta_data(
   \item{\code{BCa}: }{Bias- and skewness-corrected bootstrap confidence interval using Jack knife}
 }}
 
-\item{level}{Confidence level of bootstrap confidence interval. A 95 percent confidence level is the default}
+\item{level}{\code{numeric} - Confidence level of bootstrap confidence interval. A 95 percent confidence level is the default.}
 
 \item{M}{If \code{zeta_critical} is not specified (i.e., NA or not a double), what \code{M} should be used to obtain a upper value of zeta}
 
-\item{zeta_critical}{A number. Default is NA, which will initiate a Monte Carlo simulation based on your average study design across all MS comparison to obtain an adequate upper zeta value. \code{M} must be specified to obtain a valid upper limit}
+\item{N}{if \code{zeta_critical} is not specified (i.e., NA or not a double), how many iterations should be used in the simulation of \code{zeta_critical}? Default is N = 1e4L.}
+
+\item{zeta_critical}{\code{double}. Default is NA, which will initiate a Monte Carlo simulation based on your average study design across all MS comparison to obtain an adequate upper zeta value. \code{M} and \code{N} must be specified to obtain a valid upper limit}
 }
 \value{
 A \code{data table} with entries \code{comparison}, \code{zeta}, \code{lwr}, \code{upr}, \code{zeta_critical} and \code{zeta_conclusion}

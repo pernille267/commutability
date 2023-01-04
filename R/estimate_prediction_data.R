@@ -94,7 +94,7 @@ estimate_prediction_data <- function(data, new_data = NULL, B = NULL, method = "
 
   uniq_data <- lapply(X = data_list, FUN = function(x) (unique(x$ReplicateID[which(!is.na(x$ReplicateID))])))
   R_cs_list <- lapply(X = data_list, FUN = function(x) table(x$ReplicateID) / length(x$ReplicateID)) |>
-    mapply(FUN = function(x, y) cumsum(sort(x / (1/length(y)), decreasing = TRUE)), uniq_data, SIMPLIFY = FALSE) |>
+    mapply(FUN = function(x, y) cumsum(sort(x / (1 / length(y)), decreasing = TRUE)), uniq_data, SIMPLIFY = FALSE) |>
     mapply(FUN = function(x, y) which(x > length(y) * (0.5 ** (1 / length(y))))[1], uniq_data, SIMPLIFY = FALSE) |>
     lapply(FUN = function(x) unname(as.vector(x)))
   copy_data_list <- data_list
