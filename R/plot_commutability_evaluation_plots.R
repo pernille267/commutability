@@ -26,6 +26,7 @@
 #'   \item{\code{point_border}: }{border color of clinical sample points. May be a color defined in \code{colors()} or a HEX code. Default color is \code{'black'}}
 #'   \item{\code{comparison_fill}: }{Fill color for the individual plot labels listing the IVD-MD comparisons. Must be a valid color name or HEX code}
 #'   \item{\code{comparison_text_color}: }{Text color for the individual plot labels listing the IVD-MD comparisons. Must be a valid color name or HEX code}
+#'   \item{\code{hide_prediction_intervals}: }{Should the black prediction intervals for each EQAM be hidden?}
 #'   \item{\code{legend_fill}: }{Fill color for the legend regions. Must be a valid color name or HEX code}
 #'   \item{\code{legend_text_color}: }{Text color for the legends. Must be a valid color name or HEX code}
 #' }
@@ -210,6 +211,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
   default_comparison_text_color <- "#000000"
   default_legend_fill <- "#F9F9F9"
   default_legend_text_color <- "#000000"
+  default_hide_prediction_intervals <- FALSE
 
   given_arguments <- names(additional_arguments)
 
@@ -478,6 +480,15 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
       include_flexible_smooth <- FALSE
     }
   }
+  prediction_interval_alpha <- 1
+  if(any("hide_prediction_intervals" == given_arguments)){
+    if(isTRUE(additional_arguments$hide_prediction_intervals)){
+      prediction_interval_alpha <- 0
+    }
+    else{
+      prediction_interval_alpha <- 1
+    }
+  }
 
 
   if(!exclude_cs & !exclude_rings){
@@ -506,7 +517,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                    fill = if(any("point_fill" == given_arguments)){additional_arguments$point_fill}else{default_point_fill},
                    size = if(any("point_size" == given_arguments)){additional_arguments$point_size}else{default_point_size},
                    color = if(any("point_border" == given_arguments)){additional_arguments$point_border}else{default_point_border}) +
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
+        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
@@ -566,7 +577,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                    size = if(any("point_size" == given_arguments)){additional_arguments$point_size}else{default_point_size},
                    color = if(any("point_border" == given_arguments)){additional_arguments$point_border}else{default_point_border}) +
 
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
+        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
@@ -620,7 +631,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                    fill = if(any("point_fill" == given_arguments)){additional_arguments$point_fill}else{default_point_fill},
                    size = if(any("point_size" == given_arguments)){additional_arguments$point_size}else{default_point_size},
                    color = if(any("point_border" == given_arguments)){additional_arguments$point_border}else{default_point_border}) +
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
+        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
@@ -686,7 +697,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                    fill = if(any("point_fill" == given_arguments)){additional_arguments$point_fill}else{default_point_fill},
                    size = if(any("point_size" == given_arguments)){additional_arguments$point_size}else{default_point_size},
                    color = if(any("point_border" == given_arguments)){additional_arguments$point_border}else{default_point_border}) +
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
+        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
@@ -744,7 +755,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                    fill = if(any("point_fill" == given_arguments)){additional_arguments$point_fill}else{default_point_fill},
                    size = if(any("point_size" == given_arguments)){additional_arguments$point_size}else{default_point_size},
                    color = if(any("point_border" == given_arguments)){additional_arguments$point_border}else{default_point_border}) +
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
+        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
@@ -797,7 +808,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                    fill = if(any("point_fill" == given_arguments)){additional_arguments$point_fill}else{default_point_fill},
                    size = if(any("point_size" == given_arguments)){additional_arguments$point_size}else{default_point_size},
                    color = if(any("point_border" == given_arguments)){additional_arguments$point_border}else{default_point_border}) +
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
+        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
@@ -855,7 +866,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                     linetype = "dotted",
                     span = 0.95,
                     formula = y ~ x) +
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
+        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
@@ -908,7 +919,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                     linetype = "dotted",
                     method = "lm",
                     formula = y ~ x) +
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
+        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
@@ -956,7 +967,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                     alpha = include_line,
                     color = if(any("curve_color" == given_arguments)){additional_arguments$curve_color}else{default_curve_color},
                     linetype = "dotted") +
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
+        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
@@ -1013,7 +1024,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                     linetype = "dotted",
                     span = 0.95,
                     formula = y ~ x) +
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
+        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
@@ -1064,7 +1075,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                     linetype = "dotted",
                     method = "lm",
                     formula = y ~ x) +
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
+        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
@@ -1112,7 +1123,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                     alpha = include_line,
                     color = if(any("curve_color" == given_arguments)){additional_arguments$curve_color}else{default_curve_color},
                     linetype = "dotted") +
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
+        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
