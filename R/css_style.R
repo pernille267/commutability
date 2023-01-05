@@ -24,7 +24,7 @@ css_style <- function(event = "default", element = "input_field"){
     if(event == "default"){
       css_class <- ".form-control"
       style_body <- "{
-                     box-shadow: 0px 8px 37px 10px #9BFFFFFF inset;
+                     box-shadow: 0px 8px 37px 10px #FFFFFF7D inset;
                      border-radius: 8px 8px 8px 8px;
                      border-color: #008FBB;
                      transition: background-color 0.9s;
@@ -34,7 +34,7 @@ css_style <- function(event = "default", element = "input_field"){
     else if(event == "hover"){
       css_class <- ".form-control:hover"
       style_body <- "{
-                     box-shadow: 0px 8px 37px 10px #9BFFFFFF inset;
+                     box-shadow: 0px 8px 37px 10px #FFFFFF7D inset;
                      border-radius: 8px 8px 8px 8px;
                      border-color: #008FBB;
                      max-width: 300px;
@@ -45,7 +45,7 @@ css_style <- function(event = "default", element = "input_field"){
     else if(event == "active"){
       css_class <- ".form-control:active"
       style_body <- "{
-                     box-shadow: 0px 8px 37px 10px #9BFFFFFF inset;
+                     box-shadow: 0px 8px 37px 10px #FFFFFF7D inset;
                      border-radius: 8px 8px 8px 8px;
                      border-color: #000000;
                      max-width: 300px;
@@ -56,7 +56,7 @@ css_style <- function(event = "default", element = "input_field"){
     else if(event == "focus"){
       css_class <- ".form-control:focus"
       style_body <- "{
-                     box-shadow: 0px 8px 37px 10px #9BFFFFFF inset;
+                     box-shadow: 0px 8px 37px 10px #FFFFFF7D inset;
                      border-radius: 8px 8px 8px 8px;
                      border-color: #000000;
                      max-width: 300px;
@@ -97,13 +97,13 @@ css_style <- function(event = "default", element = "input_field"){
   else if(element == "p"){
     css_class <- ".p, p"
     style_body <- "{
-                   font-family: cursive;
+                   font-family: verdana;
                    }"
   }
   else if(element == "h"){
     css_class <- ".h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6"
     style_body <- "{
-                   font-family: cursive;
+                   font-family: verdana;
                    color: #605CA8;
                    }"
   }

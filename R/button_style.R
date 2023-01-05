@@ -86,31 +86,33 @@ button_style <- function(event = "default", button_type = "browse"){
                      }"
     }
     else if(event == "active"){
-      button_class <- ".btn-primary:active"
+      button_class <- ".btn-primary.active"
       style_body <- "{
                      background-color: #34ce57;
                      border-color: #1e7e34;
                      color: #FFFFFF;
                      font-weight: 900;
-                     box-shadow: 0px 8px 37px 10px #9B000000 inset;
+                     box-shadow: 0px 8px 37px 10px #0000009E inset;
                      }"
     }
     else if(event == "focus"){
       button_class <- ".btn-primary:focus"
       style_body <- "{
                      background-color: #34ce57;
-                     border-color: #1e7e34;
+                     border-color: #000000;
+                     border-style: groove;
                      color: #FFFFFF;
-                     box-shadow: 0px 8px 37px 10px #9B000000 inset;
+                     box-shadow: 0px 8px 37px 10px #0000009E inset;
                      }"
     }
     else if(event == "active:focus"){
-      button_class <- ".btn-primary:active:focus"
+      button_class <- ".btn-primary.active.focus"
       style_body <- "{
                      background-color: #34ce57;
-                     border-color: #1e7e34;
+                     border-color: #000000;
+                     border-style: groove;
                      color: #FFF;
-                     box-shadow: 0px 8px 37px 10px #9B000000 inset;
+                     box-shadow: 0px 8px 37px 10px #0000009E inset;
                      }"
     }
     else if(event == "active:hover"){
