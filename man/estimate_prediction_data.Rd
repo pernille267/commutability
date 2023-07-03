@@ -2,7 +2,7 @@
 % Please edit documentation in R/estimate_prediction_data.R
 \name{estimate_prediction_data}
 \alias{estimate_prediction_data}
-\title{Estimate prediction intervals for Deming regression based on EQA data}
+\title{Estimate prediction intervals for Deming regression based on clinical sample (CS) data and possibly external quality assessment (EQA) material data or certified reference (CR) material data}
 \usage{
 estimate_prediction_data(
   data,
@@ -10,27 +10,41 @@ estimate_prediction_data(
   B = NULL,
   method = "fg",
   level = 0.99,
-  rounding = 3L
+  rounding = 3L,
+  override_R_ratio = NULL,
+  na_rm = TRUE
 )
 }
 \arguments{
-\item{data}{\code{list} - \code{data table} or \code{data frame} - Data containing clinical samples' measurements}
+\item{data}{A \code{list}, \code{data.table} or \code{data.frame} containing the measurements of clinical samples grouped by \code{comparison}, \code{SampleID} and \code{ReplicateID}.}
 
-\item{new_data}{\code{list} - \code{data table} or \code{data frame} - Data containing either external quality assessment materials' measurements or new values for \code{MP_B}. Including \code{SampleID}, \code{MP_A}, \code{MP_B} will create commutability evaluation data based on control material measurements, whereas having only \code{MP_B} yields prediction band data}
+\item{new_data}{A \code{list}, \code{data.table}, or \code{data.frame} with measurements of either external quality assessment materials, reference materials or new values for \code{MP_B}. If \code{SampleID}, \code{MP_A}, and \code{MP_B} columns are provided, the function will produce commutability evaluation data (CE data) based on the external quality assessment material measurements or reference material measurements. If \code{new_data = NULL}, it will generate prediction band data for the \code{MP_B} values of \code{data}. Alternatively, \code{new_data} can also be a \code{character} string in the format 'gen#number' (see details).}
 
-\item{B}{\code{integer} - How many bootstrap resamples should be used to estimate the inside rates for the external quality assessment materials? Set \code{B = NULL} for not including "inside-pi" rates.}
+\item{B}{An \code{integer} that specifies the number of bootstrap resamples to be used for estimating the inside rates (commutability conclusion consistency) for the external quality assessment materials. Set to \code{NULL} to exclude calculations of inside rates.}
 
-\item{method}{\code{character} - 1 x 1 character signifying which method should be applied for estimating the prediction intervals}
+\item{method}{A \code{character} string that denotes the method to be used for estimating the prediction intervals. The default is \code{'fg'}. Current possible prediction interval estimation methods include:
+\itemize{
+  \item{\code{fg}: }{Implements standard Deming regression with prediction intervals calculated using the Fuller and Gillard method.}
+  \item{\code{clsi}: }{Utilizes standard Deming regression, with prediction intervals derived from the CLSI EP14 method.}
+  \item{\code{ols}: }{Implements Ordinary Least Squares regression, where the predictor is selected to minimize the variance of the ignored IVD-MD uncertainty. Specifically, \code{MP_A} is used as the predictor when \code{lambda < 1}, otherwise, \code{MP_B} is utilized.}
+}}
 
-\item{level}{\code{float} - Number between 0 and 1, that is the confidence level of the estimated prediction intervals}
+\item{level}{A \code{double} between 0 and 1, representing the confidence level of the estimated prediction intervals.}
 
-\item{rounding}{\code{integer} - How many decimals should be returned in the output. Default is \code{3}}
+\item{rounding}{An \code{integer} that defines the number of decimals to be returned in the output. The default is \code{3}.}
+
+\item{override_R_ratio}{Either a \code{list} or \code{NULL}, with \code{NULL} being the default. When provided as a \code{list}, it should include the IVD-MD comparison-specific ratios of the number of replicates between EQA/CR material data and CS data. This parameter is beneficial when distinct IVD-MD comparisons have varying replicate counts among CS data and EQA/CR data, and you need to compute pointwise prediction intervals or prediction bands.}
+
+\item{na_rm}{A \code{logical} that indicates whether NA-values should be silently removed from \code{data} and \code{new_data}. The default is \code{TRUE}.}
 }
 \value{
-\code{data table} containing commutability evaluation data or prediction band data depending on the given new_data
+A \code{data.table} containing either commutability evaluation data (CE data) or prediction band data (PB data), depending on the content of \code{new_data}.
 }
 \description{
-Estimate prediction intervals for Deming regression based on EQA data
+Estimate prediction intervals for Deming regression based on clinical sample (CS) data and possibly external quality assessment (EQA) material data or certified reference (CR) material data
+}
+\details{
+When \code{new_data} is a \code{character} string it most be on the format 'gen#number' or 'number#gen', where number is an integer. For example, setting \code{new_data = 'gen#100'} or \code{new_data = '100#gen'} would instruct the function to generate 100 pointwise prediction intervals uniformly distributed across the range of IVD-MD measurements for each comparison. Note that is is not yet possible to generate prediction band data using \code{method = 'ols'}.
 }
 \examples{
 print(1)

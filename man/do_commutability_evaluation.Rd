@@ -2,7 +2,7 @@
 % Please edit documentation in R/do_commutability_evaluation.R
 \name{do_commutability_evaluation}
 \alias{do_commutability_evaluation}
-\title{Run a complete commutability evaluation based on CS data and EQA/CR material data}
+\title{Run a complete commutability evaluation analysis based on clinical sample data and external quality assessment / certified reference material data}
 \usage{
 do_commutability_evaluation(
   data,
@@ -15,37 +15,40 @@ do_commutability_evaluation(
   level_bs = 0.95,
   M = 0,
   upper_zeta = 2.25,
-  output = "sufficient"
+  output = "sufficient",
+  avoid_simulations = FALSE
 )
 }
 \arguments{
-\item{data}{\code{list}, \code{data table} or \code{data frame} - Clinical sample data (CS data) for the commutability assessment experiment}
+\item{data}{A \code{list}, \code{data.table} or \code{data.frame} containing the measurements of clinical samples grouped by \code{comparison}, \code{SampleID} and \code{ReplicateID}.}
 
-\item{new_data}{\code{list}, \code{data table} or \code{data frame} - Evaluated samples' data (EQAM / CRM data) for the commutability assessment experiment}
+\item{new_data}{A \code{list}, \code{data.table}, or \code{data.frame} with measurements of either external quality assessment materials or reference materials grouped by \code{comparison}, \code{SampleID} and \code{ReplicateID}.}
 
-\item{B}{Integer - How many bootstrap replicates should be used to calculate confidence intervals for bootstrap confidence intervals}
+\item{B}{An \code{integer} >= 100 that represents the number of bootstrap replicates utilized for estimating bootstrap confidence intervals. The default is set to 2000, a common choice for such calculations. Please be aware that if your \code{data} contains more than five unique IVD-MDs, the resampling process might take a couple of seconds to complete due to the computational complexity.}
 
-\item{N}{Integer - How many bootstrap replicates should be used to calculate inside rates}
+\item{N}{An \code{integer} >= 100 that specifies the number of bootstrap resamples to be used for estimating the inside rates (commutability conclusion consistency) for the external quality assessment materials. Set to \code{NULL} to exclude calculations of inside rates.}
 
-\item{method_pi}{\code{character} - Which method should be used to estimate the Deming prediction intervals. Default is \code{fg} which is Fuller and Gillard's approach. Alternatively, \code{clsi} may be used for EP14's approach}
+\item{method_pi}{A \code{character} string referring to the method to employ for estimating the Deming prediction intervals. The default is \code{'fg'}, standing for the Fuller and Gillard approach. Alternatively, the approach derived by CLSI EP14 can be used by setting \code{'clsi'}.}
 
-\item{method_bs}{\code{character} - Which bootstrap method should be used to estimated the confidence levels of zeta and imprecision estimates}
+\item{method_bs}{A \code{character} string that determines the bootstrap method to apply for estimating the confidence intervals of zeta and imprecision estimates, based on IVD-MD comparisons.}
 
-\item{level_pi}{\code{double} - Number between 0 and 1, which is the required confidence level for the estimated prediction intervals}
+\item{level_pi}{A \code{double} value that must be between 0 and 1, defining the desired confidence level for the estimated prediction intervals. The default confidence level is \code{level_pi = 0.99}.}
 
-\item{level_bs}{\code{double} - Number between 0 and 1, which is the required confidence level for the estimated bootstrap confidence intervals}
+\item{level_bs}{A \code{double} value that must be between 0 and 1, designating the desired confidence level for the estimated bootstrap confidence intervals. The default confidence level is \code{level_bs = 0.95}.}
 
-\item{M}{\code{double} - If upper_zeta is not given, how much differences in non-selectivity between IVD-MD pairs should we accept in terms of relative increase in prediction interval width. For example, 0.15 signify that we accept an average of 15 \% relative increase}
+\item{M}{A \code{double} >= 0. If \code{upper_zeta} is either \code{NULL}, \code{NA}, or an improperly formatted \code{character} string (see details), and \code{avoid_simulations = FALSE}, then this parameter signifies the tolerable level of differences in non-selectivity between all IVD-MD pairs within \code{data} and \code{new_data}. This tolerance level is expressed as an average relative increase in the widths of pointwise prediction intervals. For example, specifying M as 0.15 implies an acceptance of an average relative increase of 15\%. If \code{M > 0}, \code{upper_zeta} is approximated through Monte Carlo simulations unless \code{avoid_simulations = TRUE}. In such a scenario, an error would be triggered. If \code{M} < 0, \code{M} will be silently set to 0 instead.}
 
-\item{upper_zeta}{\code{double} - Either NULL or a number. A estimated value of zeta above \code{upper_zeta} results in concluding with excessive differences in non-selectivity between IVD-MD pairs. If \code{NULL}, M will be used to look for an appropriate upper limit utilizing Monte Carlo simulations}
+\item{upper_zeta}{A \code{double} >= 1. An estimated zeta value that exceeds \code{upper_zeta} will suggest substantial differences in non-selectivity concerning the particular IVD-MD pair. If \code{upper_zeta} is provided as \code{NULL}, \code{NA}, or a \code{character} string with invalid syntax (refer to details), and \code{avoid_simulations = FALSE}, then the function will utilize the parameter \code{M} >= 0 to approximate a suitable upper limit for zeta through Monte Carlo simulations.}
 
-\item{output}{\code{character} - Either \code{sufficient} or \code{complete}. Passing \code{sufficient} will only output the necessary data analysis for the commutability evaluation analysis. Passing \code{complete} will output all data analysis for the commutability evaluation analysis}
+\item{output}{A \code{character} string that can be \code{'sufficient'} or \code{'complete'}. Selecting \code{'sufficient'} will yield only the essential data analysis required for the commutability evaluation analysis. Choosing \code{'complete'} will produce a comprehensive data analysis for the commutability evaluation.}
+
+\item{avoid_simulations}{A \code{logical} value that ensures that an error is thrown in case \code{upper_zeta} is a \code{character} string with invalid syntax (see details) instead of approximating \code{upper_zeta} using Monte Carlo simulations. The default value of \code{avoid_simulations} are set to \code{FALSE}}
 }
 \value{
-A two-dimensional \code{list} containing \code{merged_pb_data} and \code{merged_ce_data}, and these are of \code{data table} class. \code{merged_pb_data} is used for plotting, whereas \code{merged_ce_data} is the summary of the data analysis concerning the commutability evaluation experiment
+A 2D \code{list} containing \code{merged_pb_data} and \code{merged_ce_data}, each being a \code{data.table} object. The \code{merged_pb_data} comprises pointwise prediction interval or prediction band data, intended solely for plotting purposes. On the other hand, \code{merged_ce_data} delivers a thorough, tabulated summary of the commutability evaluation experiment data analysis, grouped by \code{comparison} and \code{SampleID}. Both \code{merged_pb_data} and \code{merged_ce_data} are necessary input parameters for the \code{plot_commutability_evaluation_plots()} function.
 }
 \description{
-Run a complete commutability evaluation based on CS data and EQA/CR material data
+Run a complete commutability evaluation analysis based on clinical sample data and external quality assessment / certified reference material data
 }
 \examples{
 print(1)

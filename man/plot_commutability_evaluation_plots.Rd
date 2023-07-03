@@ -16,19 +16,19 @@ plot_commutability_evaluation_plots(
 )
 }
 \arguments{
-\item{cs_data}{A \code{list}, \code{data table} or \code{data frame} - Data containing clinical samples' measurements.}
+\item{cs_data}{This is either a \code{list}, \code{data.table} or \code{data.frame} containing mean-of-replicates clinical sample data. Data should be grouped by both \code{comparison} and \code{SampleID}.}
 
-\item{pb_data}{A \code{list}, \code{data table} or \code{data frame} - Data containing prediction band data.}
+\item{pb_data}{This can be a \code{list}, \code{data.table} or \code{data.frame} containing pointwise prediction interval or prediction band data. This data should be grouped by \code{comparison}.}
 
-\item{ce_data}{A \code{list}, \code{data table} or \code{data frame} - Data containing prediction evaluation data for evaluated control materials.}
+\item{ce_data}{This should be a \code{list}, \code{data.table} or \code{data.frame} that holds prediction interval data along with commutability evaluation data for assessed external quality assessment materials or reference materials. It must be grouped by both \code{comparison} and \code{SampleID}.}
 
-\item{exclude_rings}{\code{Logical} - Remove circles that signify strengths of commutability evaluation conclusions. Default is \code{FALSE}.}
+\item{exclude_rings}{A \code{logical} value that indicates whether circles, denoting the relative consistency of commutability evaluation conclusions, should be omitted. The default is \code{FALSE}.}
 
-\item{exclude_cs}{\code{Logical} - Remove clinical sample data from plots. Default is \code{FALSE}.}
+\item{exclude_cs}{A \code{logical} value that determines whether to exclude clinical sample data from the plots. The default is \code{FALSE}.}
 
-\item{plot_theme}{\code{Character} - Which plotting theme should be used. Possible values are 'default', 'noklus', 'soft', 'depression' and 'happy'. Default is 'custom', which means that no particular theme is applied to the plots.}
+\item{plot_theme}{A \code{character} string specifying the desired plotting theme. Options include 'custom', 'default', 'noklus', 'soft', 'depression', and 'happy'. The default is 'custom', which applies no particular theme to the plots unless specified in \code{additional_arguments}.}
 
-\item{additional_arguments}{\code{List} - Additional arguments for the output plot. Default is \code{NULL}, which implies that default plot settings are used. Optional additional arguments include
+\item{additional_arguments}{This is a \code{list} specifying additional arguments to modify the output plot. The default value is \code{NULL}, indicating that the plot will be generated using the default settings. Optional additional arguments can be provided to customize the plot according to specific requirements.
 \itemize{
   \item{\code{main_title}: }{Main title of the plot}
   \item{\code{sub_title}: }{Sub title of the plot}
@@ -48,14 +48,15 @@ plot_commutability_evaluation_plots(
   \item{\code{point_border}: }{border color of clinical sample points. May be a color defined in \code{colors()} or a HEX code. Default color is \code{'black'}}
   \item{\code{comparison_fill}: }{Fill color for the individual plot labels listing the IVD-MD comparisons. Must be a valid color name or HEX code}
   \item{\code{comparison_text_color}: }{Text color for the individual plot labels listing the IVD-MD comparisons. Must be a valid color name or HEX code}
+  \item{\code{hide_prediction_intervals}: }{Should the black prediction intervals for each EQAM be hidden?}
   \item{\code{legend_fill}: }{Fill color for the legend regions. Must be a valid color name or HEX code}
   \item{\code{legend_text_color}: }{Text color for the legends. Must be a valid color name or HEX code}
 }}
 
-\item{testing}{\code{Logical} - Should the function output be test-friendly? Only useful for maintainer, so the end-user should not change this parameter. Default is \code{FALSE}.}
+\item{testing}{A \code{logical} value indicating whether the function output should be test-friendly. This parameter is primarily intended for maintainers and not typically modified by end-users. The default value is \code{FALSE}.}
 }
 \value{
-\code{ggplot2} object that is a grid of plots having dimensions corresponding to the number of unique IVD-MD comparisons
+A \code{ggplot2} object that is a grid of plots having dimensions corresponding to the number of unique IVD-MD comparisons
 }
 \description{
 Plots commutability evaluation plots based on ce_data, pb_data and ce_data

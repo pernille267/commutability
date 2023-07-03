@@ -8,41 +8,45 @@ estimate_zeta_data(
   data,
   B = 2000L,
   type = "percentile",
-  level = 95/100,
+  level = 0.95,
   M = 0,
   N = 10000L,
-  zeta_critical = NA
+  zeta_critical = NA,
+  invalid_NA = FALSE
 )
 }
 \arguments{
-\item{data}{\code{data table}, \code{data frame} or \code{list} - Clinical sample data grouped by 'comparison'. Data must be grouped by 'comparison' and contain \code{comparison}, \code{SampleID}, \code{ReplicateID}, \code{MP_A} and \code{MP_B}.}
+\item{data}{A \code{data.table}, \code{data.frame}, or \code{list}. It represents clinical sample data, grouped by 'comparison' (IVD-MD comparisons). The data structure should be arranged by 'comparison' and must include the following columns: \code{comparison}, \code{SampleID}, \code{ReplicateID}, \code{MP_A}, and \code{MP_B}.}
 
-\item{B}{\code{integer} - Number of bootstrap replicates used to estimate bootstrap confidence intervals. The default is 2000, which is the typical for bootstrap confidence intervals. Set B = 0 to avoid estimation of bootstrap confidence intervals and only to return the point estimates of zeta.}
+\item{B}{An \code{integer} value greater than or equal to 50. It represents the number of bootstrap replicates for estimating bootstrap confidence intervals. The default value is set at 2e3L (i.e., 2,000), a typical setting for bootstrap confidence intervals. Assign \code{B} to \code{NULL} or \code{NA} to skip estimating bootstrap confidence intervals and return only the point estimates of zeta.}
 
-\item{type}{Type of bootstrap confidence interval. There are four options:
+\item{type}{A \code{character} string that specifies the type of bootstrap confidence interval. Four types are supported:
 \itemize{
-  \item{\code{normal}: }{Standard normal bootstrap confidence interval}
-  \item{\code{basic}: }{Basic bootstrap confidence interval}
-  \item{\code{percentile}: }{Percentile bootstrap confidence interval}
-  \item{\code{BCa}: }{Bias- and skewness-corrected bootstrap confidence interval using Jack knife}
+  \item{\code{normal}: }{Standard normal bootstrap confidence interval.}
+  \item{\code{basic}: }{Basic bootstrap confidence interval.}
+  \item{\code{percentile}: }{Percentile bootstrap confidence interval.}
+  \item{\code{BCa}: }{Bias and skewness-corrected bootstrap confidence interval embedding the Jackknife (leave-one-out) method.}
 }}
 
-\item{level}{\code{numeric} - Confidence level of bootstrap confidence interval. A 95 percent confidence level is the default.}
+\item{level}{A \code{double} value between 0 and 1 representing the confidence level for the bootstrap confidence interval. The default level is set at 0.95 (95 percent).}
 
-\item{M}{If \code{zeta_critical} is not specified (i.e., NA or not a double), what \code{M} should be used to obtain a upper value of zeta}
+\item{M}{A \code{double} value equal to or larger than 0 that indicates what value of \code{M} (acceptable average relative increase in pointwise prediction interval widths due to DINS) should be used to simulate an upper zeta value when \code{zeta_critical} is not specified (i.e., is \code{NULL}, \code{NA}, or not numeric).}
 
-\item{N}{if \code{zeta_critical} is not specified (i.e., NA or not a double), how many iterations should be used in the simulation of \code{zeta_critical}? Default is N = 1e4L.}
+\item{N}{A \code{integer} value equal to or larger than 1 that indicates the number of IVD-MD comparison-wise zeta values to be simulated to approximate \code{zeta_critical} when it is not specified (i.e., is \code{NULL}, \code{NA}, or not numeric). The default value is 1e4L (i.e., 10,000).}
 
-\item{zeta_critical}{\code{double}. Default is NA, which will initiate a Monte Carlo simulation based on your average study design across all MS comparison to obtain an adequate upper zeta value. \code{M} and \code{N} must be specified to obtain a valid upper limit}
+\item{zeta_critical}{A \code{double} value. Its default value is \code{NA}, which triggers a Monte Carlo simulation based on your average study design across all IVD-MD comparisons to obtain a suitable upper zeta value. Both \code{M} and \code{N} must be specified for a valid upper limit determination.}
+
+\item{invalid_NA}{A \code{logical} value. If set to TRUE, the function will return \code{NA} for zeta when encountering invalid input or computation errors instead of raising an error. While this is not generally recommended due to the risk of masking potential issues, it can be useful in certain scenarios where uninterrupted execution is a priority.}
 }
 \value{
-A \code{data table} with entries \code{comparison}, \code{zeta}, \code{lwr}, \code{upr}, \code{zeta_critical} and \code{zeta_conclusion}
+A \code{data.table} that contains the following columns: \code{comparison}, \code{zeta}, \code{lwr}, \code{upr}, \code{zeta_critical}, and \code{zeta_conclusion}.
 }
 \description{
-Obtain all necessary information on zeta data for each unique pair of IVD-MDs in \code{data}. The output is also on the form required by merge_results(), making it very useful
+This function processes the zeta data for each unique pair of IVD-MDs in the provided \code{data}. The output format is compatible with the \code{merge_results()} function of the \code{fasteqa} package, facilitating downstream operations.
 }
 \examples{
 \dontrun{
+  library(commutability)
   print(1)
 }
 }

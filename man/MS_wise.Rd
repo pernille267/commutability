@@ -7,13 +7,17 @@
 MS_wise(data)
 }
 \arguments{
-\item{data}{\code{list} or \code{data table} containing \code{SampleID}, \code{ReplicateID}, and measurement result columns}
+\item{data}{\code{list} or \code{data.table} including \code{SampleID}, \code{ReplicateID}, and at least two IVD-MD measurement result columns}
 }
 \value{
-A \code{data table} containing \code{data} on long format
+Returns a \code{data.table} that represents the long-formatted equivalent of the input \code{data}. The resulting \code{data.table} will encompass the following columns in the specified order: 'comparison', 'SampleID', 'ReplicateID', 'MP_B', and 'MP_A'.
 }
 \description{
-MS_wise
+This function processes the provided \code{data}, grouping measurements based on every unique combination of the IVD-MD measurement columns. Within each IVD-MD combination, measurements are further grouped by \code{SampleID} and \code{ReplicateID}.
+}
+\details{
+To ensure optimal compatibility with other functions in this package, it is recommended that the IVD-MD measurement columns in \code{data} are sorted in alphabetical order. This assists in consistently maintaining the 'comparison' column of the output for both clinical sample (CS) data and external quality assessment material (EQAM) data.
+However, take note that the \code{repair_data()} function automatically sorts the IVD-MD measurement columns. As such, it is a good practice to preprocess your CS data or EQAM data through \code{repair_data()} prior to using this function.
 }
 \examples{
 print(1)

@@ -21,16 +21,16 @@ imprecision_data_1 <- estimate_imprecision_data(data = test_data_1, B = 2e2)[,-c
 imprecision_data_2 <- estimate_imprecision_data(data = test_data_2, B = 2e2)[,-c("Var_A","Var_A_lwr","Var_A_upr", "Var_B","Var_B_lwr","Var_B_upr")]
 
 zeta_data_1 <- estimate_zeta_data(data = test_data_1, B = 2e2, zeta_critical = 2.16)
-zeta_data_2 <- estimate_zeta_data(data = test_data_2 |> na.omit(), B = 2e2, zeta_critical = 2.01)
+zeta_data_2 <- estimate_zeta_data(data = test_data_2, B = 2e2, zeta_critical = 2.01)
 
-prediction_ce_data_1 <- estimate_prediction_data(data = test_data_1, new_data = test_eqam_1, B = 2e3)
-prediction_ce_data_2 <- estimate_prediction_data(data = test_data_2 |> na.omit(), new_data = test_eqam_2, B = 2e2)
+prediction_ce_data_1 <- estimate_prediction_data(data = test_data_1, new_data = test_eqam_1, B = 2e2)
+prediction_ce_data_2 <- estimate_prediction_data(data = test_data_2, new_data = test_eqam_2, B = 2e2)
 
 prediction_pb_data_1 <- estimate_prediction_data(data = test_data_1, new_data = "gen_250")
-prediction_pb_data_2 <- estimate_prediction_data(data = test_data_2 |> na.omit(), new_data = "gen_250")
+prediction_pb_data_2 <- estimate_prediction_data(data = test_data_2, new_data = "gen_250")
 
-dce_1 <- do_commutability_evaluation(data = test_data_1, new_data = test_eqam_1, upper_zeta = 2.16)
-dce_2 <- do_commutability_evaluation(data = test_data_2 |> na.omit(), new_data = test_eqam_2, upper_zeta = 2.01)
+dce_1 <- do_commutability_evaluation(data = test_data_1, new_data = test_eqam_1, upper_zeta = 2.16, B = 2e2, N = 2e2)
+dce_2 <- do_commutability_evaluation(data = test_data_2, new_data = test_eqam_2, upper_zeta = 2.01, B = 2e2, N = 2e2)
 
 expected_1 <- merge(zeta_data_1, prediction_ce_data_1, by = "comparison")
 old_names <- c("lwr.x", "upr.x","zeta_critical","zeta_conclusion","MP_B","MP_A","lwr.y","upr.y", "inside")
@@ -102,3 +102,4 @@ test_that(desc = "Testing correctness of output data when output = 'complete'", 
   expect_true(sum(mapply(FUN = function(x, y) all(if(is.numeric(x) & !is.integer(x)){abs(x/y) >= 0.90 | abs(x/y) <= 1.10}else{x==y}), actual_ce_1, expected_ce_1), na.rm = TRUE) >= 18)
   expect_true(sum(mapply(FUN = function(x, y) all(if(is.numeric(x) & !is.integer(x)){abs(x/y) >= 0.90 | abs(x/y) <= 1.10}else{x==y}), actual_ce_2, expected_ce_2), na.rm = TRUE) >= 18)
 })
+

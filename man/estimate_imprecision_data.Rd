@@ -4,7 +4,13 @@
 \alias{estimate_imprecision_data}
 \title{All calculations regarding imprecision}
 \usage{
-estimate_imprecision_data(data, B = 2000L, type = "percentile", level = 95/100)
+estimate_imprecision_data(
+  data,
+  B = 2000L,
+  type = "percentile",
+  level = 0.95,
+  invalid_NA = FALSE
+)
 }
 \arguments{
 \item{data}{\code{list}, \code{data frame} or \code{data table} that is grouped by \code{"comparison"}. Furthermore, must contain the following columns: \code{comparison}, \code{SampleID}, \code{ReplicateID}, \code{MP_A} and \code{MP_B}.}
@@ -20,6 +26,8 @@ estimate_imprecision_data(data, B = 2000L, type = "percentile", level = 95/100)
 }}
 
 \item{level}{\code{Numeric} - Confidence level of the bootstrap confidence intervals. A 95 percent confidence level is the default.}
+
+\item{invalid_NA}{A \code{logical} value. If set to \code{TRUE}, the function will return \code{NA} for zeta when encountering invalid input or computation errors instead of raising an error. While this is not generally recommended due to the risk of masking potential issues, it can be useful in certain scenarios where uninterrupted execution is a priority.}
 }
 \value{
 A \code{data table} with entries \code{CV_A}, \code{CV_A_lwr}, \code{CV_A_upr}, \code{CV_B}, \code{CV_B_lwr}, \code{CV_B_upr}, \code{lambda}, \code{lambda_lwr}, \code{lambda_upr}, \code{Var_A}, \code{Var_A_lwr}, \code{Var_A_upr}, \code{Var_B}, \code{Var_B_lwr}, \code{Var_B_upr}

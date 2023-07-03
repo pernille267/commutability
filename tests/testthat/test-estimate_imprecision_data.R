@@ -13,11 +13,17 @@ T_MCV2020_CS <- setDT(read_excel("~/datasets to be tested on/W..MCV2020_CS.xlsx"
 T_TPK2020_CS <- setDT(read_excel("~/datasets to be tested on/W..TPK2020_CS.xlsx"))
 T_HDLCXXX_CS <- setDT(read_excel("~/datasets to be tested on/HDLC.CS.FILTERED.xlsx"))
 
-test_data_1 <- MS_wise(data = T_EPK2020_CS)
-test_data_2 <- MS_wise(data = T_HB2020_CS)
-test_data_3 <- MS_wise(data = T_LPK2020_CS)
-test_data_4 <- MS_wise(data = T_TPK2020_CS)
-test_data_5 <- MS_wise(data = T_HDLCXXX_CS)
+check_test_data_1 <- check_data(data = T_EPK2020_CS)
+check_test_data_2 <- check_data(data = T_HB2020_CS)
+check_test_data_3 <- check_data(data = T_LPK2020_CS)
+check_test_data_4 <- check_data(data = T_TPK2020_CS)
+check_test_data_5 <- check_data(data = T_HDLCXXX_CS)
+
+test_data_1 <- MS_wise(data = repair_data(data = T_EPK2020_CS, data_check = check_test_data_1))
+test_data_2 <- MS_wise(data = repair_data(data = T_HB2020_CS, data_check = check_test_data_2))
+test_data_3 <- MS_wise(data = repair_data(data = T_LPK2020_CS, data_check = check_test_data_3))
+test_data_4 <- MS_wise(data = repair_data(data = T_TPK2020_CS, data_check = check_test_data_4))
+test_data_5 <- MS_wise(data = repair_data(data = T_HDLCXXX_CS, data_check = check_test_data_5))
 
 actual_1 <- estimate_imprecision_data(data = test_data_1, type = testing_type, B = 200)
 actual_2 <- estimate_imprecision_data(data = test_data_2, type = testing_type, B = 200)
@@ -261,3 +267,4 @@ test_that(desc = "Testing whether lambda corresponds with the variances", code =
   expect_true(all(abs(sub_actual_4$Var_A / sub_actual_4$Var_B - sub_actual_4$lambda) < 1e-6))
   expect_true(all(abs(sub_actual_5$Var_A / sub_actual_5$Var_B - sub_actual_5$lambda) < 1e-6))
 })
+

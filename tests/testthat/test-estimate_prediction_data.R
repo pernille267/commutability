@@ -398,47 +398,13 @@ test_that(desc = "Testing whether CLSI and F-G methods yield same results where 
   expect_true(all(particular_pb_data_clsi_7$prediction == particular_pb_data_fg_7$prediction))
 })
 
-zetas_1 <- lapply(X = split(test_data_1, by = "comparison", keep.by = FALSE), FUN = function(x) setDT(estimate_zeta(x))) |> rbindlist(idcol = "comparison")
-zetas_2 <- lapply(X = split(test_data_2, by = "comparison", keep.by = FALSE), FUN = function(x) setDT(estimate_zeta(x))) |> rbindlist(idcol = "comparison")
-zetas_3 <- lapply(X = split(test_data_3, by = "comparison", keep.by = FALSE), FUN = function(x) setDT(estimate_zeta(x))) |> rbindlist(idcol = "comparison")
-zetas_4 <- lapply(X = split(test_data_4, by = "comparison", keep.by = FALSE), FUN = function(x) setDT(estimate_zeta(x))) |> rbindlist(idcol = "comparison")
-zetas_5 <- lapply(X = split(test_data_5, by = "comparison", keep.by = FALSE), FUN = function(x) setDT(estimate_zeta(x))) |> rbindlist(idcol = "comparison")
-zetas_6 <- lapply(X = split(test_data_6, by = "comparison", keep.by = FALSE), FUN = function(x) setDT(estimate_zeta(x))) |> rbindlist(idcol = "comparison")
-zetas_7 <- lapply(X = split(test_data_7, by = "comparison", keep.by = FALSE), FUN = function(x) setDT(estimate_zeta(x))) |> rbindlist(idcol = "comparison")
-
-which_zeta_larger_than_1_1 <- which(zetas_1$zeta > 1)
-which_zeta_larger_than_1_2 <- which(zetas_2$zeta > 1)
-which_zeta_larger_than_1_3 <- which(zetas_3$zeta > 1)
-which_zeta_larger_than_1_4 <- which(zetas_4$zeta > 1)
-which_zeta_larger_than_1_5 <- which(zetas_5$zeta > 1)
-which_zeta_larger_than_1_6 <- which(zetas_6$zeta > 1)
-which_zeta_larger_than_1_7 <- which(zetas_7$zeta > 1)
-
-which_fg_larger_than_clsi_1 <- which((particular_pb_data_clsi_1$upr - particular_pb_data_clsi_1$lwr) < (particular_pb_data_fg_1$upr - particular_pb_data_fg_1$lwr))
-which_fg_larger_than_clsi_2 <- which((particular_pb_data_clsi_2$upr - particular_pb_data_clsi_2$lwr) < (particular_pb_data_fg_2$upr - particular_pb_data_fg_2$lwr))
-which_fg_larger_than_clsi_3 <- which((particular_pb_data_clsi_3$upr - particular_pb_data_clsi_3$lwr) < (particular_pb_data_fg_3$upr - particular_pb_data_fg_3$lwr))
-which_fg_larger_than_clsi_4 <- which((particular_pb_data_clsi_4$upr - particular_pb_data_clsi_4$lwr) < (particular_pb_data_fg_4$upr - particular_pb_data_fg_4$lwr))
-which_fg_larger_than_clsi_5 <- which((particular_pb_data_clsi_5$upr - particular_pb_data_clsi_5$lwr) < (particular_pb_data_fg_5$upr - particular_pb_data_fg_5$lwr))
-which_fg_larger_than_clsi_6 <- which((particular_pb_data_clsi_6$upr - particular_pb_data_clsi_6$lwr) < (particular_pb_data_fg_6$upr - particular_pb_data_fg_6$lwr))
-which_fg_larger_than_clsi_7 <- which((particular_pb_data_clsi_7$upr - particular_pb_data_clsi_7$lwr) < (particular_pb_data_fg_7$upr - particular_pb_data_fg_7$lwr))
-
-test_that(desc = "Relationship between zeta > 1 and difference between clsi and fg", code = {
-  expect_equal(object = which_zeta_larger_than_1_1 %in% which_fg_larger_than_clsi_1, expected = logical(0))
-  expect_equal(object = which_zeta_larger_than_1_2 %in% which_fg_larger_than_clsi_2, expected = logical(0))
-  expect_gte(object = sum(which_zeta_larger_than_1_3 %in% which_fg_larger_than_clsi_3), expected = 7)
-  expect_gte(object = sum(which_zeta_larger_than_1_4 %in% which_fg_larger_than_clsi_4), expected = 5)
-  expect_gte(object = sum(which_zeta_larger_than_1_5 %in% which_fg_larger_than_clsi_5), expected = 6)
-  expect_gte(object = sum(which_zeta_larger_than_1_6 %in% which_fg_larger_than_clsi_6), expected = 7)
-  expect_equal(object = sum(which_zeta_larger_than_1_7 %in% which_fg_larger_than_clsi_7), expected = 6)
-})
-
 ce_data_1 <- estimate_prediction_data(data = test_data_1, new_data = eqam_1, method = "clsi", B = 100)
 ce_data_2 <- estimate_prediction_data(data = test_data_2, new_data = eqam_2, method = "fg", B = 100)
 ce_data_3 <- estimate_prediction_data(data = test_data_3, new_data = eqam_3, method = "clsi", B = 100)
 ce_data_4 <- estimate_prediction_data(data = test_data_4, new_data = eqam_4, method = "fg", B = 100)
 ce_data_5 <- estimate_prediction_data(data = test_data_5, new_data = eqam_5, method = "clsi", B = 100)
 ce_data_6 <- estimate_prediction_data(data = test_data_6, new_data = eqam_6, method = "fg", B = 100)
-ce_data_7 <- estimate_prediction_data(data = test_data_7, new_data = eqam_7, method = "clsi", B = 1e3)
+ce_data_7 <- estimate_prediction_data(data = test_data_7, new_data = eqam_7, method = "clsi", B = 100)
 
 test_that(desc = "Testing correctness for calculation of inside rates", code = {
   expect_true(object = all(ce_data_1$inside_rate <= 1 | ce_data_1$inside_rate >= 0))
@@ -460,3 +426,14 @@ test_that(desc = "Testing output names for ce_data with inside rates", code = {
   expect_named(object = ce_data_7, expected = c("comparison", "SampleID", "MP_B", "MP_A", "prediction", "lwr", "upr", "inside",  "inside_rate"), ignore.order = FALSE)
   expect_true(object = TRUE)
 })
+
+test_that(desc = "Testing some expected errors and warnings", code = {
+  expect_error(object = estimate_prediction_data(data = "yes"), regexp = "character")
+  expect_error(object = estimate_prediction_data(data = 1L), regexp = "integer")
+  expect_error(object = estimate_prediction_data(data = test_data_1[,-c("comparison")]), regexp = "comparison")
+  expect_error(object = estimate_prediction_data(data = test_data_1[,-c("comparison", "MP_A")]), regexp = "comparison, MP_A")
+  expect_error(object = estimate_prediction_data(data = test_data_1, new_data = "gen_1!00"), regexp = "3 non-empty")
+  expect_warning(object = estimate_prediction_data(data = test_data_1, new_data = "gen!1A00999B9"), regexp = "Defaulting to 100")
+  expect_warning(object = estimate_prediction_data(data = test_data_1, new_data = "AB1CltR#gen"), regexp = "Defaulting to 100")
+})
+

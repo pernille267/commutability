@@ -6,31 +6,34 @@
 \usage{
 perform_assessment_tests(
   data,
-  B = 2000L,
+  B = 200L,
   method = "fg",
   level = 0.95,
   include_rejection_rates = TRUE,
   simultaneous_testing = TRUE,
+  na_rm = FALSE,
   silence = 1L
 )
 }
 \arguments{
-\item{data}{\code{data table}, \code{list} or \code{data frame} - Clinical sample data grouped by 'comparison'. This data must include all replicated measurements, or else imprecision estimates may not be calculated.}
+\item{data}{A \code{data.table}, \code{list}, or \code{data.frame} containing the clinical sample data, grouped by 'comparison', 'SampleID' and 'ReplicateID'. All replicated measurements must be included in the data for accurate computation of imprecision estimates.}
 
-\item{B}{\code{integer} - The number of bootstrap replicates used to calculate the rejection rates of the assessment tests}
+\item{B}{An \code{integer} representing the number of bootstrap replicates used in calculating the rejection rates of assessment tests. A value of 1 or more is required when \code{include_rejection_rates} is set to \code{TRUE}. If \code{include_rejection_rates} is \code{FALSE}, this parameter is ignored. Please avoid setting \code{B} to an integer above 100,000 due to the resulting intensive computational time.}
 
-\item{method}{\code{character} - Which method should be used to calculate the linear model residuals used in the normality tests. Possible inputs are \code{'fg'} (default), \code{'clsi'} and \code{'ols'}. \code{'fg'} uses Deming regression defined by Fuller & Gillard. \code{'clsi'} uses Deming regression defined by CLSI EP14. \code{'ols'} uses ordinary least squared linear regression.}
+\item{method}{A \code{character} string that specifies the linear regression model for calculating residuals in the Shapiro-Wilk normality tests. The possible options are \code{'fg'} (default), \code{'clsi'}, and \code{'ols'}. The \code{'fg'} option uses Deming regression as defined by Fuller & Gillard, \code{'clsi'} uses Deming regression according to the CLSI EP14 standard, and \code{'ols'} uses ordinary least squares regression. This parameter does not affect the Breusch-Pagan homoscedasticity tests.}
 
-\item{level}{\code{double} - A value between 0 and 1, that corresponds with the significance level of the assessment tests. Default level is \code{0.95}.}
+\item{level}{A \code{double} value (between 0 and 1) that represents 1 - significance level of the assessment tests. The default value is \code{0.95}, corresponding to a test significance level of \code{0.05}.}
 
-\item{include_rejection_rates}{\code{logical} - \code{TRUE} or \code{FALSE}, where the former is the default. Setting this to \code{TRUE} ensures that assessment test rejection rates are included in the output. Setting this to \code{FALSE}, disables any bootstrap estimation and exclude rejection rates from the output.}
+\item{include_rejection_rates}{This \code{logical} parameter, when set to \code{TRUE} (default), includes the assessment test rejection rates in the output. If set to \code{FALSE}, the function will bypass any bootstrap estimation and exclude rejection rates from the output.}
 
-\item{simultaneous_testing}{\code{logical} - \code{TRUE} or \code{FALSE}, where the former is the default. Setting this to \code{TRUE}, entails that correction for multiple testing is performed. On the contratry, setting this to \code{FALSE}, will use 1 - level for all assessment tests.}
+\item{simultaneous_testing}{This \code{logical} parameter, when set to \code{TRUE} (default), triggers correction for multiple testing. Conversely, when set to \code{FALSE}, 1 - level is applied uniformly for all assessment tests without considering multiple testing.}
 
-\item{silence}{\code{integer} - Should verbose be allowed? if silence is larger or equal to \code{1}, verbose is disabled. If silence is smaller than \code{1}, verbose is enabled.}
+\item{na_rm}{A non-missing \code{logical} value. If set to \code{TRUE}, the function will discard \code{NA} values from \code{data} before performing assessment test calculations.}
+
+\item{silence}{This \code{integer} parameter controls the verbosity of the function. If \code{silence} is 1 or more, verbose output is disabled. If \code{silence} is less than 1, verbose output is enabled.}
 }
 \value{
-A \code{data table} with results concerning the performed assessment tests
+A \code{data.table} with columns 'comparison', 'test_name', 'test', 'p.value', and 'conclusion' showing the results of the performed assessment tests. If \code{include_rejection_rates} is set to \code{TRUE} and \code{B} is an integer value of 1 or more, an additional column 'rejection_rate' is included in the output.
 }
 \description{
 Perform linear model assessment tests

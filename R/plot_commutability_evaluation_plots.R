@@ -1,12 +1,12 @@
 #' Plots commutability evaluation plots based on ce_data, pb_data and ce_data
 #'
-#' @param cs_data A \code{list}, \code{data table} or \code{data frame} - Data containing clinical samples' measurements.
-#' @param pb_data A \code{list}, \code{data table} or \code{data frame} - Data containing prediction band data.
-#' @param ce_data A \code{list}, \code{data table} or \code{data frame} - Data containing prediction evaluation data for evaluated control materials.
-#' @param exclude_rings \code{Logical} - Remove circles that signify strengths of commutability evaluation conclusions. Default is \code{FALSE}.
-#' @param exclude_cs \code{Logical} - Remove clinical sample data from plots. Default is \code{FALSE}.
-#' @param plot_theme \code{Character} - Which plotting theme should be used. Possible values are 'default', 'noklus', 'soft', 'depression' and 'happy'. Default is 'custom', which means that no particular theme is applied to the plots.
-#' @param additional_arguments \code{List} - Additional arguments for the output plot. Default is \code{NULL}, which implies that default plot settings are used. Optional additional arguments include
+#' @param cs_data This is either a \code{list}, \code{data.table} or \code{data.frame} containing mean-of-replicates clinical sample data. Data should be grouped by both \code{comparison} and \code{SampleID}.
+#' @param pb_data This can be a \code{list}, \code{data.table} or \code{data.frame} containing pointwise prediction interval or prediction band data. This data should be grouped by \code{comparison}.
+#' @param ce_data This should be a \code{list}, \code{data.table} or \code{data.frame} that holds prediction interval data along with commutability evaluation data for assessed external quality assessment materials or reference materials. It must be grouped by both \code{comparison} and \code{SampleID}.
+#' @param exclude_rings A \code{logical} value that indicates whether circles, denoting the relative consistency of commutability evaluation conclusions, should be omitted. The default is \code{FALSE}.
+#' @param exclude_cs A \code{logical} value that determines whether to exclude clinical sample data from the plots. The default is \code{FALSE}.
+#' @param plot_theme A \code{character} string specifying the desired plotting theme. Options include 'custom', 'default', 'noklus', 'soft', 'depression', and 'happy'. The default is 'custom', which applies no particular theme to the plots unless specified in \code{additional_arguments}.
+#' @param additional_arguments This is a \code{list} specifying additional arguments to modify the output plot. The default value is \code{NULL}, indicating that the plot will be generated using the default settings. Optional additional arguments can be provided to customize the plot according to specific requirements.
 #' \itemize{
 #'   \item{\code{main_title}: }{Main title of the plot}
 #'   \item{\code{sub_title}: }{Sub title of the plot}
@@ -30,9 +30,9 @@
 #'   \item{\code{legend_fill}: }{Fill color for the legend regions. Must be a valid color name or HEX code}
 #'   \item{\code{legend_text_color}: }{Text color for the legends. Must be a valid color name or HEX code}
 #' }
-#' @param testing \code{Logical} - Should the function output be test-friendly? Only useful for maintainer, so the end-user should not change this parameter. Default is \code{FALSE}.
+#' @param testing A \code{logical} value indicating whether the function output should be test-friendly. This parameter is primarily intended for maintainers and not typically modified by end-users. The default value is \code{FALSE}.
 #'
-#' @return \code{ggplot2} object that is a grid of plots having dimensions corresponding to the number of unique IVD-MD comparisons
+#' @return A \code{ggplot2} object that is a grid of plots having dimensions corresponding to the number of unique IVD-MD comparisons
 #' @export
 #'
 #' @examples print(1)
@@ -540,7 +540,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
         theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
                                               color = "#000000",
-                                              size = 1),
+                                              linewidth = 1),
               strip.text = element_text(face = "bold",
                                         color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
               legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
@@ -600,7 +600,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
         theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
                                               color = "#000000",
-                                              size = 1),
+                                              linewidth = 1),
               strip.text = element_text(face = "bold",
                                         color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
               legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
@@ -654,7 +654,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
         theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
                                               color = "#000000",
-                                              size = 1),
+                                              linewidth = 1),
               strip.text = element_text(face = "bold",
                                         color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
               legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
@@ -719,7 +719,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
         theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
                                               color = "#000000",
-                                              size = 1),
+                                              linewidth = 1),
               strip.text = element_text(face = "bold",
                                         color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
               legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
@@ -777,7 +777,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
         theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
                                               color = "#000000",
-                                              size = 1),
+                                              linewidth = 1),
               strip.text = element_text(face = "bold",
                                         color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
               legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
@@ -830,7 +830,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
         theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
                                               color = "#000000",
-                                              size = 1),
+                                              linewidth = 1),
               strip.text = element_text(face = "bold",
                                         color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
               legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
@@ -889,7 +889,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
         theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
                                               color = "#000000",
-                                              size = 1),
+                                              linewidth = 1),
               strip.text = element_text(face = "bold",
                                         color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
               legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
@@ -942,7 +942,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
         theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
                                               color = "#000000",
-                                              size = 1),
+                                              linewidth = 1),
               strip.text = element_text(face = "bold",
                                         color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
               legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
@@ -990,7 +990,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
         theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
                                               color = "#000000",
-                                              size = 1),
+                                              linewidth = 1),
               strip.text = element_text(face = "bold",
                                         color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
               legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
@@ -1046,7 +1046,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
         theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
                                               color = "#000000",
-                                              size = 1),
+                                              linewidth = 1),
               strip.text = element_text(face = "bold",
                                         color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
               legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
@@ -1097,7 +1097,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
         theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
                                               color = "#000000",
-                                              size = 1),
+                                              linewidth = 1),
               strip.text = element_text(face = "bold",
                                         color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
               legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
@@ -1145,7 +1145,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
         theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
                                               color = "#000000",
-                                              size = 1),
+                                              linewidth = 1),
               strip.text = element_text(face = "bold",
                                         color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
               legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
