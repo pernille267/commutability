@@ -1,7 +1,7 @@
 library(testthat)
 library(commutability)
 library(readxl)
-library(data.table)
+library(data.table, quietly = TRUE)
 library(fasteqa)
 
 test_data_1 <- read_excel("~/datasets to be tested on/W..MCV2020_CS.xlsx")
