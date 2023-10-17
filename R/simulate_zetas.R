@@ -26,12 +26,20 @@
 #'
 #' @examples
 #' # Simulate 100 standard deviations of zeta's estimator with 'eta' = 5 (heteroscedasticity).
-#' # Simulations use a design with n = 20 clinical samples and R = 4 replicates.
-#' simulate_zetas(n = 100, parameters = list(n = 20, R = 4, eta = 5, eta0 = 1), statistic = sd, attach = TRUE)
+#' # Simulations use a design with 'n' = 20 clinical samples and 'R' = 4 replicates.
+#' simulate_zetas(n = 100,
+#'                parameters = list(n = 20, R = 4, eta = 5, eta0 = 1),
+#'                statistic = sd,
+#'                attach = TRUE)
 #'
-#' # Simulate 1000 99th percentiles of zeta's estimator with 'prop' = 0.15 and 'mmax' = 10 (random DINS).
+#' # Simulate 1 99th percentiles of zeta's estimator with 'prop' = 0.15 and
+#' # 'mmax' = 10 (random DINS).
 #' # Simulations use a design with n = 25 clinical samples and R = 3 replicates.
-#' simulate_zetas(n = 1000, parameters = list(n = 25, R = 3, prop = 0.15, mmax = 10), statistic = quantile, attach = TRUE, probs = 0.99)
+#' simulate_zetas(n = 1000,
+#'                parameters = list(n = 25, R = 3, prop = 0.15, mmax = 10),
+#'                statistic = quantile,
+#'                attach = TRUE,
+#'                probs = 0.99)
 
 simulate_zetas <- function(n, parameters, statistic = median, m = 1L, attach = TRUE, probs = 0.99, simplify = FALSE){
 
