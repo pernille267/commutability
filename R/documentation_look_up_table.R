@@ -1,14 +1,14 @@
-#' Look-up table for critcal zeta values based on study design
+#' Look-up table for upper \eqn{\hat{\zeta}} values
 #'
-#' A dataset containing rejection values for \code{zeta} based on 432 different combinations of study designs and
-#' acceptable differences in non-selectivity
+#' A dataset containing critical values of the differences in non-selectivity estimator, \eqn{\hat{\zeta}}, based on 2604 unqiue combinations of study designs and
+#' maximum tolerable differences in non-selectivity magnitudes. That is, all combinations of \eqn{n = 20, 21, \ldots, 50}, \eqn{R = 2, 3, 4, 5}, and \eqn{M = 0, 0.05, 0.10, \ldots, 0.95, 1}.
 #'
-#' @format A data frame with 75 rows and 7 variables:
+#' @format A data.table with 2604 rows and 4 variables:
 #' \describe{
-#'   \item{id}{Row ID}
-#'   \item{n}{Number of clinical samples}
-#'   \item{R}{Number of replicated measurements on each clinical sample}
-#'   \item{M}{Average relative increase of prediction intervals caused by differences in non-selectivity}
-#'   \item{zeta}{Rejection value for zeta. Any computed zeta value above this value will result in conclusion of differences in non-selectivity}
+#'   \item{n}{The number of clinical samples in the study design}
+#'   \item{R}{The number of replicated measurements performed on each clinical sample in the study design}
+#'   \item{M}{Average relative increase of point-wise prediction intervals attributed to differences in non-selectivity}
+#'   \item{zeta}{The associated lower limit of the rejection region of \eqn{\hat{\zeta}} for n, R and M}
 #' }
 "look_up_table"
+

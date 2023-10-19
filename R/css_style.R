@@ -78,6 +78,7 @@ css_style <- function(event = "default", element = "input_field"){
                      position: relative;
                      box-shadow: inset -3px -2px 6px #000000;
                      width: fit-content;
+                     max-width: 750px;
                      }"
     }
     else if(event == "hover"){
@@ -118,6 +119,7 @@ css_style <- function(event = "default", element = "input_field"){
                      border-radius: 1px 8px 1px 8px;
                      box-shadow: 10px 10px 16px 2px #b9b9b9;
                      transition: box-shadow 0.3s;
+                     max-width: 380px;
                      }"
     }
     else if(event == "hover"){
