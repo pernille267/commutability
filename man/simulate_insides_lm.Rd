@@ -43,6 +43,6 @@ A \code{data.table} containing the inside replications for the inputs.
 Simulate Clinical Sample Data and External Quality Assessment Data and Check Whether Inside PIs
 }
 \examples{
-simulate_insides(parameters = list(n = 25, R = 3, cvx = 0.01,
+simulate_insides_lm(parameters = list(n = 25, R = 3, cvx = 0.01,
  cvy = 0.04, qran = 0.3, qpos = 1, mmax = 5, df = 5))
 }

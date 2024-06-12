@@ -124,7 +124,7 @@ simulate_inside_lm <- function(parameters, m = 1, level = 0.95, method = c("fg",
 #' @return A \code{data.table} containing the inside replications for the inputs.
 #' @export
 #'
-#' @examples simulate_insides(parameters = list(n = 25, R = 3, cvx = 0.01,
+#' @examples simulate_insides_lm(parameters = list(n = 25, R = 3, cvx = 0.01,
 #'  cvy = 0.04, qran = 0.3, qpos = 1, mmax = 5, df = 5))
 simulate_insides_lm <- function(N = 1e2L, m = 1, x = 1, parameters, level = 0.95, method = c("fg", "clsi", "ols"), attach = TRUE, replication_id = TRUE){
   method <- method[1]
