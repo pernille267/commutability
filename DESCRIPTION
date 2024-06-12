@@ -20,8 +20,13 @@ Imports:
     ggplot2,
     skedastic,
     moments,
-    boot
-Remotes: pernille267/fasteqa
+    boot,
+    smooth.commutability,
+    parallel,
+    pbapply
+Remotes: 
+    pernille267/fasteqa
+    pernille267/smooth.commutability
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
