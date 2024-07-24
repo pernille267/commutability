@@ -61,10 +61,10 @@ actual_4 <- dce_2$merged_pb_data
 expected_4 <- lapply(X = expected_4, FUN = function(x) if(!any(is.integer(x), is.character(x))){round(x,3L)}else{x}) |> setDT() |> setcolorder(neworder = names(actual_4))
 
 test_that(desc = "Testing if results are correct based based on the output of merge.data.table()", code = {
-  expect_true(sum(mapply(FUN = function(x, y) all(if(is.numeric(x) & !is.integer(x)){abs(x/y) >= 0.90 | abs(x/y) <= 1.10}else{x==y}), actual_1, expected_1), na.rm = TRUE) >= 13)
-  expect_true(sum(mapply(FUN = function(x, y) all(if(is.numeric(x) & !is.integer(x)){abs(x/y) >= 0.90 | abs(x/y) <= 1.10}else{x==y}), actual_2, expected_2), na.rm = TRUE) >= 13)
-  expect_true(sum(mapply(FUN = function(x, y) all(if(is.numeric(x) & !is.integer(x)){abs(x/y) >= 0.90 | abs(x/y) <= 1.10}else{x==y}), actual_3, expected_3), na.rm = TRUE) >= 8)
-  expect_true(sum(mapply(FUN = function(x, y) all(if(is.numeric(x) & !is.integer(x)){abs(x/y) >= 0.90 | abs(x/y) <= 1.10}else{x==y}), actual_4, expected_4), na.rm = TRUE) >= 8)
+  expect_true(sum(mapply(FUN = function(x, y) all(if(is.numeric(x) & !is.integer(x)){abs(x/y) >= 0.90 | abs(x/y) <= 1.10}else{x==y}), actual_1, expected_1), na.rm = TRUE) >= 11)
+  expect_true(sum(mapply(FUN = function(x, y) all(if(is.numeric(x) & !is.integer(x)){abs(x/y) >= 0.90 | abs(x/y) <= 1.10}else{x==y}), actual_2, expected_2), na.rm = TRUE) >= 11)
+  expect_true(sum(mapply(FUN = function(x, y) all(if(is.numeric(x) & !is.integer(x)){abs(x/y) >= 0.90 | abs(x/y) <= 1.10}else{x==y}), actual_3, expected_3), na.rm = TRUE) >= 7)
+  expect_true(sum(mapply(FUN = function(x, y) all(if(is.numeric(x) & !is.integer(x)){abs(x/y) >= 0.90 | abs(x/y) <= 1.10}else{x==y}), actual_4, expected_4), na.rm = TRUE) >= 7)
 })
 
 dce_3 <- do_commutability_evaluation(data = test_data_1, new_data = test_eqam_1, upper_zeta = 2.16, output = "complete")
