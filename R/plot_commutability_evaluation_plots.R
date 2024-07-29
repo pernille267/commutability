@@ -42,6 +42,27 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
 
   MP_A <- MP_B <- MS_A <- MS_B <- SampleID <- dins_conclusion <- pi_conclusion_correctness <- pi_inside <- pi_lwr <- pi_upr <- predictor <- NULL;
 
+  shape_size_mult <- 1.5
+
+  #shape_values <- c("\U25CF", "\U25A0", "\U25C6",
+  #                  "\U25B2", "\U25BC", "\U002A",
+  #                  "\U002B", "\U2606", "\u260E",
+  #                  "\u2660", "\u2663",
+  #                  "\u2601", "\u2602", "\u2603", "\U0001F4AA", "\U0001F44D",
+  #                  "\u2620", "\u2615", "\u2665", "\u2618", "\U0001F44E",
+  #                  "\U0001F600", "\U0001F609", "\U0001F61B", "\U0001F60E",
+  #                  "\U0001F610", "\U0001F4A4", "\U0001F44C", "\u266A", LETTERS)
+
+  shape_values <- c(LETTERS, letters)
+
+  n_samples <- length(unique(ce_data$SampleID))
+
+  if(n_samples < 20){
+    shape_size_mult <- 1
+    shape_values <- c(21:25, 8, 3, 4, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18)
+  }
+
+
   if(any("dins_conclusion" == names(pb_data))){
     pb_data$dins_conclusion <- ifelse(pb_data$dins_conclusion == 0, "acceptable", "not acceptable")
   }
@@ -535,6 +556,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
         scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
+        scale_shape_manual(values = shape_values[1:n_samples]) +
         scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
         scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
@@ -578,13 +600,13 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                    color = if(any("point_border" == given_arguments)){additional_arguments$point_border}else{default_point_border}) +
 
         geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25, alpha = 0.75) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00, alpha = 0.90) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50, alpha = 1) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50, alpha = 1, color = "black") +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3  * shape_size_mult, alpha = 0.3) + theme_bw() +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75 * shape_size_mult, alpha = 0.4) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50 * shape_size_mult, alpha = 0.5) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25 * shape_size_mult, alpha = 0.75) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00 * shape_size_mult, alpha = 0.90) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50 * shape_size_mult, alpha = 1) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50 * shape_size_mult, alpha = 1, color = "black") +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, alpha = pi_conclusion_correctness, color = pi_inside), shape = 1, size = 5, show.legend = FALSE) +
         labs(title = if(any("main_title" == given_arguments)){additional_arguments$main_title}else{default_main_title},
              subtitle = if(any("sub_title" == given_arguments)){additional_arguments$sub_title}else{default_sub_title},
@@ -595,6 +617,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
         scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
+        scale_shape_manual(values = shape_values[1:n_samples]) +
         scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
         scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
@@ -632,13 +655,13 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                    size = if(any("point_size" == given_arguments)){additional_arguments$point_size}else{default_point_size},
                    color = if(any("point_border" == given_arguments)){additional_arguments$point_border}else{default_point_border}) +
         geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25, alpha = 0.75) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00, alpha = 0.90) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50, alpha = 1) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50, alpha = 1, color = "black") +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3 * shape_size_mult, alpha = 0.3) + theme_bw() +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75 * shape_size_mult, alpha = 0.4) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50 * shape_size_mult, alpha = 0.5) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25 * shape_size_mult, alpha = 0.75) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00 * shape_size_mult, alpha = 0.90) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50 * shape_size_mult, alpha = 1) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50 * shape_size_mult, alpha = 1, color = "black") +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, alpha = pi_conclusion_correctness, color = pi_inside), shape = 1, size = 5, show.legend = FALSE) +
         labs(title = if(any("main_title" == given_arguments)){additional_arguments$main_title}else{default_main_title},
              subtitle = if(any("sub_title" == given_arguments)){additional_arguments$sub_title}else{default_sub_title},
@@ -649,6 +672,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
         scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
+        scale_shape_manual(values = shape_values[1:n_samples]) +
         scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
         scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
@@ -698,13 +722,13 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                    size = if(any("point_size" == given_arguments)){additional_arguments$point_size}else{default_point_size},
                    color = if(any("point_border" == given_arguments)){additional_arguments$point_border}else{default_point_border}) +
         geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25, alpha = 0.75) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00, alpha = 0.90) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50, alpha = 1) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50, alpha = 1, color = "black") +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3 * shape_size_mult, alpha = 0.3) + theme_bw() +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75 * shape_size_mult, alpha = 0.4) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50 * shape_size_mult, alpha = 0.5) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25 * shape_size_mult, alpha = 0.75) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00 * shape_size_mult, alpha = 0.90) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50 * shape_size_mult, alpha = 1) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50 * shape_size_mult, alpha = 1, color = "black") +
         labs(title = if(any("main_title" == given_arguments)){additional_arguments$main_title}else{default_main_title},
              subtitle = if(any("sub_title" == given_arguments)){additional_arguments$sub_title}else{default_sub_title},
              color = "Inside prediction interval",
@@ -714,6 +738,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
         scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
+        scale_shape_manual(values = shape_values[1:n_samples]) +
         scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
         scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
@@ -756,13 +781,13 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                    size = if(any("point_size" == given_arguments)){additional_arguments$point_size}else{default_point_size},
                    color = if(any("point_border" == given_arguments)){additional_arguments$point_border}else{default_point_border}) +
         geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25, alpha = 0.75) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00, alpha = 0.90) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50, alpha = 1) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50, alpha = 1, color = "black") +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3 * shape_size_mult, alpha = 0.3) + theme_bw() +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75 * shape_size_mult, alpha = 0.4) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50 * shape_size_mult, alpha = 0.5) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25 * shape_size_mult, alpha = 0.75) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00 * shape_size_mult, alpha = 0.90) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50 * shape_size_mult, alpha = 1) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50 * shape_size_mult, alpha = 1, color = "black") +
         labs(title = if(any("main_title" == given_arguments)){additional_arguments$main_title}else{default_main_title},
              subtitle = if(any("sub_title" == given_arguments)){additional_arguments$sub_title}else{default_sub_title},
              color = "Inside prediction interval",
@@ -772,6 +797,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
         scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
+        scale_shape_manual(values = shape_values[1:n_samples]) +
         scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
         scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
@@ -809,13 +835,13 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                    size = if(any("point_size" == given_arguments)){additional_arguments$point_size}else{default_point_size},
                    color = if(any("point_border" == given_arguments)){additional_arguments$point_border}else{default_point_border}) +
         geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25, alpha = 0.75) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00, alpha = 0.90) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50, alpha = 1) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50, alpha = 1, color = "black") +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3 * shape_size_mult, alpha = 0.3) + theme_bw() +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75 * shape_size_mult, alpha = 0.4) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50 * shape_size_mult, alpha = 0.5) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25 * shape_size_mult, alpha = 0.75) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00 * shape_size_mult, alpha = 0.90) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50 * shape_size_mult, alpha = 1) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50 * shape_size_mult, alpha = 1, color = "black") +
         labs(title = if(any("main_title" == given_arguments)){additional_arguments$main_title}else{default_main_title},
              subtitle = if(any("sub_title" == given_arguments)){additional_arguments$sub_title}else{default_sub_title},
              color = "Inside prediction interval",
@@ -825,6 +851,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
         scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
+        scale_shape_manual(values = shape_values[1:n_samples]) +
         scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
         scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
@@ -867,13 +894,13 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                     span = 0.95,
                     formula = y ~ x) +
         geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25, alpha = 0.75) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00, alpha = 0.90) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50, alpha = 1) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50, alpha = 1, color = "black") +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3 * shape_size_mult, alpha = 0.3) + theme_bw() +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75 * shape_size_mult, alpha = 0.4) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50 * shape_size_mult, alpha = 0.5) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25 * shape_size_mult, alpha = 0.75) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00 * shape_size_mult, alpha = 0.90) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50 * shape_size_mult, alpha = 1) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50 * shape_size_mult, alpha = 1, color = "black") +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, alpha = pi_conclusion_correctness, color = pi_inside), shape = 1, size = 5, show.legend = FALSE) +
         labs(title = if(any("main_title" == given_arguments)){additional_arguments$main_title}else{default_main_title},
              subtitle = if(any("sub_title" == given_arguments)){additional_arguments$sub_title}else{default_sub_title},
@@ -884,6 +911,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
         scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
+        scale_shape_manual(values = shape_values[1:n_samples]) +
         scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
         scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
@@ -920,13 +948,13 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                     method = "lm",
                     formula = y ~ x) +
         geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25, alpha = 0.75) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00, alpha = 0.90) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50, alpha = 1) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50, alpha = 1, color = "black") +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3 * shape_size_mult, alpha = 0.3) + theme_bw() +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75 * shape_size_mult, alpha = 0.4) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50 * shape_size_mult, alpha = 0.5) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25 * shape_size_mult, alpha = 0.75) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00 * shape_size_mult, alpha = 0.90) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50 * shape_size_mult, alpha = 1) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50 * shape_size_mult, alpha = 1, color = "black") +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, alpha = pi_conclusion_correctness, color = pi_inside), shape = 1, size = 5, show.legend = FALSE) +
         labs(title = if(any("main_title" == given_arguments)){additional_arguments$main_title}else{default_main_title},
              subtitle = if(any("sub_title" == given_arguments)){additional_arguments$sub_title}else{default_sub_title},
@@ -937,6 +965,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
         scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
+        scale_shape_manual(values = shape_values[1:n_samples]) +
         scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
         scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
@@ -968,13 +997,13 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                     color = if(any("curve_color" == given_arguments)){additional_arguments$curve_color}else{default_curve_color},
                     linetype = "dotted") +
         geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25, alpha = 0.75) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00, alpha = 0.90) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50, alpha = 1) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50, alpha = 1, color = "black") +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3 * shape_size_mult, alpha = 0.3) + theme_bw() +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75 * shape_size_mult, alpha = 0.4) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50 * shape_size_mult, alpha = 0.5) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25 * shape_size_mult, alpha = 0.75) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00 * shape_size_mult, alpha = 0.90) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50 * shape_size_mult, alpha = 1) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50 * shape_size_mult, alpha = 1, color = "black") +
         geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, alpha = pi_conclusion_correctness, color = pi_inside), shape = 1, size = 5, show.legend = FALSE) +
         labs(title = if(any("main_title" == given_arguments)){additional_arguments$main_title}else{default_main_title},
              subtitle = if(any("sub_title" == given_arguments)){additional_arguments$sub_title}else{default_sub_title},
@@ -985,6 +1014,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
         scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
+        scale_shape_manual(values = shape_values[1:n_samples]) +
         scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
         scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
@@ -1025,13 +1055,13 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                     span = 0.95,
                     formula = y ~ x) +
         geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25, alpha = 0.75) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00, alpha = 0.90) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50, alpha = 1) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50, alpha = 1, color = "black") +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3 * shape_size_mult, alpha = 0.3) + theme_bw() +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75 * shape_size_mult, alpha = 0.4) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50 * shape_size_mult, alpha = 0.5) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25 * shape_size_mult, alpha = 0.75) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00 * shape_size_mult, alpha = 0.90) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50 * shape_size_mult, alpha = 1) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50 * shape_size_mult, alpha = 1, color = "black") +
         labs(title = if(any("main_title" == given_arguments)){additional_arguments$main_title}else{default_main_title},
              subtitle = if(any("sub_title" == given_arguments)){additional_arguments$sub_title}else{default_sub_title},
              color = "Inside prediction interval",
@@ -1041,6 +1071,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
         scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
+        scale_shape_manual(values = shape_values[1:n_samples]) +
         scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
         scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
@@ -1076,13 +1107,13 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                     method = "lm",
                     formula = y ~ x) +
         geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25, alpha = 0.75) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00, alpha = 0.90) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50, alpha = 1) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50, alpha = 1, color = "black") +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3 * shape_size_mult, alpha = 0.3) + theme_bw() +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75 * shape_size_mult, alpha = 0.4) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50 * shape_size_mult, alpha = 0.5) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25 * shape_size_mult, alpha = 0.75) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00 * shape_size_mult, alpha = 0.90) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50 * shape_size_mult, alpha = 1) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50 * shape_size_mult, alpha = 1, color = "black") +
         labs(title = if(any("main_title" == given_arguments)){additional_arguments$main_title}else{default_main_title},
              subtitle = if(any("sub_title" == given_arguments)){additional_arguments$sub_title}else{default_sub_title},
              color = "Inside prediction interval",
@@ -1092,6 +1123,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
         scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
+        scale_shape_manual(values = shape_values[1:n_samples]) +
         scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
         scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
@@ -1124,13 +1156,13 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                     color = if(any("curve_color" == given_arguments)){additional_arguments$curve_color}else{default_curve_color},
                     linetype = "dotted") +
         geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25, alpha = 0.75) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00, alpha = 0.90) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50, alpha = 1) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50, alpha = 1, color = "black") +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3 * shape_size_mult, alpha = 0.3) + theme_bw() +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75 * shape_size_mult, alpha = 0.4) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50 * shape_size_mult, alpha = 0.5) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25 * shape_size_mult, alpha = 0.75) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00 * shape_size_mult, alpha = 0.90) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50 * shape_size_mult, alpha = 1) +
+        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50 * shape_size_mult, alpha = 1, color = "black") +
         labs(title = if(any("main_title" == given_arguments)){additional_arguments$main_title}else{default_main_title},
              subtitle = if(any("sub_title" == given_arguments)){additional_arguments$sub_title}else{default_sub_title},
              color = "Inside prediction interval",
@@ -1140,6 +1172,7 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
         scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
                            n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
+        scale_shape_manual(values = shape_values[1:n_samples]) +
         scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
         scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
         scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +

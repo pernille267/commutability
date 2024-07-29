@@ -150,7 +150,13 @@ test_that(desc = "Testing if some arguments are registered", code = {
 })
 
 
-
+plot_commutability_evaluation_plots(cs_data = test_mo_data_1,
+                                    pb_data = test_plot_input_1$merged_pb_data,
+                                    ce_data = test_plot_input_1$merged_ce_data,
+                                    exclude_cs = TRUE,
+                                    exclude_rings = FALSE,
+                                    plot_theme = "default",
+                                    additional_arguments = list("sub_title" = 1:10))
 
 
 
