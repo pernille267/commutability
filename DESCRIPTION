@@ -25,7 +25,7 @@ Imports:
     parallel,
     pbapply
 Remotes: 
-    pernille267/fasteqa
+    pernille267/fasteqa,
     pernille267/smooth.commutability
 Suggests: 
     testthat (>= 3.0.0)
