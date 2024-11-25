@@ -1,11 +1,11 @@
 library(testthat)
 library(commutability)
 library(readxl)
-library(data.table)
+suppressWarnings(library(data.table))
 library(fasteqa)
 
-test_data_1 <- read_excel("~/datasets to be tested on/W..MCV2020_CS.xlsx")
-test_data_2 <- read_excel("~/datasets to be tested on/HDLC.CS.FILTERED.xlsx")
+test_data_1 <- read_excel("~/Packages/datasets to be tested on/W..MCV2020_CS.xlsx")
+test_data_2 <- read_excel("~/Packages/datasets to be tested on/HDLC.CS.FILTERED.xlsx")
 test_data_2$`Ortho CD Vitros` <- NULL
 
 check_1 <- check_data(data = test_data_1, silence = 1L, type = "cs")

@@ -1,17 +1,17 @@
 library(testthat)
 library(commutability)
 library(readxl)
-library(data.table)
+suppressWarnings(library(data.table))
 library(fasteqa)
 
 testing_type <- "percentile"
 
-T_EPK2020_CS <- setDT(read_excel("~/datasets to be tested on/W..EPK2020_CS.xlsx"))
-T_HB2020_CS <- setDT(read_excel("~/datasets to be tested on/W..HB2020_CS.xlsx"))
-T_LPK2020_CS <- setDT(read_excel("~/datasets to be tested on/W..LPK2020_CS.xlsx"))
-T_MCV2020_CS <- setDT(read_excel("~/datasets to be tested on/W..MCV2020_CS.xlsx"))
-T_TPK2020_CS <- setDT(read_excel("~/datasets to be tested on/W..TPK2020_CS.xlsx"))
-T_HDLCXXX_CS <- setDT(read_excel("~/datasets to be tested on/HDLC.CS.FILTERED.xlsx"))
+T_EPK2020_CS <- setDT(read_excel("~/Packages/datasets to be tested on/W..EPK2020_CS.xlsx"))
+T_HB2020_CS <- setDT(read_excel("~/Packages/datasets to be tested on/W..HB2020_CS.xlsx"))
+T_LPK2020_CS <- setDT(read_excel("~/Packages/datasets to be tested on/W..LPK2020_CS.xlsx"))
+T_MCV2020_CS <- setDT(read_excel("~/Packages/datasets to be tested on/W..MCV2020_CS.xlsx"))
+T_TPK2020_CS <- setDT(read_excel("~/Packages/datasets to be tested on/W..TPK2020_CS.xlsx"))
+T_HDLCXXX_CS <- setDT(read_excel("~/Packages/datasets to be tested on/HDLC.CS.FILTERED.xlsx"))
 
 check_test_data_1 <- check_data(data = T_EPK2020_CS)
 check_test_data_2 <- check_data(data = T_HB2020_CS)

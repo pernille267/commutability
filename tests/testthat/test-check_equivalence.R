@@ -1,11 +1,11 @@
-library(data.table)
+suppressWarnings(library(data.table))
 library(stringi)
 library(commutability)
 library(fasteqa)
 library(readxl)
 
-test_cs_data_raw <- setDT(read_excel(path = "~/datasets to be tested on/simulated_cholesterol_cs_data.xlsx"))
-test_eq_data_raw <- setDT(read_excel(path = "~/datasets to be tested on/simulated_cholesterol_eq_data.xlsx"))
+test_cs_data_raw <- setDT(read_excel(path = "~/Packages/datasets to be tested on/simulated_cholesterol_cs_data.xlsx"))
+test_eq_data_raw <- setDT(read_excel(path = "~/Packages/datasets to be tested on/simulated_cholesterol_eq_data.xlsx"))
 
 test_cs_data_1 <- test_cs_data_raw
 test_eq_data_1 <- test_eq_data_raw

@@ -1,17 +1,17 @@
 library(testthat)
 library(commutability)
 library(readxl)
-library(data.table)
+suppressWarnings(library(data.table))
 library(fasteqa)
 
 set.seed(1)
-test_data_1 <- read_excel(path = "~/datasets to be tested on/test_data_1.xlsx")
-test_data_2 <- read_excel(path = "~/datasets to be tested on/test_data_2.xlsx")
-test_data_3 <- read_excel(path = "~/datasets to be tested on/test_data_3.xlsx")
-test_data_4 <- read_excel(path = "~/datasets to be tested on/test_data_4.xlsx")
-test_data_5 <- read_excel(path = "~/datasets to be tested on/test_data_5.xlsx")
-test_data_6 <- read_excel(path = "~/datasets to be tested on/test_data_6.xlsx")
-test_data_7 <- read_excel(path = "~/datasets to be tested on/test_data_7.xlsx")
+test_data_1 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_1.xlsx")
+test_data_2 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_2.xlsx")
+test_data_3 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_3.xlsx")
+test_data_4 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_4.xlsx")
+test_data_5 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_5.xlsx")
+test_data_6 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_6.xlsx")
+test_data_7 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_7.xlsx")
 
 check_data_1 <- check_data(test_data_1)
 check_data_2 <- check_data(test_data_2)
@@ -149,14 +149,6 @@ test_that(desc = "Testing if some arguments are registered", code = {
   expect_equal(object = actual_2$theme$strip.background$colour, expected = "#000000")
 })
 
-
-plot_commutability_evaluation_plots(cs_data = test_mo_data_1,
-                                    pb_data = test_plot_input_1$merged_pb_data,
-                                    ce_data = test_plot_input_1$merged_ce_data,
-                                    exclude_cs = TRUE,
-                                    exclude_rings = FALSE,
-                                    plot_theme = "default",
-                                    additional_arguments = list("sub_title" = 1:10))
 
 
 
