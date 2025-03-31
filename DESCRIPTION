@@ -1,7 +1,7 @@
 Package: commutability
 Type: Package
 Title: Commutability calculations for external quality assessment materials and possibly certified reference materials
-Version: 0.1.0
+Version: 1.0.0
 Author: Pernille Kjeilen Fauskanger <pernille.fauskanger@noklus.no>
 Maintainer: Pernille Kjeilen Fauskanger <pernille.fauskanger@noklus.no>
 Description: Simplifies tidious commutability evaluation calculations.
@@ -9,21 +9,19 @@ License: MIT + file LICENSE
 Year: 2022
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 Imports:
     data.table,
-    fasteqa,
     stringi,
     utils,
     readxl,
     microbenchmark,
     ggplot2,
-    skedastic,
-    moments,
-    boot,
-    smooth.commutability,
     parallel,
-    pbapply
+    pbapply,
+    boot,
+    fasteqa,
+    smooth.commutability
 Remotes: 
     pernille267/fasteqa,
     pernille267/smooth.commutability
@@ -31,4 +29,4 @@ Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Depends: 
-    R (>= 2.10)
+    R (>= 3.5.0)

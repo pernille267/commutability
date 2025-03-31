@@ -1,72 +1,393 @@
+#' Validates \code{data}
+#'
+#' @description
+#' This function is used to validate and convert the \code{data} argument
+#' in \code{estimate_imprecision_data}.
+#'
+#' @param data A object to be validated.
+#'
+#' @return Processed \code{data}
+#' @keywords internal
+validate_data_eid <- function(data){
+
+  # Avoid modifying original input
+  data <- copy(data)
+
+  # Convert data iff possible. Error otherwise
+  if (!is.data.table(data)) {
+    if (is.data.frame(data) || is.list(data)) {
+      setDT(data)
+    }
+    else {
+      stop(sprintf("Invalid class '%s'. Expected data.table, data.frame, or list.",
+                   class(data)[1]))
+
+    }
+  }
+
+  # Req. columns in data.
+  required_columns <- c('comparison', 'SampleID', 'ReplicateID', 'MP_A', 'MP_B')
+
+  # Misng. Columns in data
+  missing_columns <- setdiff(required_columns, names(data))
+
+  # Throws an error if some column names are missing of 'data'
+  if(length(missing_columns) > 0){
+    stop(
+      sprintf(
+        "Missing required columns in data: [%s]",
+        paste(missing_columns, collapse = ", ")
+      )
+    )
+  }
+
+  data$SampleID <- as.character(data$SampleID)
+  data$ReplicateID <- as.character(data$ReplicateID)
+
+
+  return(data)
+}
+
+#' Validates \code{B} parameter
+#'
+#' @description
+#' This function validates the \code{B} parameter (bootstrap iterations)
+#' in \code{estimate_imprecision_data}.
+#'
+#' @param B A numeric value representing bootstrap iterations.
+#' @param invalid_NA A \code{logical} value. If \code{TRUE}, \code{NA} is
+#'                   returned instead of throwing an error. Default is \code{FALSE}.
+#'
+#' @return
+#' A \code{list}. The processed \code{B} and which action should be taken
+#' based on the value of \code{B}.
+#' @keywords internal
+validate_B_eid <- function(B, invalid_NA = FALSE) {
+
+  # Initialize return values
+  B_action <- NULL
+  B_message <- NULL
+  B_message_type <- NULL
+
+  # Check if B is NULL or empty
+  if (is.null(B) || length(B) == 0) {
+    B_action <- "return_orig_imps"
+    return(list(B = NULL,
+                B_action = B_action,
+                B_message = B_message,
+                B_message_type = B_message_type))
+  }
+
+  # Check if B is not numeric
+  if (!is.numeric(B)) {
+    B_action <- "throw_error"
+    B_message_type <- "error"
+    B_message <- "B is expected to be an integer larger than or equal to 50L."
+
+    if (invalid_NA) {
+      B_message_type <- "warning"
+      B_action <- "return_NA_imps"
+      B_message <- paste(B_message, "NA returned.")
+    } else {
+      B_message <- paste(B_message, "Try again with a valid B.")
+    }
+
+    return(list(B = NULL,
+                B_action = B_action,
+                B_message = B_message,
+                B_message_type = B_message_type))
+  }
+
+  # Check if B has multiple values
+  if (length(B) > 1) {
+    B_action <- "throw_warning"
+    B_message <- paste0("B was of length ", length(B),
+                        ". Only the first element is used.")
+    B_message_type <- "warning"
+    B <- B[1]
+  }
+
+  # Check if B is NA
+  if (is.na(B)) {
+    B_action <- "return_orig_imps"
+    B_message <- paste("The first element of B is a NA value.",
+                       "Bootstrap confidence intervals are not estimated.")
+    B_message_type <- "warning"
+    return(list(B = NULL,
+                B_action = B_action,
+                B_message = B_message,
+                B_message_type = B_message_type))
+  }
+
+  # Round up B to nearest integer
+  B <- as.integer(ceiling(B))
+
+  # Check the value of B
+  if (B < 0) {
+    B_message <- paste("B is negative. It must be a positive integer",
+                       "larger than or equal to 50L.")
+
+    if (invalid_NA) {
+      B_action <- "return_orig_imps"
+      B_message <- paste(B_message,
+                         "Bootstrap confidence intervals are not estimated.")
+      B_message_type <- "warning"
+    } else {
+      B_action <- "throw_error"
+      B_message_type <- "error"
+    }
+
+    return(list(B = NULL,
+                B_action = B_action,
+                B_message = B_message,
+                B_message_type = B_message_type))
+  }
+  else if (B < 50) {
+    B_action <- "return_orig_imps"
+    B_message <- paste("B is too small. It must be a positive integer",
+                       "larger than or equal to 50L.",
+                       "Bootstrap confidence intervals are not estimated.")
+    B_message_type <- "warning"
+    return(list(B = NULL,
+                B_action = B_action,
+                B_message = B_message,
+                B_message_type = B_message_type))
+  }
+  else if (B > 1e6) {
+    B_action <- "use_default_B"
+    B_message <- "B is too large. The default (B = 2e3L) is used instead."
+    B_message_type <- "warning"
+    return(list(B = 2e3L,
+                B_action = B_action,
+                B_message = B_message,
+                B_message_type = B_message_type))
+  }
+
+  # B is valid
+  B_action <- "use_B"
+
+  return(list(B = B,
+              B_action = B_action,
+              B_message = B_message,
+              B_message_type = B_message_type))
+}
+
+#' @title
+#' Estimates Imprecision Bootstrap Confidence Intervals
+#'
+#' @param B An \code{integer}. The desired number of bootstrap replicates used
+#'          to estimate bootstrap confidence intervals. See
+#'          \code{?estimate_imprecision_data()} for more information.
+#' @param data A \code{data.table} or \code{list}. The clinical sample data.
+#'             See \code{?estimate_imprecision_data()} for more information.
+#' @param type An \code{integer}. The type of bootstrap confidence interval
+#'             desired. Can be \code{1-4}.
+#' @param level A \code{double}. The desired nominal confidence level of the
+#'              estimated boostrap confidence intervals.
+#'
+#' @details
+#' Not to be used by end-users. Used internally in
+#' \code{estimate_imprecision_data()}.
+#'
+#'
+#' @returns
+#' A \code{list}. The estimated boostrap confidence intervals.
+#' @keywords internal
+estimate_imp_boot_ci <- function(B, data, type, level) {
+
+  # Avoid to modify original data
+  data <- copy(data)
+
+  # Original imprecision estimates
+  orig_imps <- data[, global_precision_estimates(.SD)]
+
+  # Resampled imprecision estimates
+  resampled_imps <- replicate(
+    n = B,
+    expr = resample_global_precision_estimates(data),
+    simplify = FALSE
+  )
+
+  # Leave-One-Out imprecision estimates
+  loo_imps <- sapply(
+    X = seq_len(length.out = length(unique(data$SampleID))),
+    FUN = function(smpl){
+      loo_global_precision_estimates(
+        data = data,
+        loo_id = smpl
+      )
+    },
+    simplify = FALSE
+  )
+
+  # Convert to data.table
+  resampled_imps <- rbindlist(resampled_imps)
+  loo_imps <- rbindlist(loo_imps)
+
+  # Estimate bootstrap intervals
+  boot_ci_Var_A <- bootstrap_ci(
+    bootstrapped_parameter_estimates = resampled_imps$Var_A,
+    jackknife_parameter_estimates = loo_imps$Var_A,
+    original_parameter_estimate = orig_imps$Var_A,
+    type = type,
+    level = level
+  )
+  boot_ci_Var_B <- bootstrap_ci(
+    bootstrapped_parameter_estimates = resampled_imps$Var_B,
+    jackknife_parameter_estimates = loo_imps$Var_B,
+    original_parameter_estimate = orig_imps$Var_B,
+    type = type,
+    level = level
+  )
+  boot_ci_CV_A <- bootstrap_ci(
+    bootstrapped_parameter_estimates = resampled_imps$CV_A,
+    jackknife_parameter_estimates = loo_imps$CV_A,
+    original_parameter_estimate = orig_imps$CV_A,
+    type = type,
+    level = level
+  )
+  boot_ci_CV_B <- bootstrap_ci(
+    bootstrapped_parameter_estimates = resampled_imps$CV_B,
+    jackknife_parameter_estimates = loo_imps$CV_B,
+    original_parameter_estimate = orig_imps$CV_B,
+    type = type,
+    level = level
+  )
+  boot_ci_lambda <- bootstrap_ci(
+    bootstrapped_parameter_estimates = resampled_imps$lambda,
+    jackknife_parameter_estimates = loo_imps$lambda,
+    original_parameter_estimate = orig_imps$lambda,
+    type = type,
+    level = level
+  )
+
+  out <- list("Var_A" = orig_imps$Var_A,
+              "Var_A_lwr" = boot_ci_Var_A[1],
+              "Var_A_upr" = boot_ci_Var_A[2],
+              "Var_B" = orig_imps$Var_B,
+              "Var_B_lwr" = boot_ci_Var_B[1],
+              "Var_B_upr" = boot_ci_Var_B[2],
+              "CV_A" = orig_imps$CV_A,
+              "CV_A_lwr" = boot_ci_CV_A[1],
+              "CV_A_upr" = boot_ci_CV_A[2],
+              "CV_B" = orig_imps$CV_B,
+              "CV_B_lwr" = boot_ci_CV_B[1],
+              "CV_B_upr" = boot_ci_CV_B[2],
+              "lambda" = orig_imps$lambda,
+              "lambda_lwr" = boot_ci_lambda[1],
+              "lambda_upr" = boot_ci_lambda[2])
+
+  out <- lapply(
+    X = out,
+    FUN = function(stat){
+      if (!isTRUE(stat >= 0)) {
+        return(NA_real_)
+      }
+      else{
+        return(stat)
+      }
+    }
+  )
+  return(out)
+}
+
+#' @title
 #' All calculations regarding imprecision
 #'
-#' @param data \code{list}, \code{data frame} or \code{data table} that is grouped by \code{"comparison"}. Furthermore, must contain the following columns: \code{comparison}, \code{SampleID}, \code{ReplicateID}, \code{MP_A} and \code{MP_B}.
-#' @param B \code{Integer} - Number of bootstrap replicates used to estimate bootstrap confidence intervals. The default is 2000, which is the typical for bootstrap confidence intervals. Note that if you have more than five unique IVD-MDs in \code{data}, it may take approximately two seconds to run the resampling.
-#' @param type \code{Character} - Type of bootstrap confidence interval. There are four options:
-#' \itemize{
-#'   \item{\code{normal}: }{Standard normal bootstrap confidence intervals}
-#'   \item{\code{basic}: }{Basic bootstrap confidence intervals}
-#'   \item{\code{percentile}: }{Percentile bootstrap confidence intervals}
-#'   \item{\code{BCa}: }{Bias- and skewness-corrected bootstrap confidence intervals}
-#' }
-#' @param level \code{Numeric} - Confidence level of the bootstrap confidence intervals. A 95 percent confidence level is the default.
-#' @param invalid_NA A \code{logical} value. If set to \code{TRUE}, the function will return \code{NA} for zeta when encountering invalid input or computation errors instead of raising an error. While this is not generally recommended due to the risk of masking potential issues, it can be useful in certain scenarios where uninterrupted execution is a priority.
-#' @description Obtain all necessary information on imprecision data for each unique pair of IVD-MDs in your data. The output is on the form required by \code{merge_results}(), making it very useful.
+#' @param data A \code{list}, \code{data.table} or \code{data.frame}. The
+#'             CS data. Must contain the following variables:
+#'             \itemize{
+#'                \item \code{comparison: } A \code{character} vector. The
+#'                      comparison identifiers. Typically on the form
+#'                      \code{'MP_A - MP_B'}.
+#'                \item \code{SampleID: } A \code{character} vector. The sample
+#'                      identifiers for the clinical samples.
+#'                \item \code{ReplicateID: }A \code{character} vector. The
+#'                      replicated measurement identifiers.
+#'                \item \code{MP_A: } A \code{numeric} vector. The observed
+#'                      measurement results from IVD-MD \code{MP_A} (response).
+#'                \item \code{MP_B: } A \code{numeric} vector. The observed
+#'                      measurement results from IVD-MD \code{MP_A} (predictor).
+#'             }
+#' @param B An \code{integer}. Must be larger than or equal to \code{50}. The
+#'          Number of bootstrap replicates used to estimate bootstrap
+#'          confidence intervals for each of the repeatability imprecision
+#'          statistics. Defaults to \code{2e3L} (2,000). If \code{NULL},
+#'          estimated confidence intervals are not calculated.
+#' @param type A \code{character} string. Determines the bootstrap method to
+#'             apply for estimating the confidence intervals:
+#'             \itemize{
+#'                \item \code{normal: } Standard normal bootstrap confidence
+#'                                      interval.
+#'                \item \code{basic: } Basic bootstrap confidence interval.
+#'                \item \code{percentile: } Percentile bootstrap confidence
+#'                                          interval.
+#'                \item \code{BCa: } Bias- and skewness-corrected bootstrap
+#'                                   confidence interval.
+#'            }
+#' @param level A \code{double}. Must be between \code{0} and \code{1}. The
+#'              desired nominal confidence level for the bootstrap estimated
+#'              confidence intervals. The default is \code{0.95} (\eqn{95\%}).
+#' @param invalid_NA A \code{logical} value. If \code{TRUE} (not recommended),
+#'                   return \code{NA} rather than throwing an error if
+#'                   something goes wrong.
+#' @description
+#' Obtains all necessary information on repeatability imprecision for each
+#' unique IVD-MD pair (\code{comparison}) in \code{data}.
 #'
-#' @return A \code{data table} with entries \code{CV_A}, \code{CV_A_lwr}, \code{CV_A_upr}, \code{CV_B}, \code{CV_B_lwr}, \code{CV_B_upr}, \code{lambda}, \code{lambda_lwr}, \code{lambda_upr}, \code{Var_A}, \code{Var_A_lwr}, \code{Var_A_upr}, \code{Var_B}, \code{Var_B_lwr}, \code{Var_B_upr}
+#' @details
+#' Estimate \code{Var_A}, \code{Var_B}, \code{CV_A}, \code{CV_B} and
+#' \code{lambda}, with corresponding bootstrap confidence intervals for each
+#' unique \code{comparison} element in \code{data}.
+#'
+#' This function is generally not recommended to be used by end-users. It is
+#' however an extremely important helping function that is used in the
+#' \code{do_commutability_evaluation()} wrapper function.
+#'
+#'
+#' @return
+#' A \code{data.table} with \code{unique(data$comparison)} rows and \code{5} or
+#' \code{15} columns. The columns are named: \code{CV_A}, \code{CV_A_lwr},
+#' \code{CV_A_upr}, \code{CV_B}, \code{CV_B_lwr}, \code{CV_B_upr},
+#' \code{lambda}, \code{lambda_lwr}, \code{lambda_upr}, \code{Var_A},
+#' \code{Var_A_lwr}, \code{Var_A_upr}, \code{Var_B}, \code{Var_B_lwr},
+#' \code{Var_B_upr}.
 #' @export
 #'
 #' @examples print(1)
 
-estimate_imprecision_data <- function(data, B = 2e3L, type = "percentile", level = 0.95, invalid_NA = FALSE){
+estimate_imprecision_data <- function(data,
+                                      B = 2e3L,
+                                      type = "percentile",
+                                      level = 0.95,
+                                      invalid_NA = FALSE){
 
-  # Checks if 'data' is of correct class
-  if(!is.data.table(data)){
-    if(is.data.frame(data) | is.list(data)){
-      setDT(data)
-    }
-    else{
-      stop("The input 'data' is neither a data.table, list, nor data.frame.
-            \nRegistered input class of 'data': '", class(data)[1], "'.
-            \nPlease provide an input of type data.table, list, or data.frame to proceed. The calculations cannot continue with the current input type.")
+  # Bind global variables
+  bootstrap_ci <- BCa_bootstrap_ci <- global_precision_estimates <- NULL
+  leave_one_out <- resample_samples <- SampleID <- NULL
+  ReplicateID <- comparison <- NULL
 
-    }
-  }
+  # Validate 'data'
+  data <- validate_data_eid(data)
 
-  # Checks if 'data' have the required columns
-  required_columns <- c('comparison', 'SampleID', 'ReplicateID', 'MP_A', 'MP_B')
-  missing_columns <- setdiff(required_columns, names(data))
-  if(length(missing_columns) > 0){
-    stop(paste0("Some required columns are missing from 'data':", "\n",
-                "* Missing column(s): [",
-                paste(missing_columns, collapse=", "),
-                "]", "\n",
-                "* The argument 'data' must include 'comparison', 'SampleID', 'ReplicateID', 'MP_A' and 'MP_B'."))
-  }
-
+  # Convert type to integer (because it is used in bootstrap_ci)
   type_numeric <- switch(type, "percentile" = 3, "basic" = 2, "normal" = 1, "BCa" = 4, "bca" = 4, 3)
-  bootstrap_ci <- BCa_bootstrap_ci <- global_precision_estimates <- leave_one_out <- resample_samples <- SampleID <- ReplicateID <- comparison <- NULL
 
-  # Checks if 'SampleID' and 'ReplicateID' are character vectors
-  # If they are not, they will be converted to character vectors
-  if(isFALSE(is.character(data$SampleID))){
-    data[, SampleID := as.character(SampleID)]
-  }
-  if(isFALSE(is.character(data$ReplicateID))){
-    data[, ReplicateID := as.character(ReplicateID)]
-  }
-
-  data_list <- split(data, by = "comparison", keep.by = FALSE)
+  # Calculate original imprecision estimates
   orig_imps <- data[, global_precision_estimates(.SD), by = comparison]
 
-  # Checks if 'B' is 'NULL' or 'NA'. If this is the case, we do not return estimated bootstrap confidence intervals
-  if(is.null(B) || length(B) == 0 || is.na(B)){
-    return(orig_imps)
-  }
+  # Validate 'B'
+  B_validation <- validate_B_eid(B, invalid_NA)
 
-  # Checks if 'B' is a character string. If this is the case, we return NA or throw an error depending on the 'invalid_NA' input
-  if(isTRUE(is.character(B))){
-    if(isTRUE(invalid_NA)){
+  if(!is.null(B_validation$B_message_type) && B_validation$B_message_type == "error"){
+    stop(B_validation$B_message)
+  }
+  else if(!is.null(B_validation$B_message_type) && B_validation$B_message_type == "warning"){
+    warning(B_validation$B_message)
+    if(!is.null(B_validation$B_action) && B_validation$B_action == "return_orig_imps"){
+      return(orig_imps)
+    }
+    else if(!is.null(B_validation$B_action) && B_validation$B_action == "return_NA_imps"){
       orig_imps$Var_A <- NA_real_
       orig_imps$Var_B <- NA_real_
       orig_imps$CV_A <- NA_real_
@@ -74,116 +395,14 @@ estimate_imprecision_data <- function(data, B = 2e3L, type = "percentile", level
       orig_imps$lambda <- NA_real_
       return(orig_imps)
     }
-    else{
-      stop(sprintf("'B' ['%s'] is a character string. Make sure it is a integer equal to or larger than 50 and try again.
-                 \nIf you do not wish to estimate bootstrap confidence intervals for the IVD-MD imprecision estimates, set 'B' to either 'NULL' or 'NA'.",
-                 B))
-    }
   }
 
-  # Checks if 'B' is positive. If this is not the case, return NA or throw an error depending on the 'invalid_NA' input
-  B_is_positive <- B >= 0
-  if(isFALSE(B_is_positive)){
-    if(isTRUE(invalid_NA)){
-      orig_imps$Var_A <- NA_real_
-      orig_imps$Var_B <- NA_real_
-      orig_imps$CV_A <- NA_real_
-      orig_imps$CV_B <- NA_real_
-      orig_imps$lambda <- NA_real_
-      return(orig_imps)
-    }
-    else{
-      stop(sprintf("'B' [%d] is a negative value. Make sure it is a integer equal to or larger than 50 and try again.
-                 \nIf you do not wish to estimate bootstrap confidence intervals for the IVD-MD imprecision estimates, set 'B' to either 'NULL' or 'NA'.",
-                 B))
-    }
-  }
+  # A valid value of B
+  B <- B_validation$B
 
-  # Checks if 'B' is an integer. If this is not the case, round it to the nearest integer
-  B_is_integer <- abs(B - round(B)) < .Machine$double.eps ** 0.5
-  if(isFALSE(B_is_integer)){
-    B <- round(B)
-  }
-
-  if(B < 50L && B >= 1L){
-    warning(sprintf("Ideally, 'B' should exceed 2,000 to ensure stable bootstrap confidence intervals for IVD-MD imprecision estimates.
-                 \nWith the current 'B' value [%d], which is less than 50, the confidence intervals might be quite unstable. Due to the low 'B' value, no bootstrap confidence intervals are estimated. Increase 'B' above 50 to enable confidence interval estimation.",
-                 B), immediate. = TRUE)
-
-    return(orig_imps)
-
-  }
-
-  else if(B < 1L){
-    return(orig_imps)
-  }
-
-  # Estimation of confidence intervals of IVD-MD imprecision estimates depending on the input of 'type' and 'level'
-  orig_imps_list <- split(orig_imps, by = "comparison", keep.by = FALSE)
-  resampled_data <- lapply(X = data_list, FUN = function(x) replicate(n = B, expr = resample_samples(data = x, silence = 1), simplify = FALSE))
-  bootstrapped_imps <- lapply(X = resampled_data, FUN = function(x) lapply(x, global_precision_estimates))
-  bootstrapped_imps <- lapply(X = bootstrapped_imps, FUN = rbindlist)
-
-  if(type_numeric == 4){
-    loo_data <- lapply(X = data_list,
-                       FUN = function(x) sapply(X = 1:length(unique(x$SampleID)),
-                                                FUN = function(y) leave_one_out(x, y),
-                                                simplify = FALSE))
-    loo_imps <- lapply(X = loo_data, FUN = function(x) lapply(x, global_precision_estimates))
-    loo_imps <- lapply(X = loo_imps, FUN = rbindlist)
-
-    bootstrapped_cis <- as.list(1:length(bootstrapped_imps))
-    names(bootstrapped_cis) <- names(bootstrapped_imps)
-
-    for(i in 1:length(bootstrapped_imps)){
-      bootstrapped_cis[[i]] <- mapply(FUN = function(x, y, z) BCa_bootstrap_ci(x, y, z, level),
-                                   bootstrapped_imps[[i]],
-                                   loo_imps[[i]],
-                                   orig_imps_list[[i]],
-                                   SIMPLIFY = FALSE)
-    }
-
-    bootstrapped_cis_tabled <- lapply(X = bootstrapped_cis,
-                                   FUN = function(x) list("Var_A_lwr" = if(x$Var_A[1] < 0 | is.na(x$Var_A[1])){NA}else{max(.Machine$double.eps, x$Var_A[1])},
-                                                          "Var_A_upr" = if(x$Var_A[2] < 0 | is.na(x$Var_A[2])){NA}else if(x$Var_A[2] < x$Var_A[1]){NA}else{max(.Machine$double.eps, x$Var_A[2])},
-                                                          "Var_B_lwr" = if(x$Var_B[1] < 0 | is.na(x$Var_B[1])){NA}else{max(.Machine$double.eps, x$Var_B[1])},
-                                                          "Var_B_upr" = if(x$Var_B[2] < 0 | is.na(x$Var_B[2])){NA}else if(x$Var_B[2] < x$Var_B[1]){NA}else{max(.Machine$double.eps, x$Var_B[2])},
-                                                          "CV_A_lwr" = if(x$CV_A[1] < 0 | is.na(x$CV_A[1])){NA}else{max(.Machine$double.eps, x$CV_A[1])},
-                                                          "CV_A_upr" = if(x$CV_A[2] < 0 | is.na(x$CV_A[2])){NA}else if(x$CV_A[2] < x$CV_A[1]){NA}else{max(.Machine$double.eps, x$CV_A[2])},
-                                                          "CV_B_lwr" = if(x$CV_B[1] < 0 | is.na(x$CV_B[1])){NA}else{max(.Machine$double.eps, x$CV_B[1])},
-                                                          "CV_B_upr" = if(x$CV_B[2] < 0 | is.na(x$CV_B[2])){NA}else if(x$CV_B[2] < x$CV_B[1]){NA}else{max(.Machine$double.eps, x$CV_B[2])},
-                                                          "lambda_lwr" = if(x$lambda[1] < 0 | is.na(x$lambda[1])){NA}else{max(.Machine$double.eps, x$lambda[1])},
-                                                          "lambda_upr" = if(x$lambda[2] < 0 | is.na(x$lambda[2])){NA}else if(x$lambda[2] < x$lambda[1]){NA}else{max(.Machine$double.eps, x$lambda[2])})) |>
-      lapply(setDT) |> rbindlist(idcol = "comparison")
-
-    out <- merge(orig_imps, bootstrapped_cis_tabled, by = "comparison", sort = FALSE)
-    setcolorder(x = out, neworder = c("comparison","CV_A", "CV_A_lwr", "CV_A_upr", "CV_B", "CV_B_lwr", "CV_B_upr", "lambda", "lambda_lwr", "lambda_upr", "Var_A", "Var_A_lwr", "Var_A_upr", "Var_B", "Var_B_lwr", "Var_B_upr"))
-    return(out)
-  }
-
-  bootstrapped_cis <- as.list(1:length(bootstrapped_imps))
-  names(bootstrapped_cis) <- names(bootstrapped_imps)
-
-  for(i in 1:length(bootstrapped_imps)){
-    bootstrapped_cis[[i]] <- mapply(FUN = function(boot, orig) bootstrap_ci(boot, orig, type_numeric, level = level),
-                                 bootstrapped_imps[[i]],
-                                 orig_imps_list[[i]],
-                                 SIMPLIFY = FALSE)
-  }
-  bootstrapped_cis_tabled <- lapply(X = bootstrapped_cis,
-                                 FUN = function(x) list("Var_A_lwr" = if(x$Var_A[1] < 0 | is.na(x$Var_A[1])){NA}else{max(.Machine$double.eps, x$Var_A[1])},
-                                                        "Var_A_upr" = if(x$Var_A[2] < 0 | is.na(x$Var_A[2])){NA}else if(x$Var_A[2] < x$Var_A[1]){NA}else{max(.Machine$double.eps, x$Var_A[2])},
-                                                        "Var_B_lwr" = if(x$Var_B[1] < 0 | is.na(x$Var_B[1])){NA}else{max(.Machine$double.eps, x$Var_B[1])},
-                                                        "Var_B_upr" = if(x$Var_B[2] < 0 | is.na(x$Var_B[2])){NA}else if(x$Var_B[2] < x$Var_B[1]){NA}else{max(.Machine$double.eps, x$Var_B[2])},
-                                                        "CV_A_lwr" = if(x$CV_A[1] < 0 | is.na(x$CV_A[1])){NA}else{max(.Machine$double.eps, x$CV_A[1])},
-                                                        "CV_A_upr" = if(x$CV_A[2] < 0 | is.na(x$CV_A[2])){NA}else if(x$CV_A[2] < x$CV_A[1]){NA}else{max(.Machine$double.eps, x$CV_A[2])},
-                                                        "CV_B_lwr" = if(x$CV_B[1] < 0 | is.na(x$CV_B[1])){NA}else{max(.Machine$double.eps, x$CV_B[1])},
-                                                        "CV_B_upr" = if(x$CV_B[2] < 0 | is.na(x$CV_B[2])){NA}else if(x$CV_B[2] < x$CV_B[1]){NA}else{max(.Machine$double.eps, x$CV_B[2])},
-                                                        "lambda_lwr" = if(x$lambda[1] < 0 | is.na(x$lambda[1])){NA}else{max(.Machine$double.eps, x$lambda[1])},
-                                                        "lambda_upr" = if(x$lambda[2] < 0 | is.na(x$lambda[2])){NA}else if(x$lambda[2] < x$lambda[1]){NA}else{max(.Machine$double.eps, x$lambda[2])})) |>
-    lapply(setDT) |> rbindlist(idcol = "comparison")
-
-  out <- merge(orig_imps, bootstrapped_cis_tabled, by = "comparison", sort = FALSE)
+  # The output
+  out <- data[, estimate_imp_boot_ci(B, .SD, type_numeric, level),
+              by = comparison]
   setcolorder(x = out, neworder = c("comparison","CV_A", "CV_A_lwr", "CV_A_upr", "CV_B", "CV_B_lwr", "CV_B_upr", "lambda", "lambda_lwr", "lambda_upr", "Var_A", "Var_A_lwr", "Var_A_upr", "Var_B", "Var_B_lwr", "Var_B_upr"))
 
   return(out)

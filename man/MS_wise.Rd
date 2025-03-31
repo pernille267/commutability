@@ -2,22 +2,56 @@
 % Please edit documentation in R/MS_wise.R
 \name{MS_wise}
 \alias{MS_wise}
-\title{MS_wise}
+\title{Transform IVD-MD data to IVD-MD Comparison-wise Data (Deprecated)}
 \usage{
 MS_wise(data)
 }
 \arguments{
-\item{data}{\code{list} or \code{data.table} including \code{SampleID}, \code{ReplicateID}, and at least two IVD-MD measurement result columns}
+\item{data}{A \code{data.table} or \code{list}. Must contain:
+\itemize{
+   \item \code{SampleID: } A \code{character} vector. The sample
+         identifiers.
+   \item \code{ReplicateID: } A \code{character} vector. The
+         replicate measurement identifiers.
+   \item \code{IVD-MD 1: } A \code{numeric} vector. The first
+         IVD-MD.
+   \item \code{...}
+   \item \code{IVD-MD n:} A \code{numeric} vector. The n-th
+         IVD-MD.
+}}
 }
 \value{
-Returns a \code{data.table} that represents the long-formatted equivalent of the input \code{data}. The resulting \code{data.table} will encompass the following columns in the specified order: 'comparison', 'SampleID', 'ReplicateID', 'MP_B', and 'MP_A'.
+A \code{data.table}. The long-formatted equivalent of the input \code{data}.
+Will encompass the following columns in the specified order:
+\itemize{
+ \item \code{comparison: } A \code{character} vector. The comparison
+       identifiers. It is on the form \code{'MP_A - MP_B'}.
+ \item \code{SampleID: } A \code{character} vector. The sample identifiers.
+ \item \code{ReplicateID: } A \code{character} vector. The replicated
+       measurement identifiers.
+ \item \code{MP_A: } A \code{numeric} vector. The observed measurement
+       results from IVD-MD \code{MP_A} (response).
+ \item \code{MP_B: } A \code{numeric} vector. The observed measurement
+       results from IVD-MD \code{MP_B} (predictor).
+
+}
 }
 \description{
-This function processes the provided \code{data}, grouping measurements based on every unique combination of the IVD-MD measurement columns. Within each IVD-MD combination, measurements are further grouped by \code{SampleID} and \code{ReplicateID}.
+Processes \code{data}, by grouping measurements based on every unique
+combination of the IVD-MD measurement columns. Within each IVD-MD
+combination, measurements are further grouped by \code{SampleID} and
+\code{ReplicateID}.
 }
 \details{
-To ensure optimal compatibility with other functions in this package, it is recommended that the IVD-MD measurement columns in \code{data} are sorted in alphabetical order. This assists in consistently maintaining the 'comparison' column of the output for both clinical sample (CS) data and external quality assessment material (EQAM) data.
-However, take note that the \code{repair_data()} function automatically sorts the IVD-MD measurement columns. As such, it is a good practice to preprocess your CS data or EQAM data through \code{repair_data()} prior to using this function.
+To ensure optimal compatibility with other functions in this package,
+it is recommended that the IVD-MD measurement columns in \code{data} are
+sorted in alphabetical order. This assists in consistently maintaining the
+'comparison' column of the output for both clinical sample (CS) data and
+evaluated material data.
+
+Note \code{repair_data()} can assist to convert \code{data} to the correct
+format. As such, it is a good practice to preprocess \code{data} through
+\code{repair_data()} prior to using this function.
 }
 \examples{
 print(1)

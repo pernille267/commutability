@@ -2,7 +2,8 @@
 % Please edit documentation in R/estimate_prediction_data.R
 \name{estimate_prediction_data}
 \alias{estimate_prediction_data}
-\title{Estimate prediction intervals for Deming regression based on clinical sample (CS) data and possibly external quality assessment (EQA) material data or certified reference (CR) material data}
+\title{Estimate Prediction Intervals Based on Clinical Sample (CS) data and
+Evaluated Material Data}
 \usage{
 estimate_prediction_data(
   data,
@@ -16,36 +17,152 @@ estimate_prediction_data(
 )
 }
 \arguments{
-\item{data}{A \code{list}, \code{data.table} or \code{data.frame} containing the measurements of clinical samples grouped by \code{comparison}, \code{SampleID} and \code{ReplicateID}.}
-
-\item{new_data}{A \code{list}, \code{data.table}, or \code{data.frame} with measurements of either external quality assessment materials, reference materials or new values for \code{MP_B}. If \code{SampleID}, \code{MP_A}, and \code{MP_B} columns are provided, the function will produce commutability evaluation data (CE data) based on the external quality assessment material measurements or reference material measurements. If \code{new_data = NULL}, it will generate prediction band data for the \code{MP_B} values of \code{data}. Alternatively, \code{new_data} can also be a \code{character} string in the format 'gen#number' (see details).}
-
-\item{B}{An \code{integer} that specifies the number of bootstrap resamples to be used for estimating the inside rates (commutability conclusion consistency) for the external quality assessment materials. Set to \code{NULL} to exclude calculations of inside rates.}
-
-\item{method}{A \code{character} string that denotes the method to be used for estimating the prediction intervals. The default is \code{'fg'}. Current possible prediction interval estimation methods include:
+\item{data}{A \code{list}, \code{data.table} or \code{data.frame}. The
+CS data. Must contain the following variables:
 \itemize{
-  \item{\code{fg}: }{Implements standard Deming regression with prediction intervals calculated using the Fuller and Gillard method.}
-  \item{\code{clsi}: }{Utilizes standard Deming regression, with prediction intervals derived from the CLSI EP14 method.}
-  \item{\code{ols}: }{Implements Ordinary Least Squares regression, where the predictor is selected to minimize the variance of the ignored IVD-MD uncertainty. Specifically, \code{MP_A} is used as the predictor when \code{lambda < 1}, otherwise, \code{MP_B} is utilized.}
+   \item \code{comparison: } A \code{character} vector. The
+         comparison identifiers. Typically on the form
+         \code{'MP_A - MP_B'}.
+   \item \code{SampleID: } A \code{character} vector. The sample
+         identifiers for the clinical samples.
+   \item \code{ReplicateID: }A \code{character} vector. The
+         replicated measurement identifiers.
+   \item \code{MP_A: } A \code{numeric} vector. The observed
+         measurement results from IVD-MD \code{MP_A} (response).
+   \item \code{MP_B: } A \code{numeric} vector. The observed
+         measurement results from IVD-MD \code{MP_A} (predictor).
 }}
 
-\item{level}{A \code{double} between 0 and 1, representing the confidence level of the estimated prediction intervals.}
+\item{new_data}{A \code{list}, \code{data.table} or \code{data.frame}. The
+CS data. Must contain the following variables:
+\itemize{
+   \item \code{comparison: } See \code{data}.
+   \item \code{MP_B: } See \code{data}.
+}
+Can contain:
+\itemize{
+   \item \code{SampleID: } A \code{character} vector. The
+   sample identifiers for the evaluated material samples.
+   \item \code{ReplicateID: } See \code{data}.
+   \item \code{MP_A: } See \code{data}.
+}
+Can alternatively be a \code{character} string. See details.}
 
-\item{rounding}{An \code{integer} that defines the number of decimals to be returned in the output. The default is \code{3}.}
+\item{B}{An \code{integer}. The desired number of bootstrap resamples to be
+used for estimating the inside rates (commutability conclusion
+consistency) for the evaluated materials. If \code{NULL} (default),
+inside rates are not calculated.}
 
-\item{override_R_ratio}{Either a \code{list} or \code{NULL}, with \code{NULL} being the default. When provided as a \code{list}, it should include the IVD-MD comparison-specific ratios of the number of replicates between EQA/CR material data and CS data. This parameter is beneficial when distinct IVD-MD comparisons have varying replicate counts among CS data and EQA/CR data, and you need to compute pointwise prediction intervals or prediction bands.}
+\item{method}{A \code{character} string. The method used to estimate
+              prediction intervals. The default is \code{'fg'}. Current
+              possible prediction interval estimation methods include:
+\itemize{
+  \item \code{fg: } Implements standard Deming regression with prediction
+         intervals estimated using the Fuller and Gillard method.
+  \item \code{clsi: } Utilizes standard Deming regression with prediction
+                      intervals estimated using the CLSI EP14 approach.
+  \item \code{ols: } Implements Ordinary Least Squares regression.
+  \item \code{ss: } Implements Smoothing Splines with prediction intervals
+                    approximated using an heuristic extension of the
+                    bayesian confidence intervals derived by Grace Wahba.
+                    See references.
+  \item \code{ssw: } Implements Weighted Smoothing Splines with prediction
+                     intervals approximated using a heuristic extension of
+                     the bayesian confidence intervals derived by Grace
+                     Wahba. See references.
+}}
 
-\item{na_rm}{A \code{logical} that indicates whether NA-values should be silently removed from \code{data} and \code{new_data}. The default is \code{TRUE}.}
+\item{level}{A \code{double}. Must be between \code{0} and \code{1}. The
+desired nominal confidence level for the estimated prediction
+intervals. Defaults to \code{0.99} (\eqn{99\%}).}
+
+\item{rounding}{An \code{integer}. The number of decimals to include in the
+\code{numeric} results. Defaults to \code{3L}.}
+
+\item{override_R_ratio}{A \code{list} or \code{NULL} (default). When
+provided as a \code{list}, it should include the
+IVD-MD comparison-specific ratios of the number of
+replicates between evaluated material data and CS
+data.}
+
+\item{na_rm}{A \code{logical} value. Indicates whether \code{NA} values are
+silently removed from \code{data} and \code{new_data}. Defaults
+to \code{TRUE}.}
 }
 \value{
-A \code{data.table} containing either commutability evaluation data (CE data) or prediction band data (PB data), depending on the content of \code{new_data}.
+A \code{data.table}. Depending on the structure of \code{new_data},
+contains either commutability evaluation data (CE data) or prediction band
+data (PB data).
 }
 \description{
-Estimate prediction intervals for Deming regression based on clinical sample (CS) data and possibly external quality assessment (EQA) material data or certified reference (CR) material data
+Estimate Prediction Intervals Based on Clinical Sample (CS) data and
+Evaluated Material Data
 }
 \details{
-When \code{new_data} is a \code{character} string it most be on the format 'gen#number' or 'number#gen', where number is an integer. For example, setting \code{new_data = 'gen#100'} or \code{new_data = '100#gen'} would instruct the function to generate 100 pointwise prediction intervals uniformly distributed across the range of IVD-MD measurements for each comparison. Note that is is not yet possible to generate prediction band data using \code{method = 'ols'}.
+The output of this function depends greatly on the input of \code{new_data}.
+If \code{new_data} contains \code{SampleID} and \code{MP_A}, the function
+returns the so-called CE (Commutability Evaluation) data. If either of these
+are omitted, or if \code{new_data} is a \code{character} string, the
+function returns the so-called PB (Prediction Band) data.
+
+Note: CE data is typically coded \code{ce_data}. PB data is often coded
+\code{pb_data}. These codings are important to remember because they are
+used in e.g., \code{do_commutability_evaluation()} and
+\code{plot_commutability_evaluation_plots()}.
+
+When \code{new_data} is a \code{character} string it most be on the format
+\code{'gen#number'} or \code{'number#gen'}, where \code{number} is an
+integer. For example, setting \code{new_data = 'gen#100'} or
+\code{new_data = '100#gen'} would instruct the function to generate
+\code{100} pointwise prediction intervals uniformly distributed across the
+domain of the IVD-MD measurements for each comparison.
 }
 \examples{
-print(1)
+# Required packages
+library(smooth.commutability)
+library(fasteqa)
+library(data.table)
+
+test_crp_cs_data <- copy(crp_cs_data)
+test_crp_eq_data <- copy(crp_eqam_data)
+
+# Estimate CE (Commutability Evaluation) data using weighted smoothing spline
+print(estimate_prediction_data(data = test_crp_cs_data,
+                               new_data = test_crp_eq_data[SampleID == "1"],
+                               B = 50,
+                               method = "ssw",
+                               level = 0.99,
+                               rounding = 3L,
+                               override_R_ratio = NULL,
+                               na_rm = TRUE))
+
+# Estimate PB (Prediction Band) data using weighted smoothing spline
+pb_data <- estimate_prediction_data(data = test_crp_cs_data,
+                                    new_data = "gen#20",
+                                    B = NULL,
+                                    method = "ssw",
+                                    level = 0.99,
+                                    rounding = 2L,
+                                    override_R_ratio = NULL,
+                                    na_rm = TRUE)
+
+# The PB data for the AQT90 - Chroma comparison
+pb_data_AQT90_Chroma <- pb_data[comparison == "AQT90 - Chroma"]
+print(pb_data_AQT90_Chroma)
+
+# Plotting the PB data for the AQT90 - Chroma comparison
+mor_test_crp_cs_data <- test_crp_cs_data[comparison == "AQT90 - Chroma", fun_of_replicates(.SD)]
+plot(x = mor_test_crp_cs_data$MP_B,
+     y = mor_test_crp_cs_data$MP_A,
+     main = "Prediction Band Data For AQT90 - Chroma",
+     xlab = "Chroma",
+     ylab = "AQT90",
+     pch = 20)
+lines(x = pb_data_AQT90_Chroma$predictor,
+      y = pb_data_AQT90_Chroma$lwr,
+      col = "red")
+lines(x = pb_data_AQT90_Chroma$predictor,
+      y = pb_data_AQT90_Chroma$upr,
+      col = "red")
+
 }

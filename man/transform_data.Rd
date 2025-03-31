@@ -2,28 +2,101 @@
 % Please edit documentation in R/transform_data.R
 \name{transform_data}
 \alias{transform_data}
-\title{Transformation of EQA data}
+\title{Transformation of IVD-MD Comparison Data}
 \usage{
 transform_data(data, transformation = "log")
 }
 \arguments{
-\item{data}{A \code{list}, \code{data table} or \code{data frame} that must contain \code{MP_A} and \code{MP_B}}
+\item{data}{A \code{data.table}, \code{list} or \code{data.frame}. Must
+contain \code{MP_A} and \code{MP_B}. For special transformations
+it must also contain \code{comparison} and \code{SampleID}.
+See details on information on special transformations.}
 
-\item{transformation}{\code{character} - Either a string seperated by space or symbol so that we have transformation|seperator|value. For example, if the cube root is required, you e.g., write root#3 or root_3. Possible transformations are:
-\itemize{
-  \item{\code{log}: }{log-transformation, with values representing the base of the log-transformation. All values to be transformed must be positive}
-  \item{\code{root}: }{root-transforomation, with values representing which root is taken, e.g., 2 for square root, 3 for cube root or other integers. All values to be transformed values must be non-negative}
-  \item{\code{pow}: }{power-transformation, with values representing the power taken, e.g., 2 for squaring, 3 for cubing or other integers. If value < 1, all values to be transformed must be non-negative}
-  \item{\code{inv}: }{inverse-transformation, with values representing the power of the denominator of the invserse transformation. If value < 1, all values transformed to be transformed must be non-negative}
-  \item{\code{id}: }{indentity-transformation, which means no transformation at all}
-}}
+\item{transformation}{A \code{character} string. A \code{character}
+formatted like this: \code{'transformation#parameter'}.
+See details.}
 }
 \value{
-The transformed \code{data} as a \code{data table}
+A \code{data.table}. The transformed \code{data}.
 }
 \description{
-Transformation of EQA data
+Apply a particular transformation to \code{MP_A} and \code{MP_B} in
+\code{data}. Not necessarily univariate transformations. See details.
+}
+\details{
+To transform \code{MP_A} and \code{MP_B} in \code{data}, one need to specify
+a particular transformation to apply. There are five different
+transformations one can apply:
+\itemize{
+   \item \code{log: } Log-transformation.
+         Use \code{transformation = 'log#base'}, where \code{'base'} is the
+         desired base (positive \code{double}) to use in the
+         log-transformation. For example, \code{'log#e'} transform the data
+         using natural logs.
+   \item \code{root: } Root-transformation. Use
+         \code{transformation = 'root#n'}, where \code{'n'} (an integer) is
+         the desired root. For example, \code{'root#2'} is the square root.
+   \item \code{pow: } Power-transformation. Use
+         \code{transformation = 'pow#exponent'}, where \code{'exponent'}
+         (a \code{double}) is the desired power. For example \code{'pow#3'}
+         applies cube transformation.
+   \item \code{boxcox: } Box-Cox transformation. Use
+         \code{transformation = 'boxcox#lambda'}, where \code{'lambda'}
+         (a positive \code{double}) is the desired Box-Cox parameter.
+   \item \code{identity: } No transformation.
+}
+Alternatively, one can apply custom transformations among the allowed
+variants:
+\itemize{
+   \item \code{'log': } Natural log-transformation. Same as \code{'log#e'}.
+   \item \code{'ln': }  Natural log-transformation. Same as \code{'log#e'}.
+   \item \code{'log10': } log-transformation with base \code{10}. Same as
+         \code{'log#10': }.
+   \item \code{'sqrt': } Square-root transformation. Same as
+         \code{'root#2'}.
+   \item \code{'cuberoot': } Cube-root transformation. Same as
+         \code{'root#3'}.
+   \item \code{'square': } Square transformation. Same as \code{'pow#2'}
+   \item \code{'cube': } Cube transformation. Same as \code{'pow#3'}
+   \item \code{'unit': } Unit-transformation. Transforms to unit interval.
+   \item \code{'ba': } Bland-Altman transformation. Two-dimensional
+         transformation. Using aritmetic differences.
+   \item \code{'bal': } Bland-Altman transformation. Two-dimensional
+         transformation. Using log-differences.
+}
+The latter three transformations are considered special transformations.
+
+Note: using log- or root- type transformations are not allowed if
+\code{data} contains negative values. Negative values will be replaced
+with NA-values prior to transformation if unsuitable transformaton types
+are desired. You have been warned.
 }
 \examples{
-print(1)
+# Required packages
+library(smooth.commutability)
+library(data.table)
+
+# Use example data from the smooth.commutability package
+test_cs_data <- copy(crp_cs_data)
+
+# Apply log-transformation
+test_cs_data_log_transformed <- transform_data(data = test_cs_data,
+                                               transformation = "log")
+
+# Output
+print(test_cs_data_log_transformed)
+
+# Apply Bland-Altman transformation (w. logarithmic differences)
+test_cs_data_bal_transformed <- transform_data(data = test_cs_data,
+                                               transformation = "bal")
+
+# Output
+print(test_cs_data_bal_transformed)
+
+# Apply Box-Cox transformation (w. parameter = 0.5)
+test_cs_data_boxcox_0.5_transformed <- transform_data(data = test_cs_data,
+                                                      transformation = "boxcox#0.5")
+
+# Output
+print(test_cs_data_boxcox_0.5_transformed)
 }

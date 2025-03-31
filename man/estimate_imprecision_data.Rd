@@ -13,27 +13,68 @@ estimate_imprecision_data(
 )
 }
 \arguments{
-\item{data}{\code{list}, \code{data frame} or \code{data table} that is grouped by \code{"comparison"}. Furthermore, must contain the following columns: \code{comparison}, \code{SampleID}, \code{ReplicateID}, \code{MP_A} and \code{MP_B}.}
-
-\item{B}{\code{Integer} - Number of bootstrap replicates used to estimate bootstrap confidence intervals. The default is 2000, which is the typical for bootstrap confidence intervals. Note that if you have more than five unique IVD-MDs in \code{data}, it may take approximately two seconds to run the resampling.}
-
-\item{type}{\code{Character} - Type of bootstrap confidence interval. There are four options:
+\item{data}{A \code{list}, \code{data.table} or \code{data.frame}. The
+CS data. Must contain the following variables:
 \itemize{
-  \item{\code{normal}: }{Standard normal bootstrap confidence intervals}
-  \item{\code{basic}: }{Basic bootstrap confidence intervals}
-  \item{\code{percentile}: }{Percentile bootstrap confidence intervals}
-  \item{\code{BCa}: }{Bias- and skewness-corrected bootstrap confidence intervals}
+   \item \code{comparison: } A \code{character} vector. The
+         comparison identifiers. Typically on the form
+         \code{'MP_A - MP_B'}.
+   \item \code{SampleID: } A \code{character} vector. The sample
+         identifiers for the clinical samples.
+   \item \code{ReplicateID: }A \code{character} vector. The
+         replicated measurement identifiers.
+   \item \code{MP_A: } A \code{numeric} vector. The observed
+         measurement results from IVD-MD \code{MP_A} (response).
+   \item \code{MP_B: } A \code{numeric} vector. The observed
+         measurement results from IVD-MD \code{MP_A} (predictor).
 }}
 
-\item{level}{\code{Numeric} - Confidence level of the bootstrap confidence intervals. A 95 percent confidence level is the default.}
+\item{B}{An \code{integer}. Must be larger than or equal to \code{50}. The
+Number of bootstrap replicates used to estimate bootstrap
+confidence intervals for each of the repeatability imprecision
+statistics. Defaults to \code{2e3L} (2,000). If \code{NULL},
+estimated confidence intervals are not calculated.}
 
-\item{invalid_NA}{A \code{logical} value. If set to \code{TRUE}, the function will return \code{NA} for zeta when encountering invalid input or computation errors instead of raising an error. While this is not generally recommended due to the risk of masking potential issues, it can be useful in certain scenarios where uninterrupted execution is a priority.}
+\item{type}{A \code{character} string. Determines the bootstrap method to
+ apply for estimating the confidence intervals:
+ \itemize{
+    \item \code{normal: } Standard normal bootstrap confidence
+                          interval.
+    \item \code{basic: } Basic bootstrap confidence interval.
+    \item \code{percentile: } Percentile bootstrap confidence
+                              interval.
+    \item \code{BCa: } Bias- and skewness-corrected bootstrap
+                       confidence interval.
+}}
+
+\item{level}{A \code{double}. Must be between \code{0} and \code{1}. The
+desired nominal confidence level for the bootstrap estimated
+confidence intervals. The default is \code{0.95} (\eqn{95\%}).}
+
+\item{invalid_NA}{A \code{logical} value. If \code{TRUE} (not recommended),
+return \code{NA} rather than throwing an error if
+something goes wrong.}
 }
 \value{
-A \code{data table} with entries \code{CV_A}, \code{CV_A_lwr}, \code{CV_A_upr}, \code{CV_B}, \code{CV_B_lwr}, \code{CV_B_upr}, \code{lambda}, \code{lambda_lwr}, \code{lambda_upr}, \code{Var_A}, \code{Var_A_lwr}, \code{Var_A_upr}, \code{Var_B}, \code{Var_B_lwr}, \code{Var_B_upr}
+A \code{data.table} with \code{unique(data$comparison)} rows and \code{5} or
+\code{15} columns. The columns are named: \code{CV_A}, \code{CV_A_lwr},
+\code{CV_A_upr}, \code{CV_B}, \code{CV_B_lwr}, \code{CV_B_upr},
+\code{lambda}, \code{lambda_lwr}, \code{lambda_upr}, \code{Var_A},
+\code{Var_A_lwr}, \code{Var_A_upr}, \code{Var_B}, \code{Var_B_lwr},
+\code{Var_B_upr}.
 }
 \description{
-Obtain all necessary information on imprecision data for each unique pair of IVD-MDs in your data. The output is on the form required by \code{merge_results}(), making it very useful.
+Obtains all necessary information on repeatability imprecision for each
+unique IVD-MD pair (\code{comparison}) in \code{data}.
+}
+\details{
+Estimate \code{Var_A}, \code{Var_B}, \code{CV_A}, \code{CV_B} and
+\code{lambda}, with corresponding bootstrap confidence intervals for each
+unique \code{comparison} element in \code{data}.
+
+This function is generally not recommended to be used by end-users. It is
+however an extremely important helping function that is used in the
+\code{do_commutability_evaluation()} wrapper function.
 }
 \examples{
 print(1)

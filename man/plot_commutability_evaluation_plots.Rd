@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_commutability_evaluation_plots.R
 \name{plot_commutability_evaluation_plots}
 \alias{plot_commutability_evaluation_plots}
-\title{Plots commutability evaluation plots based on ce_data, pb_data and ce_data}
+\title{Plot Commutability Evaluation Plots For Each Comparison}
 \usage{
 plot_commutability_evaluation_plots(
   cs_data,
@@ -16,50 +16,108 @@ plot_commutability_evaluation_plots(
 )
 }
 \arguments{
-\item{cs_data}{This is either a \code{list}, \code{data.table} or \code{data.frame} containing mean-of-replicates clinical sample data. Data should be grouped by both \code{comparison} and \code{SampleID}.}
-
-\item{pb_data}{This can be a \code{list}, \code{data.table} or \code{data.frame} containing pointwise prediction interval or prediction band data. This data should be grouped by \code{comparison}.}
-
-\item{ce_data}{This should be a \code{list}, \code{data.table} or \code{data.frame} that holds prediction interval data along with commutability evaluation data for assessed external quality assessment materials or reference materials. It must be grouped by both \code{comparison} and \code{SampleID}.}
-
-\item{exclude_rings}{A \code{logical} value that indicates whether circles, denoting the relative consistency of commutability evaluation conclusions, should be omitted. The default is \code{FALSE}.}
-
-\item{exclude_cs}{A \code{logical} value that determines whether to exclude clinical sample data from the plots. The default is \code{FALSE}.}
-
-\item{plot_theme}{A \code{character} string specifying the desired plotting theme. Options include 'custom', 'default', 'noklus', 'soft', 'depression', and 'happy'. The default is 'custom', which applies no particular theme to the plots unless specified in \code{additional_arguments}.}
-
-\item{additional_arguments}{This is a \code{list} specifying additional arguments to modify the output plot. The default value is \code{NULL}, indicating that the plot will be generated using the default settings. Optional additional arguments can be provided to customize the plot according to specific requirements.
+\item{cs_data}{A \code{data.table}, \code{list}, or \code{data.frame}. The
+mean-of-replicates (MOR) clinical sample data. Must contain:
 \itemize{
-  \item{\code{main_title}: }{Main title of the plot}
-  \item{\code{sub_title}: }{Sub title of the plot}
-  \item{\code{x_name}: }{Title of the x-axis}
-  \item{\code{y_name}: }{Title of the y-axis}
-  \item{\code{n_breaks}: }{Number of axis-breaks}
-  \item{\code{title_color}: }{Text color of 'main_title'. Default color is \code{'black'}}
-  \item{\code{sub_title_color}: }{Text color of 'sub_title'. Default color is \code{'black'}}
-  \item{\code{pb_fill:  }}{Fill color of prediction bands. Default fill color is \code{'green'}}
-  \item{\code{pb_border}:  }{Color of the border of the prediction bands. Default color is \code{'black'}}
-  \item{\code{curve}:  }{Should a curve be included to the clinical samples measurements. Default is \code{FALSE}}
-  \item{\code{curve_type}: }{Which type of curve should be included. Only relevant if \code{curve = TRUE}. Possible values are 'equivalence_curve', 'fitted_curve' and 'flexible_curve'}
-  \item{\code{curve_color}: }{Color of curve. Only relevant if \code{curve = TRUE}. Default is \code{'black'}.}
-  \item{\code{point_shape}: }{Shape of clinical sample points. Possible inputs are 'circle' (default), 'square', 'diamond' and 'triangle'}
-  \item{\code{point_size}: }{Size of clinical sample points. Possible inputs are of type \code{double} and must larger than 0. Default is automatically determined}
-  \item{\code{point_fill}: }{fill color of clinical sample points. May be a color defined in \code{colors()} or a HEX code}
-  \item{\code{point_border}: }{border color of clinical sample points. May be a color defined in \code{colors()} or a HEX code. Default color is \code{'black'}}
-  \item{\code{comparison_fill}: }{Fill color for the individual plot labels listing the IVD-MD comparisons. Must be a valid color name or HEX code}
-  \item{\code{comparison_text_color}: }{Text color for the individual plot labels listing the IVD-MD comparisons. Must be a valid color name or HEX code}
-  \item{\code{hide_prediction_intervals}: }{Should the black prediction intervals for each EQAM be hidden?}
-  \item{\code{legend_fill}: }{Fill color for the legend regions. Must be a valid color name or HEX code}
-  \item{\code{legend_text_color}: }{Text color for the legends. Must be a valid color name or HEX code}
+  \item \code{comparison: } A \code{character} vector.
+        The IVD-MD comparison identifiers. Typically on the
+        form \code{'MP_A - MP_B'}.
+  \item \code{SampleID: } A \code{character} vector. The
+        clinical sample identifiers.
+  \item \code{MP_A: } A \code{numeric} vector. The
+        mean-of-replicates results from IVD-MD \code{MP_A}
+        (response).
+  \item \code{MP_B: } A \code{numeric} vector. The
+        mean-of-replicates results from IVD-MD \code{MP_B}
+        (predictor).
 }}
 
-\item{testing}{A \code{logical} value indicating whether the function output should be test-friendly. This parameter is primarily intended for maintainers and not typically modified by end-users. The default value is \code{FALSE}.}
+\item{pb_data}{A \code{data.table} or \code{data.frame}. The Prediction Band
+(PB) data. See \code{?do_commutability_evaluation()}.}
+
+\item{ce_data}{A \code{data.table} or \code{data.frame}. The Commutability
+Evaluation (CE) data. See
+\code{?do_commutability_evaluation()}.}
+
+\item{exclude_rings}{A \code{logical}. If \code{TRUE}, \code{inside_rate}
+circles are not drawn in the plots.}
+
+\item{exclude_cs}{A \code{logical}. If \code{TRUE}, clinical sample
+mean-of-replicates results are not drawn in the plots.}
+
+\item{plot_theme}{A \code{character} string. The desired plotting theme.
+Options include:
+\itemize{
+   \item \code{custom: } No predefined theme. Customized
+         theme may be defined by given arguments in
+         \code{additional_arguments}.
+   \item \code{default: } Uses default theme.
+   \item \code{noklus: } Uses Noklus colors.
+   \item \code{soft: } Uses pastel colors.
+   \item \code{depression: } Uses dark hues such as black,
+         gray, and purple.
+   \item \code{happy: } Uses vibrant colors such as orange,
+         red and yellow.
+}}
+
+\item{additional_arguments}{A \code{list}. Additional arguments to modify
+the appearance of the output plot. The default
+value is \code{NULL}, indicating that the plot
+will be generated using the default settings.
+Possible additional_argument entries include:
+\itemize{
+   \item \code{main_title: } Main title of the plot
+   \item \code{sub_title: } Sub title of the plot
+   \item \code{x_name: } Title of the x-axis
+   \item \code{y_name: } Title of the y-axis
+   \item \code{n_breaks: } Number of axis-breaks
+   \item \code{title_color: } Text color of 'main_title'. Defaults to
+         \code{'black'}.
+   \item \code{sub_title_color: } Text color of 'sub_title'. Defaults to
+         \code{'black'}
+   \item \code{pb_fill:  } Fill color of prediction bands if differences in
+         non-selectivity is acceptable. Defaults to \code{'green'}.
+   \item \code{pb_border: } Color of the border of the prediction bands.
+         Defaults to \code{'black'}.
+   \item \code{curve: } Should a additional curve be drawn based on either
+         the clinical sample measurements or something else. defaults to
+         \code{FALSE}.
+   \item \code{curve_type: } The curve type to draw. Relvant if
+         \code{curve = TRUE}. Possible choices are limited to
+         \code{'equivalence_curve'}, \code{'fitted_curve'} and
+         \code{'flexible_curve'}.
+   \item \code{curve_color: } The curve color. Relevant if
+         \code{curve = TRUE}. Defaults to \code{'black'}.
+   \item \code{point_shape: } The desired shape of clinical sample points.
+         Possible choices include: \code{'circle'} (default), \code{'square'},
+         \code{'diamond'} and \code{'triangle'}.
+   \item \code{point_size: } A \code{double} larger than \code{0}. The size
+         (in pts) of drawn clinical sample points. Default is selected by
+         \code{ggplot()}.
+   \item \code{point_fill: } The fill color of the clinical sample points.
+   \item \code{point_border: } The border color of clinical sample points.
+   \item \code{comparison_fill: } The fill color for the IVD-MD comparison
+         strip labels.
+   \item \code{comparison_text_color: } The text color for the IVD-MD
+         comparison strip labels.
+   \item \code{hide_prediction_intervals: } If \code{TRUE}, pointwise
+         prediction intervals for evaluated material are not drawn.
+   \item \code{legend_fill: } The fill color for the legend background.
+         Defaults to \code{'white'}.
+   \item \code{legend_text_color: } The text color for the legend font.
+         Defaults to \code{'black'}.
+ }}
+
+\item{testing}{A \code{logical} value. If \code{TRUE} (not recommended), the
+output will be in a form that allows testing of the output.
+Primarly used for debugging and should not be used by
+end-users.}
 }
 \value{
-A \code{ggplot2} object that is a grid of plots having dimensions corresponding to the number of unique IVD-MD comparisons
+A \code{ggplot2} object.
 }
 \description{
-Plots commutability evaluation plots based on ce_data, pb_data and ce_data
+Plot Commutability Evaluation Plots For Each Comparison
 }
 \examples{
 print(1)

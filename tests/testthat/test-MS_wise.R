@@ -1,85 +1,94 @@
 library(testthat)
-library(commutability)
 library(readxl)
-suppressWarnings(library(data.table))
+library(data.table)
 library(fasteqa)
 
 test_data_1 <- setDT(read_excel("~/Packages/datasets to be tested on/W..EPK2020_CS.xlsx"))
 test_data_2 <- setDT(read_excel("~/Packages/datasets to be tested on/HDLC.CS.FILTERED.xlsx"))
 test_data_3 <- setDT(read_excel("~/Packages/datasets to be tested on/test_data_7.xlsx"))
 test_data_4 <- setDT(read_excel("~/Packages/datasets to be tested on/test_data_6.xlsx"))
-check_data_3 <- check_data(test_data_3)
-check_data_4 <- check_data(test_data_4)
-test_data_3 <- repair_data(test_data_3, check_data_3)
-test_data_4 <- repair_data(test_data_4, check_data_4)
 
-actual_result_1 <- MS_wise(test_data_1)
-actual_result_2 <- MS_wise(test_data_2)
+test_data_1 <- repair_data(test_data_1)
+test_data_2 <- repair_data(test_data_2)
+test_data_3 <- repair_data(test_data_3)
+test_data_4 <- repair_data(test_data_4)
 
-test_that(desc = "Testing for valid names I", code = {
-  expect_named(object = actual_result_1, expected = c("comparison", "SampleID", "ReplicateID", "MP_A", "MP_B"), ignore.order = TRUE)
-  expect_named(object = actual_result_2, expected = c("comparison", "SampleID", "ReplicateID", "MP_A", "MP_B"), ignore.order = TRUE)
+# Testing names of output
+test_that(desc = "Checking output for valid names", code = {
+
+  # The expected names
+  expected_names <- c("comparison", "SampleID", "ReplicateID", "MP_A", "MP_B")
+
+  # Actual output
+  actual_1 <- get_comparison_data(data = test_data_1)
+  actual_2 <- get_comparison_data(data = test_data_3)
+
+  # Tests
+  expect_named(object = actual_1,
+               expected = expected_names,
+               ignore.order = FALSE,
+               ignore.case = FALSE)
+
+  expect_named(object = actual_2,
+               expected = expected_names,
+               ignore.order = FALSE,
+               ignore.case = FALSE)
+
 })
 
-names(test_data_1)[1:2] <- c("smPl","REpl")
-names(test_data_2)[1:2] <- c("Sample_id","R_e_P_i_D")
+# Testing types of output
+test_that(desc = "Checking output types", code = {
 
-actual_result_3 <- MS_wise(test_data_1)
-actual_result_4 <- MS_wise(test_data_2)
-actual_result_5 <- MS_wise(test_data_3)
-actual_result_6 <- MS_wise(test_data_4)
+  # The expected types
+  expected_types <- c("character", "character", "character", "numeric", "numeric")
+  names(expected_types) <- c("comparison", "SampleID", "ReplicateID", "MP_A", "MP_B")
 
-test_that(desc = "Testing for valid names II", code = {
-  expect_named(object = actual_result_3, expected = c("comparison", "SampleID", "ReplicateID", "MP_A", "MP_B"), ignore.order = TRUE)
-  expect_named(object = actual_result_4, expected = c("comparison", "SampleID", "ReplicateID", "MP_A", "MP_B"), ignore.order = TRUE)
-  expect_named(object = actual_result_5, expected = c("comparison", "SampleID", "ReplicateID", "MP_A", "MP_B"), ignore.order = TRUE)
-  expect_named(object = actual_result_6, expected = c("comparison", "SampleID", "ReplicateID", "MP_A", "MP_B"), ignore.order = TRUE)
+  # Actual output
+  actual_1 <- sapply(X = get_comparison_data(data = test_data_3),
+                     FUN = function(out_column) {
+                       class(out_column)
+                     },
+                     simplify = TRUE,
+                     USE.NAMES = FALSE)
+  actual_2 <- sapply(X = get_comparison_data(data = test_data_3),
+                     FUN = function(out_column) {
+                       class(out_column)
+                     },
+                     simplify = TRUE,
+                     USE.NAMES = FALSE)
+
+  # Tests
+  expect_equal(object = actual_1, expected = expected_types)
+  expect_equal(object = actual_2, expected = expected_types)
+
 })
 
-test_that(desc = "Testing correct output types", code = {
-  expect_true(is.character(actual_result_1$comparison))
-  expect_true(is.character(actual_result_1$SampleID))
-  expect_true(is.character(actual_result_1$ReplicateID))
-  expect_true(is.numeric(actual_result_1$MP_A))
-  expect_true(is.numeric(actual_result_1$MP_B))
+# Testing errors
+test_that(desc = "Checking errors / warnings", code = {
 
-  expect_true(is.character(actual_result_2$comparison))
-  expect_true(is.character(actual_result_2$SampleID))
-  expect_true(is.character(actual_result_2$ReplicateID))
-  expect_true(is.numeric(actual_result_2$MP_A))
-  expect_true(is.numeric(actual_result_2$MP_B))
+  # An example of very wrong data
+  unsuitable_data <- data.table("Cat ID" = c(1, 2, 3),
+                                "Breed" = c("naked", "not naked", "forest cat"),
+                                "Tail length" = c(13.22, 11.92, 9.94),
+                                "Has head" = c(TRUE, TRUE, FALSE))
 
-  expect_true(is.character(actual_result_3$comparison))
-  expect_true(is.character(actual_result_3$SampleID))
-  expect_true(is.character(actual_result_3$ReplicateID))
-  expect_true(is.numeric(actual_result_3$MP_A))
-  expect_true(is.numeric(actual_result_3$MP_B))
+  # An example of data that is already on IVD-MD comparison format
+  already_transformed <- get_comparison_data(test_data_1)
 
-  expect_true(is.character(actual_result_4$comparison))
-  expect_true(is.character(actual_result_4$SampleID))
-  expect_true(is.character(actual_result_4$ReplicateID))
-  expect_true(is.numeric(actual_result_4$MP_A))
-  expect_true(is.numeric(actual_result_4$MP_B))
+  # Check if errors are thrown if data is not data.table, list or data.frame
+  expect_error(object = get_comparison_data(data = 1),
+               regexp = "Your input class: 'numeric'")
+  expect_error(object = get_comparison_data(data = c("blabla", "blablabla")),
+               regexp = "Your input class: 'character'")
 
-  expect_true(all(is.character(actual_result_5$comparison),
-                  is.character(actual_result_5$SampleID),
-                  is.character(actual_result_5$ReplicateID),
-                  is.numeric(actual_result_5$MP_A),
-                  is.numeric(actual_result_5$MP_B)))
+  # Check if error is thrown if data is far off
+  expect_error(object = get_comparison_data(data = unsuitable_data),
+               regexp = "Only these columns were found in your 'data' input:")
 
-  expect_true(all(is.character(actual_result_6$comparison),
-                  is.character(actual_result_6$SampleID),
-                  is.character(actual_result_6$ReplicateID),
-                  is.numeric(actual_result_6$MP_A),
-                  is.numeric(actual_result_6$MP_B)))
+  # Check if warning is thrown if data already have a column named comparison
+  expect_warning(object = get_comparison_data(already_transformed),
+                 regexp = "The input 'data' appears to already be in long format.")
+
+
 })
-
-names(test_data_1)[1:2] <- c("Sysmexc","Adviac")
-names(test_data_2)[1:2] <- c("xxxx","yyyy")
-
-test_that(desc = "Testing whether error is thrown", code = {
-  expect_error(MS_wise(test_data_1))
-  expect_error(MS_wise(test_data_2))
-})
-
 

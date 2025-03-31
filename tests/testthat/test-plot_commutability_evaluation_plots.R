@@ -1,153 +1,187 @@
 library(testthat)
-library(commutability)
 library(readxl)
-suppressWarnings(library(data.table))
+library(data.table)
 library(fasteqa)
+library(stringi)
+library(smooth.commutability)
 
-set.seed(1)
-test_data_1 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_1.xlsx")
-test_data_2 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_2.xlsx")
-test_data_3 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_3.xlsx")
-test_data_4 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_4.xlsx")
-test_data_5 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_5.xlsx")
-test_data_6 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_6.xlsx")
-test_data_7 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_7.xlsx")
+# Read data to be tested
+test_cs_data <- copy(crp_cs_data)
+test_eq_data <- copy(crp_eqam_data)
+test_cs_data_2 <- copy(commutability_cs_data)
+test_eq_data_2 <- copy(commutability_eq_data)[stri_detect(str = SampleID,
+                                                          fixed = "RM")]
 
-check_data_1 <- check_data(test_data_1)
-check_data_2 <- check_data(test_data_2)
-check_data_3 <- check_data(test_data_3)
-check_data_4 <- check_data(test_data_4)
-check_data_5 <- check_data(test_data_5)
-check_data_6 <- check_data(test_data_6)
-check_data_7 <- check_data(test_data_7)
+# TEST first data
+test_that(desc = "Check stuff 1", code = {
 
-test_cs_data_1 <- repair_data(data = test_data_1, check_data_1)[!SampleID %in% c("19","22"),] |> MS_wise()
-test_eq_data_1 <- repair_data(data = test_data_1, check_data_1)[SampleID %in% c("19","22"),] |> MS_wise()
-test_mo_data_1 <- lapply(X = split(test_cs_data_1, by = "comparison", keep.by = FALSE),
-                         FUN = fun_of_replicates) |> rbindlist(idcol = "comparison")
-
-test_cs_data_2 <- repair_data(data = test_data_2, check_data_2)[!SampleID %in% c("10","7"),] |> MS_wise()
-test_eq_data_2 <- repair_data(data = test_data_2, check_data_2)[SampleID %in% c("10","7"),] |> MS_wise()
-test_mo_data_2 <- lapply(X = split(test_cs_data_2, by = "comparison", keep.by = FALSE),
-                         FUN = fun_of_replicates) |> rbindlist(idcol = "comparison")
-
-test_cs_data_3 <- repair_data(data = test_data_6, check_data_6)[!SampleID %in% c("sample id 1","sample id 2"),] |> MS_wise() |> na.omit()
-test_eq_data_3 <- repair_data(data = test_data_6, check_data_6)[SampleID %in% c("sample id 1","sample id 2"),] |> MS_wise() |> na.omit()
-test_mo_data_3 <- lapply(X = split(test_cs_data_3, by = "comparison", keep.by = FALSE),
-                         FUN = fun_of_replicates) |> rbindlist(idcol = "comparison")
+  # Pick random theme
+  plot_theme <- sample(x = c("default", "noklus", "depression", "soft", "happy"),
+                       size = 1)
 
 
-test_plot_input_1 <- do_commutability_evaluation(data = test_cs_data_1,
-                                                 new_data = test_eq_data_1,
-                                                 B = 50,
-                                                 N = 50,
-                                                 method_pi = "fg",
-                                                 upper_zeta = 2.25)
+  # Commutability Evaluation Components
+  dce_1 <- do_commutability_evaluation(data = test_cs_data,
+                                       new_data = test_eq_data,
+                                       B = 2000L,
+                                       N = 1000L,
+                                       method_pi = "fg",
+                                       method_bs = "BCa",
+                                       upper_zeta = 3.49,
+                                       level_pi = 0.99,
+                                       level_bs = 0.95,
+                                       output = "sufficient")
 
-test_plot_input_2 <- do_commutability_evaluation(data = test_cs_data_2,
-                                                 new_data = test_eq_data_2,
-                                                 B = 50,
-                                                 N = 50,
-                                                 method_pi = "fg",
-                                                 upper_zeta = 2.25)
+  # Mor data
+  test_mor_cs_data <- test_cs_data[, fun_of_replicates(.SD), by = comparison]
 
-test_plot_input_3 <- do_commutability_evaluation(data = test_cs_data_3,
-                                                 new_data = test_eq_data_3,
-                                                 B = 50,
-                                                 N = 50,
-                                                 method_pi = "fg",
-                                                 upper_zeta = 2.25)
+  # Expect to run without errors
+  expect_no_condition(object = plot_commutability_evaluation_plots(
+    cs_data = test_mor_cs_data,
+    pb_data = dce_1$merged_pb_data,
+    ce_data = dce_1$merged_ce_data,
+    exclude_rings = FALSE,
+    exclude_cs = FALSE,
+    plot_theme = plot_theme,
+    additional_arguments = NULL)
+  )
 
-test_that(desc = "Testing some of the warnings", code = {
+  actual_1 <- plot_commutability_evaluation_plots(cs_data = test_mor_cs_data,
+                                                  pb_data = dce_1$merged_pb_data,
+                                                  ce_data = dce_1$merged_ce_data,
+                                                  exclude_rings = FALSE,
+                                                  exclude_cs = FALSE,
+                                                  plot_theme = plot_theme,
+                                                  additional_arguments = NULL)
 
+  actual_1_labels <- names(actual_1$labels)
 
-  expect_warning(plot_commutability_evaluation_plots(cs_data = test_mo_data_1,
-                                                     pb_data = test_plot_input_1$merged_pb_data,
-                                                     ce_data = test_plot_input_1$merged_ce_data,
-                                                     exclude_cs = TRUE,
-                                                     exclude_rings = TRUE,
-                                                     plot_theme = "default",
-                                                     additional_arguments = list("sub_title" = 1:10)))
+  # Expect to find alpha because exclude_rings = FALSE
+  expect_true(object = any("alpha" == actual_1_labels))
 
-  expect_warning(plot_commutability_evaluation_plots(cs_data = test_mo_data_1,
-                                                     pb_data = test_plot_input_1$merged_pb_data,
-                                                     ce_data = test_plot_input_1$merged_ce_data,
-                                                     exclude_cs = TRUE,
-                                                     exclude_rings = TRUE,
-                                                     plot_theme = "default",
-                                                     additional_arguments = list("main_title" = 2)))
-  expect_warning(plot_commutability_evaluation_plots(cs_data = test_mo_data_1,
-                                                     pb_data = test_plot_input_1$merged_pb_data,
-                                                     ce_data = test_plot_input_1$merged_ce_data,
-                                                     exclude_cs = TRUE,
-                                                     exclude_rings = TRUE,
-                                                     plot_theme = "custom",
-                                                     additional_arguments = list(pb_fill = "#FFFFFFF")))
+  # Expect to find shape because number of evaluated materials are <= 6
+  expect_true(object = any("shape" == actual_1_labels))
 
-  expect_warning(plot_commutability_evaluation_plots(cs_data = test_mo_data_1,
-                                                     pb_data = test_plot_input_1$merged_pb_data,
-                                                     ce_data = test_plot_input_1$merged_ce_data,
-                                                     exclude_cs = TRUE,
-                                                     exclude_rings = TRUE,
-                                                     plot_theme = "custom",
-                                                     additional_arguments = list(title_color = "green",
-                                                                                 sub_title_color = "blux")))
+  # Expect ten layers with these settings
+  expect_length(object = actual_1$layers, n = 10)
 
-  expect_warning(plot_commutability_evaluation_plots(cs_data = test_mo_data_1,
-                                                     pb_data = test_plot_input_1$merged_pb_data,
-                                                     ce_data = test_plot_input_1$merged_ce_data,
-                                                     exclude_cs = TRUE,
-                                                     exclude_rings = TRUE,
-                                                     plot_theme = "custom",
-                                                     additional_arguments = list(n_breaks = ",")))
+  # Expect to run without errors
+  expect_no_condition(object = plot_commutability_evaluation_plots(
+    cs_data = test_mor_cs_data,
+    pb_data = dce_1$merged_pb_data,
+    ce_data = dce_1$merged_ce_data,
+    exclude_rings = TRUE,
+    exclude_cs = TRUE,
+    plot_theme = plot_theme,
+    additional_arguments = NULL)
+  )
+
+  actual_2 <- plot_commutability_evaluation_plots(cs_data = test_mor_cs_data,
+                                                  pb_data = dce_1$merged_pb_data,
+                                                  ce_data = dce_1$merged_ce_data,
+                                                  exclude_rings = TRUE,
+                                                  exclude_cs = TRUE,
+                                                  plot_theme = plot_theme,
+                                                  additional_arguments = NULL)
+
+  actual_2_labels <- names(actual_2$labels)
+
+  # Expect not to find alpha because exclude_rings = TRUE
+  expect_true(object = !any("alpha" == actual_2_labels))
+
+  # Expect to find shape because number of evaluated materials are <= 6
+  expect_true(object = any("shape" == actual_2_labels))
+
+  # Expect eight layers with these settings
+  expect_length(object = actual_2$layers, n = 8)
 
 
 })
 
-actual_1 <- plot_commutability_evaluation_plots(cs_data = test_mo_data_1,
-                                                pb_data = test_plot_input_1$merged_pb_data,
-                                                ce_data = test_plot_input_1$merged_ce_data,
-                                                exclude_cs = FALSE,
-                                                exclude_rings = FALSE,
-                                                plot_theme = "depression",
-                                                additional_arguments = list("main_title" = "Commutability evaluation plots",
-                                                                            "sub_title" = "Here are the plots",
-                                                                            "x_name" = "Measurements from MS x",
-                                                                            "y_name" = "Measurements from MS y"))
+# TEST second data
+test_that(desc = "Check stuff 2", code = {
 
-actual_2 <- plot_commutability_evaluation_plots(cs_data = test_mo_data_2,
-                                                pb_data = test_plot_input_2$merged_pb_data,
-                                                ce_data = test_plot_input_2$merged_ce_data,
-                                                exclude_cs = FALSE,
-                                                exclude_rings = FALSE,
-                                                plot_theme = "custom",
-                                                additional_arguments = list("sub_title" = "Here are the plots again",
-                                                                            "legend_fill" = "green",
-                                                                            "legend_text_color" = "red",
-                                                                            "title_color" = "blue2",
-                                                                            "sub_title_color" = "cyan",
-                                                                            "x_name" = "X",
-                                                                            "y_name" = "Y"))
+  # Pick random theme
+  plot_theme <- sample(x = c("default", "noklus", "depression", "soft", "happy"),
+                       size = 1)
 
+  # Repair and transform data
+  test_cs_data_2 <- repair_data(test_cs_data_2, type = "cs")
+  test_eq_data_2 <- repair_data(test_eq_data_2, type = "eqam")
+  test_cs_data_2 <- transform_data(get_comparison_data(data = test_cs_data_2, reference = "Thermo"))
+  test_eq_data_2 <- transform_data(get_comparison_data(data = test_eq_data_2, reference = "Thermo"))
 
-test_that(desc = "Testing if some arguments are registered", code = {
-  expect_equal(object = actual_1$labels$title, expected = "Commutability evaluation plots")
-  expect_equal(object = actual_1$labels$subtitle, expected = "Here are the plots")
-  expect_equal(object = actual_1$theme$plot.title$hjust, expected = 0.5)
-  expect_equal(object = actual_1$theme$plot.subtitle$hjust, expected = 0.5)
-  expect_equal(object = actual_1$theme$title$face, expected = "bold")
+  # Mor data
+  test_mor_cs_data_2 <- na.omit(test_cs_data_2)[, fun_of_replicates(.SD), by = comparison]
 
-  expect_equal(object = actual_2$labels$title, expected = "Commutability evaluation plots for all unique IVD-MD comparisons")
-  expect_equal(object = actual_2$labels$subtitle, expected = "Here are the plots again")
-  expect_equal(object = actual_2$theme$legend.background$fill, expected = "green")
-  expect_equal(object = actual_2$theme$legend.background$color, expected = NULL)
-  expect_equal(object = actual_2$theme$legend.text$colour, expected = "red")
-  expect_equal(object = actual_2$theme$legend.key$fill, expected = "white")
-  expect_equal(object = actual_2$theme$legend.key$colour, expected = "black")
-  expect_equal(object = actual_2$theme$title$colour, expected = "red")
-  expect_equal(object = actual_2$theme$strip.background$fill, expected = "#5BCEFA")
-  expect_equal(object = actual_2$theme$strip.background$colour, expected = "#000000")
+  # Commutability Evaluation Components
+  dce_2 <- do_commutability_evaluation(data = test_cs_data_2,
+                                       new_data = test_eq_data_2,
+                                       B = 51L,
+                                       N = 100L,
+                                       method_pi = "ssw",
+                                       method_bs = "BCa",
+                                       upper_zeta = 8.77,
+                                       level_pi = 0.99,
+                                       level_bs = 0.95,
+                                       output = "sufficient")
+
+  # Expect no error, warning or message
+  expect_no_condition(object = plot_commutability_evaluation_plots(
+    cs_data = test_mor_cs_data_2,
+    pb_data = dce_2$merged_pb_data,
+    ce_data = dce_2$merged_ce_data,
+    exclude_rings = FALSE,
+    exclude_cs = TRUE,
+    plot_theme = plot_theme,
+    additional_arguments = list(
+      main_title = "This is a title",
+      sub_title = "This is a subtitle",
+      x_name = "Thermo measurements",
+      y_name = "Response measurements"
+      )
+    )
+  )
+
+  actual_1 <- plot_commutability_evaluation_plots(
+    cs_data = test_mor_cs_data_2,
+    pb_data = dce_2$merged_pb_data,
+    ce_data = dce_2$merged_ce_data,
+    exclude_rings = FALSE,
+    exclude_cs = TRUE,
+    plot_theme = plot_theme,
+    additional_arguments = list(
+      main_title = "This is a title",
+      sub_title = "This is a subtitle",
+      x_name = "Thermo measurements",
+      y_name = "Response measurements"
+    )
+  )
+
+  actual_1_labels <- names(actual_1$labels)
+  actual_1_label_values <- actual_1$labels
+
+  # Expect to find alpha because exclude_rings = FALSE
+  expect_true(object = any("alpha" == actual_1_labels))
+
+  # Expect to not find shape because number of evaluated materials are > 6
+  expect_true(object = !any("shape" == actual_1_labels))
+
+  # Expect five layers with these settings
+  expect_length(object = actual_1$layers, n = 5)
+
+  # Expect custom main_title
+  expect_equal(object = actual_1_label_values$title,
+               expected = "This is a title")
+
+  # Expect custom sub_title
+  expect_equal(object = actual_1_label_values$subtitle,
+               expected = "This is a subtitle")
+
 })
+
+
+
 
 
 

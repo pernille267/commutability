@@ -2,25 +2,93 @@
 % Please edit documentation in R/MS_wise_imprecision.R
 \name{MS_wise_imprecision}
 \alias{MS_wise_imprecision}
-\title{Get MS-wise imprecison estimates}
+\title{Get IVD-MD-wise Imprecison Estimates}
 \usage{
-MS_wise_imprecision(imprecision_data, mode = c("visual", "exact"))
+MS_wise_imprecision(
+  imprecision_data,
+  mode = c("visual", "exact"),
+  percent = FALSE,
+  variance = FALSE,
+  rounding = 4L
+)
 }
 \arguments{
-\item{imprecision_data}{\code{list}, \code{data table} or \code{data frame} - Imprecision estimates including bootstrap confidence intervals for CV data, variance data, or both. Must include a grouping column named \code{comparison}.}
+\item{imprecision_data}{A \code{list}, \code{data.table} or
+\code{data.frame}. Should contain imprecision data
+generated from \code{estimate_imprecision_data()}.}
 
-\item{mode}{character - How should the output be expressed. There are two possibilities:
+\item{mode}{A \code{character} string. The type of output structure:
 \itemize{
-  \item{\code{visual}: }{Creates presentable MS-wise imprecision estimates, that neatly combines MS-wise imprecision estimates into a maximum of three columns. The first column is of course \code{MS}, and the remaining potential two is all imprecision estimates for CVs and SDs}
-  \item{\code{exact}: }{Creates MS-wise imprecision estimates that could be used for further calculations if needed. Includes a minimum of four columns (and a maxium of 7), where the latter six rows are the imprecision estimates for each MS}
+   \item \code{visual: } Creates presentable IVD-MD-wise
+          repeatability imprecision estimates, that neatly
+          combines IVD-wise imprecision estimates into a maximum
+          of three columns. The first column is of course
+          \code{IVD-MD}, and the other two are CVs and SDs with
+          corresponding bootstrap confidence intervals.
+   \item \code{exact: } Creates IVD-wise imprecision estimates
+          that could be used for further calculations if needed.
+          Includes a minimum of four columns (and a maxium of 7),
+          where the latter six rows are the imprecision estimates
+          for each IVD-MD.
 }}
+
+\item{percent}{A \code{logical} value. If \code{TRUE}, coefficient of
+variation estimates are presented as percentages instead of
+decimal values.}
+
+\item{variance}{A \code{logical} value. If \code{FALSE} (default), standard
+deviation estimates are returned instead of variance
+estimates.}
+
+\item{rounding}{An \code{integer}. The number of decimals to include in the
+\code{numeric} results. Defaults to \code{4L}.}
 }
 \value{
-\code{data table} with MS-wise imprecision estimates, that include point estimates and bootstrap confidence intervals
+A \code{data.table} with \code{length(unique(comparison))} rows. Contains
+repeatability imprecision estimates for each IVD-MD. Bootstrap confidence
+intervals are included.
 }
 \description{
-Get MS-wise imprecison estimates
+Extract IVD-MD-wise repeatability imprecision estimates from the output of
+\code{estimate_imprecision_data()}.
+}
+\details{
+The output from \code{estimate_imprecision_data()} is seldom informative
+if one wants to examine the IVD-MD repeatability attributes directly. This
+function attempts to extract the unique IVD-MD specific estimates from this
+output and pack it neatly into a \code{data.table} object.
+
+The output structure depends on \code{mode}. If \code{'visual'}, the output
+will be a \code{data.table} that present the information using as few
+columns as possible. That is, point estimates and corresponding estimated
+confidence intervals are packed into one row instead of three seperate rows.
+The packed columns with be \code{character} vectors with format
+[\code{estimate}] (\code{lwr}, \code{upr}). This \code{mode} is recommended
+if one desires to present the output in an informative way. Otherwise, if
+\code{'exact'}, each estimate has its own column. This \code{mode} is
+recommended if one desires to do further calculations.
 }
 \examples{
-print(1)
+# Required packages
+library(smooth.commutability)
+library(data.table)
+
+# Reproducibility
+set.seed(99)
+
+# Get example data
+test_cs_data <- crp_cs_data
+
+# Estimate imprecision data with BCa confidence intervals
+test_impr_data <- estimate_imprecision_data(data = test_cs_data,
+                                            B = 200,
+                                            type = "BCa",
+                                            level = 0.95)
+
+# Get illustrative IVD-MD-wise imprecision estimates table
+print(MS_wise_imprecision(test_impr_data, "visual", TRUE, FALSE, 2L))
+
+# Get IVD-MD-wise imprecision estimates table that can be used further
+print(MS_wise_imprecision(test_impr_data, "exact", FALSE, TRUE, 3L))
+
 }

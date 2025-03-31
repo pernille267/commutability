@@ -2,64 +2,179 @@
 % Please edit documentation in R/plot_assessment_plots.R
 \name{plot_assessment_plots}
 \alias{plot_assessment_plots}
-\title{Plot model assessment tests}
+\title{Plot Model Diagnostics Plots}
 \usage{
 plot_assessment_plots(
   data,
   method = "fg",
   type = "residual_plot",
-  draw_curves = "none",
-  plot_theme = c("custom", "default", "noklus", "soft", "depression", "happy"),
-  additional_arguments = NULL,
-  testing = FALSE
+  draw_curves = TRUE,
+  plot_theme = "default",
+  additional_arguments = NULL
 )
 }
 \arguments{
-\item{data}{\code{data table}, \code{data frame} or \code{list} - Data on long-format grouped by comparison. Must contain 'comparison', 'SampleID', 'ReplicateID', 'MP_A' and 'MP_B'.}
-
-\item{method}{\code{character} - Method to use when calculating the linear model residuals. Can be one of the following: 'fg' (default), 'clsi' or 'ols'.}
-
-\item{type}{\code{character} - The type of model assessment plot to be plotted. Can either be 'residual_plot' (default), 'qq_plot', 'sd_vs_concentration', 'cv_vs_concentration' or 'residual_histogram'}
-
-\item{draw_curves}{\code{character} - Should curves be drawn to visualize relationships between two quantities (quantities may differ based on which plot is chosen by \code{type})}
-
-\item{plot_theme}{\code{character} - Which plotting theme should be applied to the plots. Accepted inputs are 'default', 'noklus', 'soft', 'depression', and 'happy'.}
-
-\item{additional_arguments}{\code{list} or \code{named array} with 1 row - Additional arguments to be used in calculations and plotting. Possible additional arguments are:
+\item{data}{A \code{data.table}, \code{list} or \code{data.frame}.
+Must contain the clinical sample data with variables:
 \itemize{
-  \item{\code{x_name}:  }{Title on x-axis. Default value depends on \code{type}}
-  \item{\code{y_name}:  }{Title on y-axis. Default value depends on \code{type}}
-  \item{\code{n_breaks}:  }{Number of axis-ticks used. Default value is \code{6}}
-  \item{\code{main_title}:  }{Plot title. Default value depends on \code{type}}
-  \item{\code{sub_title}:  }{Plot subtitle. Default value is \code{NULL}}
-  \item{\code{title_color}:  }{Color of plot title. Default value is \code{'black'}}
-  \item{\code{sub_title_color}:  }{Color of plot subtitle. Default value is \code{'black'}}
-  \item{\code{strip_fill}:  }{Fill color of the grouping labels. Default value depends on \code{type}}
-  \item{\code{strip_text_color}:  }{Text color of the grouping labels. Default value is \code{'black'}}
-  \item{\code{point_fill}:  }{Fill color of points. Default value is \code{'violet'}}
-  \item{\code{point_border}:  }{Color of points' border. Default value is \code{'black'}}
-  \item{\code{point_shape}:  }{Shape of points. Possible values are 'circle', 'square', 'diamond' and 'triangle'. Default is \code{'circle'}}
-  \item{\code{histogram_fill}:  }{Fill color of histogram bins. Default value is \code{#F9F9F9} (very light gray). Only relevant if \code{type = 'residual_histogram'}}
-  \item{\code{histogram_border}:  }{Border color of histogram bins. Default value is \code{'black'}. Only relevant if \code{type = 'residual_histogram'}}
-  \item{\code{curve_color}:  }{Color of drawn curve. Default value is \code{'black'}}
-  \item{\code{curve_se}:  }{Should confidence bands be included to drawn curve. Default value is \code{FALSE}}
-  \item{\code{curve_se_fill}:  }{Color of the confidence bands included to drawn curve. Default value is \code{#F9F9F9} (very light gray)}
-  \item{\code{curve_se_level}:  }{Confidence level for the confidence bands included to drawn curve. Default value is \code{0.95}}
-  \item{\code{curve_formula}:  }{Edit the standard formula 'y ~ x'. Can be any 'y ~ f(x)'. Default value is 'y ~ x'}
-  \item{\code{loess_span}:  }{Span of the loess curve. Default value is \code{0.90}. Larger values increase smoothing and smaller values decrease smoothing.}
-  \item{\code{cv_percent}:  }{Should estimated CVS be given in percent? Default is \code{FALSE}. Only relevant if \code{type = 'cv_vs_concentration'}}
-  \item{\code{var_instead}:  }{Should variance be given instead of standard deviation? Default is \code{FALSE}. Only relevant if \code{type = 'sd_vs_concentration'}}
-
+   \item \code{comparison: } A \code{character} vector. The
+         comparison identifiers. Typically on the form
+         \code{'MP_A - MP_B'}.
+   \item \code{SampleID: } A \code{character} vector. The sample
+         identifiers for the clinical samples.
+   \item \code{ReplicateID: } A \code{character} vector. The
+         replicated measurement identifiers.
+   \item \code{MP_A: } A \code{numeric} vector. The observed
+         measurement results from IVD-MD \code{MP_A} (response).
+   \item \code{MP_B: } A \code{numeric} vector. The observed
+         measurement results from IVD-MD \code{MP_A} (predictor).
 }}
 
-\item{testing}{\code{logical} - Should the output be test-friendly? This should only be used by the maintainer of the package, as it has no practical use to the end-user.}
+\item{method}{A \code{character} string. The desired model for calculating
+residuals and fitted values. The possible options are:
+\code{'fg'} (default), \code{'clsi'}, \code{'ols'},
+\code{'ss'} and \code{'ssw'}.}
+
+\item{type}{A \code{character} string. The desired model assement plot to
+draw. Can be one out of:
+\itemize{
+ \item \code{residual_plot: } Residual plot (default).
+       Standardized model residuals at the y-axis and fitted
+       values at the x-axis.
+ \item \code{residual_histogram: } Residual histogram plot.
+       Standardized residuals are the x-axis and density values
+       at the y-axis.
+ \item \code{qq_plot: } Normal QQ plot. Theoretical quantiles
+       of the N(0, 1)-distribution at the x-axis and empirical
+       quantiles of the standardized residuals at the y-axis.
+ \item \code{sd_vs_concentration: } Clinical sample standard
+       deviations at the y-axis and the corresponding
+       concentration values at the x-axis.
+ \item \code{cv_vs_concentration: } Clinical sample coefficient
+       of variation at the y-axis and the corresponding
+       concentration values at the y-axis.
+}}
+
+\item{draw_curves}{A \code{logical} value. If \code{TRUE} (default),
+informative curves are added to the assessment plots when
+relevant.}
+
+\item{plot_theme}{A \code{character} string. The desired plotting theme.
+Options include:
+\itemize{
+   \item \code{custom: } No predefined theme. Customized
+         theme may be defined by given arguments in
+         \code{additional_arguments}.
+   \item \code{default: } Uses default theme.
+   \item \code{noklus: } Uses Noklus colors.
+   \item \code{soft: } Uses pastel colors.
+   \item \code{depression: } Uses dark hues such as black,
+         gray, and purple.
+   \item \code{happy: } Uses vibrant colors such as orange,
+         red and yellow.
+}}
+
+\item{additional_arguments}{A \code{list}. Additional arguments to modify
+the appearance of the output plot. The default
+value is \code{NULL}, indicating that the plot
+will be generated using the default settings.
+Possible additional_argument entries include:
+\itemize{
+ \item \code{main_title: }
+ \item \code{sub_title: }
+ \item \code{x_name: }
+ \item \code{y_name: }
+ \item \code{n_breaks: }
+ \item \code{title_color: }
+ \item \code{sub_title_color: }
+ \item \code{strip_fill: }
+ \item \code{strip_text_color: }
+ \item \code{point_shape: }
+ \item \code{point_size: }
+ \item \code{point_fill: }
+ \item \code{point_border: }
+ \item \code{curve_color: }
+ \item \code{curve_se: }
+ \item \code{curve_se_fill: }
+ \item \code{curve_formula: }
+ \item \code{loess_span: }
+ \item \code{histogram_fill: }
+ \item \code{histogram_border: }
+ \item \code{cv_percent: }
+ \item \code{var_instead: }
+}}
 }
 \value{
-A \code{ggplot2} object, which is the drawn assessment plot
+A \code{ggplot2} object. The drawn desired assessment plots.
 }
 \description{
-Plot model assessment tests
+Generate model assessment plots for each IVD-MD comparison (or IVD-MD).
+}
+\details{
+Modeling make assumptions. One should strive to test these assumptions to
+validate whether a particular estimated model can be trusted. This function
+can be used to draw different diagnostic plots that be used to assess
+whether the model assumptions are satisfied for \code{data}.
+
+Currently, this function supports five different plot types:
+\itemize{
+   \item \code{residual_plot: } Residual plot (default). Standardized model
+         residuals at the y-axis and fitted values at the x-axis. Can be
+         used to check for model error heteroscedasticity. Can also be used
+         to check for non-linearity if a linear model is used to estimate
+         the residuals.
+   \item \code{residual_histogram: } Residual histogram plot. Standardized
+         residuals are the x-axis and density values at the y-axis. Can be
+         used to check for model error normality.
+   \item \code{qq_plot: } Normal QQ plot. Theoretical quantiles of the
+         N(0, 1)-distribution at the x-axis and empirical quantiles of the
+         standardized residuals at the y-axis. Can be used to check for
+         model error normality.
+   \item \code{sd_vs_concentration: } Clinical sample standard deviations at
+         the y-axis and the corresponding concentration values at the
+         x-axis. Can be used to check for measurement error variance
+         heteroscedasticity. Often a supplement to \code{residual_plot}.
+   \item \code{cv_vs_concentration: } Clinical sample coefficient of
+         variation at the y-axis and the corresponding concentration values
+         at the y-axis. Can be used to check whether a log-transformation
+         would solve heteroscedasticity issues for the measurement error
+         variance.
+}
+
+For formal testing, the end-user may use \code{perform_assessment_tests()}.
+
+Note: In general, it is not recommended to specify
+\code{additional_arguments}. The default settings are usually adequate in
+most scenarios.
 }
 \examples{
-print(1)
+# Required packages
+library(smooth.commutability)
+library(data.table)
+
+# Read example data from smooth.commutability package
+test_cs_data <- copy(crp_cs_data)
+
+# Draw Residual Plots Using Weighted Smoothing Splines
+plot_assessment_plots(data = test_cs_data,
+                      method = "ssw",
+                      type = "residual_plot",
+                      draw_curves = TRUE,
+                      plot_theme = "noklus")
+
+# Draw QQ Normal Plots Using Deming Regression
+plot_assessment_plots(data = test_cs_data,
+                      method = "fg",
+                      type = "qq_plot",
+                      draw_curves = FALSE,
+                      plot_theme = "depression")
+
+# Draw Coefficient of Variation Versus Concentration Plots
+plot_assessment_plots(data = test_cs_data,
+                      type = "cv_vs_concentration",
+                      draw_curves = TRUE,
+                      plot_theme = "soft",
+                      additional_arguments = list(cv_percent = TRUE))
+
+
 }

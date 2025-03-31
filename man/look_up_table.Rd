@@ -17,7 +17,10 @@ A data.table with 2604 rows and 4 variables:
 look_up_table
 }
 \description{
-A dataset containing critical values of the differences in non-selectivity estimator, \eqn{\hat{\zeta}}, based on 2604 unqiue combinations of study designs and
-maximum tolerable differences in non-selectivity magnitudes. That is, all combinations of \eqn{n = 20, 21, \ldots, 50}, \eqn{R = 2, 3, 4, 5}, and \eqn{M = 0, 0.05, 0.10, \ldots, 0.95, 1}.
+A dataset containing critical values of the differences in non-selectivity
+estimator, \eqn{\hat{\zeta}}, based on 2604 unqiue combinations of study
+designs and maximum tolerable differences in non-selectivity magnitudes.
+That is, all combinations of \eqn{n = 20, 21, \ldots, 50},
+\eqn{R = 2, 3, 4, 5}, and \eqn{M = 0, 0.05, 0.10, \ldots, 0.95, 1}.
 }
 \keyword{datasets}

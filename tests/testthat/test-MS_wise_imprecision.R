@@ -1,10 +1,12 @@
 library(testthat)
-library(commutability)
 library(readxl)
-suppressWarnings(library(data.table))
+library(data.table)
 library(fasteqa)
 
+# Reproducibility
 set.seed(1)
+
+# Read raw testing data
 test_data_1 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_1.xlsx")
 test_data_2 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_2.xlsx")
 test_data_3 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_3.xlsx")
@@ -13,39 +15,136 @@ test_data_5 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_
 test_data_6 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_6.xlsx")
 test_data_7 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_7.xlsx")
 
-check_data_1 <- check_data(test_data_1)
-check_data_2 <- check_data(test_data_2)
-check_data_3 <- check_data(test_data_3)
-check_data_4 <- check_data(test_data_4)
-check_data_5 <- check_data(test_data_5)
-check_data_6 <- check_data(test_data_6)
-check_data_7 <- check_data(test_data_7)
+# Checking the following intervals
+testing_types <- sample(
+  x = c("normal", "basic", "percentile", "BCa"),
+  size = 7,
+  replace = TRUE
+)
 
-test_data_1 <- repair_data(data = test_data_1, check_data_1) |> MS_wise() |> estimate_imprecision_data(B = 200)
-test_data_2 <- repair_data(data = test_data_2, check_data_2) |> MS_wise() |> estimate_imprecision_data(B = 200)
-test_data_3 <- repair_data(data = test_data_3, check_data_3) |> MS_wise() |> estimate_imprecision_data(B = 200)
-test_data_4 <- repair_data(data = test_data_4, check_data_4) |> MS_wise() |> estimate_imprecision_data(B = 200)
-test_data_5 <- repair_data(data = test_data_5, check_data_5) |> MS_wise() |> estimate_imprecision_data(B = 200)
-test_data_6 <- repair_data(data = test_data_6, check_data_6) |> MS_wise() |> estimate_imprecision_data(B = 200)
-test_data_7 <- repair_data(data = test_data_7, check_data_7) |> MS_wise() |> estimate_imprecision_data(B = 200)
+# Checking the following confidence levels
+testing_levels <- runif(n = 7, min = 0.80, max = 0.99)
 
-actual_1 <- MS_wise_imprecision(imprecision_data = test_data_1)
-actual_2 <- MS_wise_imprecision(imprecision_data = test_data_2)
-actual_3 <- MS_wise_imprecision(imprecision_data = test_data_3)
-actual_4 <- MS_wise_imprecision(imprecision_data = test_data_4)
-actual_5 <- MS_wise_imprecision(imprecision_data = test_data_5)
-actual_6 <- MS_wise_imprecision(imprecision_data = test_data_6)
-actual_7 <- MS_wise_imprecision(imprecision_data = test_data_7) |> suppressWarnings()
-
-expected_rows_1 <- 4L
-expected_rows_2 <- 4L
-expected_rows_3 <- 6L
-expected_rows_4 <- 5L
-expected_rows_5 <- 6L
-expected_rows_6 <- 6L
-expected_rows_7 <- 4L
+# Get testing data. If statement is there because we then can collapse...
+if (1 < 2) {
+  test_data_1 <- estimate_imprecision_data(
+    data = get_comparison_data(
+      data = repair_data(
+        data = test_data_1,
+        type = "cs",
+        remove_invalid_methods = TRUE,
+        include_repair_summary = FALSE
+      )
+    ),
+    B = 1000,
+    type = testing_types[1],
+    level = testing_levels[1],
+    invalid_NA = FALSE
+  )
+  test_data_2 <- estimate_imprecision_data(
+    data = get_comparison_data(
+      data = repair_data(
+        data = test_data_2,
+        type = "cs",
+        remove_invalid_methods = TRUE,
+        include_repair_summary = FALSE
+      )
+    ),
+    B = 1000,
+    type = testing_types[2],
+    level = testing_levels[2],
+    invalid_NA = FALSE
+  )
+  test_data_3 <- estimate_imprecision_data(
+    data = get_comparison_data(
+      data = repair_data(
+        data = test_data_3,
+        type = "cs",
+        remove_invalid_methods = TRUE,
+        include_repair_summary = FALSE
+      )
+    ),
+    B = 1000,
+    type = testing_types[3],
+    level = testing_levels[3],
+    invalid_NA = FALSE
+  )
+  test_data_4 <- estimate_imprecision_data(
+    data = get_comparison_data(
+      data = repair_data(
+        data = as.data.table(test_data_4)[, -c("IVD_MD_4")],
+        type = "cs",
+        remove_invalid_methods = TRUE,
+        include_repair_summary = FALSE
+      )
+    ),
+    B = 1000,
+    type = testing_types[4],
+    level = testing_levels[4],
+    invalid_NA = FALSE
+  )
+  test_data_5 <- estimate_imprecision_data(
+    data = get_comparison_data(
+      data = repair_data(
+        data = test_data_5,
+        type = "cs",
+        remove_invalid_methods = TRUE,
+        include_repair_summary = FALSE
+      )
+    ),
+    B = 1000,
+    type = testing_types[5],
+    level = testing_levels[5],
+    invalid_NA = FALSE
+  )
+  test_data_6 <- estimate_imprecision_data(
+    data = get_comparison_data(
+      data = repair_data(
+        data = test_data_6,
+        type = "cs",
+        remove_invalid_methods = TRUE,
+        include_repair_summary = FALSE
+      )
+    ),
+    B = 1000,
+    type = testing_types[6],
+    level = testing_levels[6],
+    invalid_NA = FALSE
+  )
+  test_data_7 <- estimate_imprecision_data(
+    data = get_comparison_data(
+      data = repair_data(
+        data = test_data_7,
+        type = "cs",
+        remove_invalid_methods = TRUE,
+        include_repair_summary = FALSE
+      )
+    ),
+    B = 1000,
+    type = testing_types[7],
+    level = testing_levels[7],
+    invalid_NA = FALSE
+  )
+}
 
 test_that(desc = "Testing output structure for visual", code = {
+
+  actual_1 <- MS_wise_imprecision(imprecision_data = test_data_1)
+  actual_2 <- MS_wise_imprecision(imprecision_data = test_data_2)
+  actual_3 <- MS_wise_imprecision(imprecision_data = test_data_3)
+  actual_4 <- MS_wise_imprecision(imprecision_data = test_data_4)
+  actual_5 <- MS_wise_imprecision(imprecision_data = test_data_5)
+  actual_6 <- MS_wise_imprecision(imprecision_data = test_data_6)
+  actual_7 <- MS_wise_imprecision(imprecision_data = test_data_7)
+
+  expected_rows_1 <- 4L
+  expected_rows_2 <- 4L
+  expected_rows_3 <- 6L
+  expected_rows_4 <- 5L
+  expected_rows_5 <- 6L
+  expected_rows_6 <- 6L
+  expected_rows_7 <- 4L
+
   expect_true(object = is.data.table(actual_1))
   expect_true(object = is.data.table(actual_2))
   expect_true(object = is.data.table(actual_3))
@@ -62,25 +161,37 @@ test_that(desc = "Testing output structure for visual", code = {
   expect_true(object = all(lapply(X = actual_6, FUN = is.character) |> unlist()))
   expect_true(object = all(lapply(X = actual_7, FUN = is.character) |> unlist()))
 
-  expect_equal(object = length(unique(actual_1$MS)), expected = expected_rows_1)
-  expect_equal(object = length(unique(actual_2$MS)), expected = expected_rows_2)
-  expect_equal(object = length(unique(actual_3$MS)), expected = expected_rows_3)
-  expect_equal(object = length(unique(actual_4$MS)), expected = expected_rows_4)
-  expect_equal(object = length(unique(actual_5$MS)), expected = expected_rows_5)
-  expect_equal(object = length(unique(actual_6$MS)), expected = expected_rows_6)
-  expect_equal(object = length(unique(actual_7$MS)), expected = expected_rows_7)
+  expect_equal(object = length(unique(actual_1$MP)), expected = expected_rows_1)
+  expect_equal(object = length(unique(actual_2$MP)), expected = expected_rows_2)
+  expect_equal(object = length(unique(actual_3$MP)), expected = expected_rows_3)
+  expect_equal(object = length(unique(actual_4$MP)), expected = expected_rows_4)
+  expect_equal(object = length(unique(actual_5$MP)), expected = expected_rows_5)
+  expect_equal(object = length(unique(actual_6$MP)), expected = expected_rows_6)
+  expect_equal(object = length(unique(actual_7$MP)), expected = expected_rows_7)
 
 })
 
-actual_1 <- MS_wise_imprecision(imprecision_data = test_data_1, mode = "exact")
-actual_2 <- MS_wise_imprecision(imprecision_data = test_data_2, mode = "exact")
-actual_3 <- MS_wise_imprecision(imprecision_data = test_data_3, mode = "exact")
-actual_4 <- MS_wise_imprecision(imprecision_data = test_data_4, mode = "exact")
-actual_5 <- MS_wise_imprecision(imprecision_data = test_data_5, mode = "exact")
-actual_6 <- MS_wise_imprecision(imprecision_data = test_data_6, mode = "exact")
-actual_7 <- MS_wise_imprecision(imprecision_data = test_data_7, mode = "exact")
-
 test_that(desc = "Testing output structure for exact", code = {
+
+  # Expected Number of Rows
+  expected_rows_1 <- 4L
+  expected_rows_2 <- 4L
+  expected_rows_3 <- 6L
+  expected_rows_4 <- 5L
+  expected_rows_5 <- 6L
+  expected_rows_6 <- 6L
+  expected_rows_7 <- 4L
+
+  # Actual output
+  actual_1 <- MS_wise_imprecision(imprecision_data = test_data_1, mode = "exact")
+  actual_2 <- MS_wise_imprecision(imprecision_data = test_data_2, mode = "exact")
+  actual_3 <- MS_wise_imprecision(imprecision_data = test_data_3, mode = "exact")
+  actual_4 <- MS_wise_imprecision(imprecision_data = test_data_4, mode = "exact")
+  actual_5 <- MS_wise_imprecision(imprecision_data = test_data_5, mode = "exact")
+  actual_6 <- MS_wise_imprecision(imprecision_data = test_data_6, mode = "exact")
+  actual_7 <- MS_wise_imprecision(imprecision_data = test_data_7, mode = "exact")
+
+  # Check if output is data.table
   expect_true(object = is.data.table(actual_1))
   expect_true(object = is.data.table(actual_2))
   expect_true(object = is.data.table(actual_3))
@@ -89,6 +200,7 @@ test_that(desc = "Testing output structure for exact", code = {
   expect_true(object = is.data.table(actual_6))
   expect_true(object = is.data.table(actual_7))
 
+  # Check if all (expect MP column) are numeric
   expect_true(object = all(lapply(X = actual_1[,-1], FUN = is.numeric) |> unlist()))
   expect_true(object = all(lapply(X = actual_2[,-1], FUN = is.numeric) |> unlist()))
   expect_true(object = all(lapply(X = actual_3[,-1], FUN = is.numeric) |> unlist()))
@@ -97,61 +209,53 @@ test_that(desc = "Testing output structure for exact", code = {
   expect_true(object = all(lapply(X = actual_6[,-1], FUN = is.numeric) |> unlist()))
   expect_true(object = all(lapply(X = actual_7[,-1], FUN = is.numeric) |> unlist()))
 
-  expect_equal(object = length(unique(actual_1$MS)), expected = expected_rows_1)
-  expect_equal(object = length(unique(actual_2$MS)), expected = expected_rows_2)
-  expect_equal(object = length(unique(actual_3$MS)), expected = expected_rows_3)
-  expect_equal(object = length(unique(actual_4$MS)), expected = expected_rows_4)
-  expect_equal(object = length(unique(actual_5$MS)), expected = expected_rows_5)
-  expect_equal(object = length(unique(actual_6$MS)), expected = expected_rows_6)
-  expect_equal(object = length(unique(actual_7$MS)), expected = expected_rows_7)
+  # Check number of rows
+  expect_equal(object = length(unique(actual_1$MP)), expected = expected_rows_1)
+  expect_equal(object = length(unique(actual_2$MP)), expected = expected_rows_2)
+  expect_equal(object = length(unique(actual_3$MP)), expected = expected_rows_3)
+  expect_equal(object = length(unique(actual_4$MP)), expected = expected_rows_4)
+  expect_equal(object = length(unique(actual_5$MP)), expected = expected_rows_5)
+  expect_equal(object = length(unique(actual_6$MP)), expected = expected_rows_6)
+  expect_equal(object = length(unique(actual_7$MP)), expected = expected_rows_7)
 
 })
-
-actual_1 <- MS_wise_imprecision(test_data_1[, -c("CV_A","CV_A_lwr","CV_A_upr","CV_B", "CV_B_lwr", "CV_B_upr")], mode = "exact")
-actual_2 <- MS_wise_imprecision(test_data_2[, -c("CV_A","CV_A_lwr","CV_A_upr","CV_B", "CV_B_lwr", "CV_B_upr")])
-actual_3 <- MS_wise_imprecision(test_data_3[, -c("CV_A","CV_A_lwr","CV_A_upr","CV_B", "CV_B_lwr", "CV_B_upr")], mode = "exact")
-actual_4 <- MS_wise_imprecision(test_data_4[, -c("CV_A","CV_A_lwr","CV_A_upr","CV_B", "CV_B_lwr", "CV_B_upr")])
-actual_5 <- MS_wise_imprecision(test_data_5[, -c("Var_A","Var_A_lwr","Var_A_upr","Var_B", "Var_B_lwr", "Var_B_upr")], mode = "exact")
-actual_6 <- MS_wise_imprecision(test_data_6[, -c("Var_A","Var_A_lwr","Var_A_upr","Var_B", "Var_B_lwr", "Var_B_upr")])
-actual_7 <- MS_wise_imprecision(test_data_7[, -c("Var_A","Var_A_lwr","Var_A_upr","Var_B", "Var_B_lwr", "Var_B_upr")], mode = "exact")
-
 
 test_that(desc = "Testing output structure for when only one imprecision estimate included", code = {
-  expect_named(object = actual_1, expected = c("MS", "SD", "SD_lwr", "SD_upr"))
-  expect_named(object = actual_2, expected = c("MS", "SD (lwr, upr)"))
-  expect_named(object = actual_3, expected = c("MS", "SD", "SD_lwr", "SD_upr"))
-  expect_named(object = actual_4, expected = c("MS", "SD (lwr, upr)"))
-  expect_named(object = actual_5, expected = c("MS", "CV", "CV_lwr", "CV_upr"))
-  expect_named(object = actual_6, expected = c("MS", "%CV (lwr, upr)"))
-  expect_named(object = actual_7, expected = c("MS", "CV", "CV_lwr", "CV_upr"))
 
-  expect_equal(object = length(unique(actual_1$MS)), expected = expected_rows_1)
-  expect_equal(object = length(unique(actual_2$MS)), expected = expected_rows_2)
-  expect_equal(object = length(unique(actual_3$MS)), expected = expected_rows_3)
-  expect_equal(object = length(unique(actual_4$MS)), expected = expected_rows_4)
-  expect_equal(object = length(unique(actual_5$MS)), expected = expected_rows_5)
-  expect_equal(object = length(unique(actual_6$MS)), expected = expected_rows_6)
-  expect_equal(object = length(unique(actual_7$MS)), expected = expected_rows_7)
-})
+  # Expected Number of Rows
+  expected_rows_1 <- 4L
+  expected_rows_2 <- 4L
+  expected_rows_3 <- 6L
+  expected_rows_4 <- 5L
+  expected_rows_5 <- 6L
+  expected_rows_6 <- 6L
+  expected_rows_7 <- 4L
 
-detail_test_data <- NULL
-draw <- sample.int(6,1,F)
-if(draw==1){detail_test_data <- test_data_1}
-if(draw==2){detail_test_data <- test_data_2}
-if(draw==3){detail_test_data <- test_data_3}
-if(draw==4){detail_test_data <- test_data_4}
-if(draw==5){detail_test_data <- test_data_5}
-if(draw==6){detail_test_data <- test_data_6}
+  # Actual output
+  actual_1 <- MS_wise_imprecision(test_data_1[, -c("CV_A","CV_A_lwr","CV_A_upr","CV_B", "CV_B_lwr", "CV_B_upr")], mode = "exact")
+  actual_2 <- MS_wise_imprecision(test_data_2[, -c("CV_A","CV_A_lwr","CV_A_upr","CV_B", "CV_B_lwr", "CV_B_upr")])
+  actual_3 <- MS_wise_imprecision(test_data_3[, -c("CV_A","CV_A_lwr","CV_A_upr","CV_B", "CV_B_lwr", "CV_B_upr")], mode = "exact")
+  actual_4 <- MS_wise_imprecision(test_data_4[, -c("CV_A","CV_A_lwr","CV_A_upr","CV_B", "CV_B_lwr", "CV_B_upr")])
+  actual_5 <- MS_wise_imprecision(test_data_5[, -c("Var_A","Var_A_lwr","Var_A_upr","Var_B", "Var_B_lwr", "Var_B_upr")], mode = "exact")
+  actual_6 <- MS_wise_imprecision(test_data_6[, -c("Var_A","Var_A_lwr","Var_A_upr","Var_B", "Var_B_lwr", "Var_B_upr")])
+  actual_7 <- MS_wise_imprecision(test_data_7[, -c("Var_A","Var_A_lwr","Var_A_upr","Var_B", "Var_B_lwr", "Var_B_upr")], mode = "exact")
 
-actual_detailed_1 <- MS_wise_imprecision(imprecision_data = detail_test_data, mode = "visual")
-actual_detailed_2 <- MS_wise_imprecision(imprecision_data = detail_test_data, mode = "exact")
-actual_detailed_3 <- MS_wise_imprecision(imprecision_data = detail_test_data[,-c("CV_A","CV_A_lwr","CV_A_upr","CV_B", "CV_B_lwr", "CV_B_upr")], mode = "visual")
-actual_detailed_4 <- MS_wise_imprecision(imprecision_data = detail_test_data[,-c("CV_A","CV_A_lwr","CV_A_upr","CV_B", "CV_B_lwr", "CV_B_upr")], mode = "exact")
+  # Check names
+  expect_named(object = actual_1, expected = c("MP", "SD", "SD_lwr", "SD_upr"))
+  expect_named(object = actual_2, expected = c("MP", "SD (lwr, upr)"))
+  expect_named(object = actual_3, expected = c("MP", "SD", "SD_lwr", "SD_upr"))
+  expect_named(object = actual_4, expected = c("MP", "SD (lwr, upr)"))
+  expect_named(object = actual_5, expected = c("MP", "CV", "CV_lwr", "CV_upr"))
+  expect_named(object = actual_6, expected = c("MP", "CV (lwr, upr)"))
+  expect_named(object = actual_7, expected = c("MP", "CV", "CV_lwr", "CV_upr"))
 
-test_that(desc = "Testing details on random test data", code = {
-  expect_true(object = all(actual_detailed_1$MS %in% (stri_split(str = detail_test_data$comparison, fixed = " - ") |> unlist() |> unique())))
-  expect_named(object = actual_detailed_1, expected = c("MS","%CV (lwr, upr)","SD (lwr, upr)"))
-  expect_true(object = all(unique(100*c(detail_test_data$CV_A, detail_test_data$CV_B)) %in% actual_detailed_2$CV))
-  expect_true(object = all(actual_detailed_4$SD_upr >= actual_detailed_4$SD_lwr | is.na(actual_detailed_4$SD_upr)))
+  # Check number of rows
+  expect_equal(object = length(unique(actual_1$MP)), expected = expected_rows_1)
+  expect_equal(object = length(unique(actual_2$MP)), expected = expected_rows_2)
+  expect_equal(object = length(unique(actual_3$MP)), expected = expected_rows_3)
+  expect_equal(object = length(unique(actual_4$MP)), expected = expected_rows_4)
+  expect_equal(object = length(unique(actual_5$MP)), expected = expected_rows_5)
+  expect_equal(object = length(unique(actual_6$MP)), expected = expected_rows_6)
+  expect_equal(object = length(unique(actual_7$MP)), expected = expected_rows_7)
 })
 

@@ -2,39 +2,130 @@
 % Please edit documentation in R/do_outlier_analysis.R
 \name{do_outlier_analysis}
 \alias{do_outlier_analysis}
-\title{Run a complete outlier analysis based on CS data}
+\title{Outlier Analysis Based on Clinical Sample Data}
 \usage{
 do_outlier_analysis(
   data,
-  type = c("burnett", "qrange", "3sd", "5cv", "iqr"),
-  where = c("replicates", "samples"),
-  what = c("raw", "rd", "ad", "ld"),
-  simplify = FALSE,
-  silence = 1L,
-  testing = FALSE
+  method = "qrange",
+  variable = "influence",
+  level = 0.99,
+  output = "visual"
 )
 }
 \arguments{
-\item{data}{\code{list}, \code{data table} or \code{data frame} - Clinical sample data (CS data) for the commutability assessment experiment}
+\item{data}{A \code{data.table}, \code{list} or \code{data frame}. The
+clinical sample measurement data. Must contain the following
+variables:
+\itemize{
+   \item \code{comparison: } A \code{character} vector. The
+         comparison identifiers. Typically on the form
+         \code{'MP_A - MP_B'}.
+   \item \code{SampleID: }  A \code{character} vector. The sample
+         identifiers for the clinical samples.
+   \item \code{ReplicateID: } A \code{character} vector. The
+         replicated measurement identifiers.
+   \item \code{MP_A: } A \code{numeric} vector. The observed
+         measurement results from IVD-MD \code{MP_A} (response).
+   \item \code{MP_B: } A \code{numeric} vector. The observed
+         measurement results from IVD-MD \code{MP_A} (predictor).
+}}
 
-\item{type}{\code{character} - Which type of outlier assessment test should be applied to the input data? Possible choices are \code{'burnett'} (default), \code{'qrange'}, \code{'3sd'} and \code{'5cv'}.}
+\item{method}{A \code{character} string. The desired outlier detection method
+ to apply to \code{data}. Options include:
+ \itemize{
+    \item \code{qrange: } Studentized Q-range test. Will be
+          performed on \code{ReplicateID}-level.
+    \item \code{burnett: } Burnetts method. Default. Will be
+          performed on \code{SampleID}-level.
+    \item \code{chauvenet: } Chauvenet's Criterion. Will be
+          performed on \code{SampleID}-level. Only statistically
+          significant outliers according to the Tietjen-Moore
+          test will be considered outliers among the
+          \code{chauvenet} candidates.
+    \item \code{iqr: } Inter-Quartile Range test. Will be
+          performed on \code{SampleID}-level. Only statistically
+          significant outliers according to the Tietjen-Moore
+          test will be considered outliers among the
+          \code{iqr} candidates.
+}}
 
-\item{where}{\code{character} - Where should the function look for outliers? Possible values are \code{'replicates'} (default) and \code{'samples'}. The former searches for outliers within replicated measurements, whereas the latter searces for outliers between samples.}
+\item{variable}{A \code{character} string. The variable to be assessed when
+looking for outliers. Possible choices are:
+\itemize{
+   \item \code{influence: } Uses studentized residuals
+         from a particular non-linear model. Default.
+   \item \code{raw_difference: } Uses the raw differences
+         between \code{MP_A} and \code{MP_B}.
+         That is, \eqn{d_i = y_i - x_i}. Not recommended.
+   \item \code{absolute_difference: } Uses the absolute
+         difference between \code{MP_A} and \code{MP_B}.
+         That is, \eqn{d_i = |y_i - x_i|}. Not recommended.
+   \item \code{relative_difference: } Uses the relative
+         difference between \code{MP_A} and \code{MP_B}
+         measurements. That is,
+         \eqn{d_i = \frac{|y_i - x_i|}{|x_i|} \cdot 100\%}.
+   \item \code{log_difference: } Uses the log difference
+         between \code{MP_A} and \code{MP_B}. That is,
+         \eqn{d_i = \log(y_i) - \log(x_i)}.
+}
+Ignored if \code{method = 'qrange'}.}
 
-\item{what}{\code{character} - What transformation should be applied before looking for outliers? Possible choices are \code{'raw'} (default), \code{'rd'}, \code{'ad'} and \code{'ld'}. The three latter choices are shorthand for relative difference, absolute difference and log difference, respectively.}
+\item{level}{A \code{double}. Must be between \code{0} and \code{1}. The
+desired confidence level. Defaults to \code{0.99}
+(\eqn{99\%}).}
 
-\item{simplify}{\code{logical} - Should the output be attempted to be simplified? If \code{TRUE}, the output will be a \code{data.table} object with 'comparison' as the ID column. In contrast, if \code{FALSE}, a list is returned.}
-
-\item{silence}{\code{integer} - Should verbose and debugging messages be included in output? Set \code{silence > 0L} to suppress such messages.}
-
-\item{testing}{\code{unknown} - Only for maintainer - Should the function provide test appropriate outputs. Default is \code{FALSE}.}
+\item{output}{A \code{character} string. The output type.}
 }
 \value{
-a \code{data.table} object that lists the outlier analysis results. The dimensions of the output depends on \code{type}, \code{where} and \code{what}.
+a \code{data.table}. The dimensions depend on \code{method}, \code{variable}
+and \code{output}.
 }
 \description{
-Run a complete outlier analysis based on CS data
+Performs outlier tests that is meant to check for multiple outliers at once.
+}
+\details{
+For IQR (\code{method = 'iqr'}) and Chauvenet (\code{method = 'chauvenet'})
+outlier detection methods, candidate outliers are further assessed using the
+Tietjen-Moore test at a significance level of \code{1 - level}.
+This additional check helps mitigate the sensitivity of these methods, which
+can sometimes flag too many data points as outliers.
+
+Burnett's method (\code{method = 'burnett'}) does not typically suffer from
+the same sensitivity issue, so no additional tests are applied.
+
+Important Note: Outliers identified by any of these methods should not
+be automatically removed without further investigation. In some cases,
+flagged data points may represent meaningful variations in the underlying
+distribution. Careful consideration should be given before deciding to
+exclude them.
+
+The format of the function output is controlled by the \code{output}
+argument:
+\itemize{
+   \item \code{'visual': } Use to presen results concisely with a focus on
+         interpretability.
+   \item \code{'raw': } Use when further calculations or custom processing
+         of the detected outliers is required.
+}
 }
 \examples{
-print(1)
+# Required packages
+library(smooth.commutability)
+library(data.table)
+
+# Use example data from smooth.commutability package
+test_cs_data <- copy(crp_cs_data)
+
+# Create an extreme value
+test_cs_data$MP_A[1:3] <- test_cs_data$MP_A[1:3] + 26
+
+# Outlier test using standardized residuals and Burnett's method
+do_outlier_analysis(
+ data = test_cs_data,
+ method = "burnett",
+ variable = "influence",
+ level = 0.95,
+ output = "visual"
+)
+
 }

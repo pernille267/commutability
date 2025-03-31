@@ -1,115 +1,182 @@
 library(testthat)
-library(commutability)
 library(readxl)
-suppressWarnings(library(data.table))
+library(data.table)
 library(fasteqa)
+library(smooth.commutability)
 
-test_data_1 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_1.xlsx")
-test_data_2 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_2.xlsx")
-test_data_3 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_3.xlsx")
-test_data_4 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_4.xlsx")
-test_data_5 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_5.xlsx")
-test_data_6 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_6.xlsx")
-test_data_7 <- read_excel(path = "~/Packages/datasets to be tested on/test_data_7.xlsx")
+# Read test data
+test_cs_data <- copy(crp_cs_data)
 
-check_data_1 <- check_data(test_data_1)
-check_data_2 <- check_data(test_data_2)
-check_data_3 <- check_data(test_data_3)
-check_data_4 <- check_data(test_data_4)
-check_data_5 <- check_data(test_data_5)
-check_data_6 <- check_data(test_data_6)
-check_data_7 <- check_data(test_data_7)
+# Sprinkle NA-values
+na_value_positions_MP_A <- sample(x = seq_len(nrow(test_cs_data)),
+                                  size = 20,
+                                  replace = FALSE)
+na_value_positions_MP_B <- sample(x = seq_len(nrow(test_cs_data)),
+                                  size = 20,
+                                  replace = FALSE)
 
-test_data_1 <- repair_data(data = test_data_1, data_check = check_data_1) |> MS_wise() |> na.omit()
-test_data_2 <- repair_data(data = test_data_2, data_check = check_data_2) |> MS_wise() |> na.omit()
-test_data_3 <- repair_data(data = test_data_3, data_check = check_data_3) |> MS_wise() |> na.omit()
-test_data_4 <- repair_data(data = test_data_4, data_check = check_data_4) |> MS_wise() |> na.omit()
-test_data_5 <- repair_data(data = test_data_5, data_check = check_data_5) |> MS_wise() |> na.omit()
-test_data_6 <- repair_data(data = test_data_6, data_check = check_data_6) |> MS_wise()
-test_data_7 <- repair_data(data = test_data_7, data_check = check_data_7) |> MS_wise()
+test_cs_data$MP_A[na_value_positions_MP_A] <- NA_real_
+test_cs_data$MP_B[na_value_positions_MP_B] <- NA_real_
 
-test_that(desc = "Testing warnings", code = {
-  expect_warning(object = transform_data(test_data_1, transformation = "l_5"))
-  expect_warning(object = transform_data(test_data_1, transformation = "loga_1.8"))
-  expect_warning(object = transform_data(test_data_1, transformation = "sqr_3_2"))
-  expect_warning(object = transform_data(test_data_1, transformation = "5"))
+# Test if all transformations work
+test_that(desc = "Check if all transformations work", code = {
 
-  expect_warning(object = transform_data(test_data_2, transformation = "somethingcompletelywrong"))
-  expect_warning(object = transform_data(test_data_2, transformation = "powr_2"))
-  expect_warning(object = transform_data(test_data_2, transformation = "3GB_3"))
-  expect_warning(object = transform_data(test_data_2, transformation = "3-3"))
+  expect_no_condition(object = transform_data(test_cs_data,
+                                              transformation = "log#e"))
+  expect_no_condition(object = transform_data(test_cs_data,
+                                              transformation = "log#10"))
+  expect_no_condition(object = transform_data(test_cs_data,
+                                              transformation = "ln"))
+  expect_no_condition(object = transform_data(test_cs_data,
+                                              transformation = "log"))
+  expect_no_condition(object = transform_data(test_cs_data,
+                                              transformation = "pow#2"))
+  expect_no_condition(object = transform_data(test_cs_data,
+                                              transformation = "pow#3"))
+  expect_no_condition(object = transform_data(test_cs_data,
+                                              transformation = "root#2"))
+  expect_no_condition(object = transform_data(test_cs_data,
+                                              transformation = "root#3"))
+  expect_no_condition(object = transform_data(test_cs_data,
+                                              transformation = "boxcox#0.75"))
+  expect_no_condition(object = transform_data(test_cs_data,
+                                              transformation = "boxcox#0.25"))
+  expect_no_condition(object = transform_data(test_cs_data,
+                                              transformation = "unit"))
+  expect_no_condition(object = transform_data(test_cs_data,
+                                              transformation = "bal"))
+  expect_no_condition(object = transform_data(test_cs_data,
+                                              transformation = "ba"))
+  expect_no_condition(object = transform_data(test_cs_data,
+                                              transformation = "identity"))
 
-  expect_warning(object = transform_data(test_data_3, transformation = "loggy_19199"))
-  expect_warning(object = transform_data(test_data_3, transformation = "inv_#Cake"))
-  expect_warning(object = transform_data(test_data_3, transformation = "#12x#"))
-  expect_warning(object = transform_data(test_data_3, transformation = "3-3"))
+
+
+
 })
 
-actual_4_1 <- transform_data(test_data_4, transformation = "lg")
-actual_4_2 <- transform_data(test_data_4, transformation = "identity")
-actual_4_3 <- transform_data(test_data_4, transformation = "sqrt")
-actual_4_4 <- transform_data(test_data_4, transformation = "root>2")
+# Test if non-special transformations result in expected values
+test_that(desc = "Check the non-special transformation values", code = {
 
-actual_5_1 <- transform_data(test_data_5, transformation = "log_2")
-actual_5_2 <- transform_data(test_data_5, transformation = "nroot/3")
-actual_5_3 <- transform_data(test_data_5, transformation = "root_3")
-actual_5_4 <- transform_data(test_data_5, transformation = "log_2LX")
+  random_elements_to_be_checked <- sample(
+    x = setdiff(x = seq_len(nrow(test_cs_data)),
+                y = union(x = na_value_positions_MP_A,
+                          y = na_value_positions_MP_B)),
+    size = 5
+  )
 
-expected_4_1 <- copy(test_data_4); expected_4_1$MP_A <- log(expected_4_1$MP_A); expected_4_1$MP_B <- log(expected_4_1$MP_B)
-expected_4_2 <- copy(test_data_4)
-expected_4_3 <- copy(test_data_4); expected_4_3$MP_A <- sqrt(expected_4_3$MP_A); expected_4_3$MP_B <- sqrt(expected_4_3$MP_B)
-expected_4_4 <- copy(test_data_4); expected_4_4$MP_A <- sqrt(expected_4_4$MP_A); expected_4_4$MP_B <- sqrt(expected_4_4$MP_B)
-
-expected_5_1 <- copy(test_data_5); expected_5_1$MP_A <- log2(expected_5_1$MP_A); expected_5_1$MP_B <- log2(expected_5_1$MP_B)
-expected_5_2 <- copy(test_data_5); expected_5_2$MP_A <- (expected_5_2$MP_A)**(1/3); expected_5_2$MP_B <- (expected_5_2$MP_B)**(1/3)
-expected_5_3 <- expected_5_2
-expected_5_4 <- copy(test_data_5); expected_5_4$MP_A <- log(expected_5_4$MP_A, 2L); expected_5_4$MP_B <- log(expected_5_4$MP_B, 2L)
+  expected_raw <- copy(test_cs_data)[random_elements_to_be_checked]
 
 
-test_that(desc = "Correctness of output", code = {
-  expect_identical(object = actual_4_1, expected = expected_4_1)
-  expect_identical(object = actual_4_2, expected = expected_4_2)
-  expect_identical(object = actual_4_3, expected = expected_4_3)
-  expect_identical(object = actual_4_4, expected = expected_4_4)
+  # Check ln-transformation
+  actual_1 <- transform_data(data = test_cs_data,
+                             transformation = "log")[random_elements_to_be_checked]
+  expected_1 <- expected_raw[, list(MP_A = log(MP_A),
+                                    MP_B = log(MP_B)),
+                             by = c("comparison", "SampleID", "ReplicateID")]
 
-  expect_identical(object = actual_5_1, expected = expected_5_1)
-  expect_identical(object = actual_5_2, expected = expected_5_2)
-  expect_identical(object = actual_5_3, expected = expected_5_3)
-  expect_identical(object = actual_5_4, expected = expected_5_4)
+  expect_equal(object = actual_1$MP_A,
+               expected = expected_1$MP_A)
+  expect_equal(object = actual_1$MP_B,
+               expected = expected_1$MP_B)
 
-  expect_identical(object = actual_5_1, expected = actual_5_4)
-  expect_identical(object = actual_4_3, expected = actual_4_3)
+  # Check pow-transformation
+  random_pow_parameter <- runif(n = 1, min = 1, max = 5)
+
+  actual_2 <- transform_data(
+    data = test_cs_data,
+    transformation = paste0("pow#", random_pow_parameter, collapse = "")
+  )[random_elements_to_be_checked]
+
+  expected_2 <- expected_raw[, list(MP_A = MP_A ** random_pow_parameter,
+                                    MP_B = MP_B ** random_pow_parameter),
+                             by = c("comparison", "SampleID", "ReplicateID")]
+
+  expect_equal(object = actual_2$MP_A,
+               expected = expected_2$MP_A)
+  expect_equal(object = actual_2$MP_B,
+               expected = expected_2$MP_B)
+
+  # Check root-transformations
+  random_root_parameter <- sample(x = c(2, 3, 4),
+                                  size = 1)
+
+  actual_3 <- transform_data(
+    data = test_cs_data,
+    transformation = paste0("root#", random_root_parameter, collapse = "")
+  )[random_elements_to_be_checked]
+
+  expected_3 <- expected_raw[, list(MP_A = MP_A ** (1 / random_root_parameter),
+                                    MP_B = MP_B ** (1 / random_root_parameter)),
+                             by = c("comparison", "SampleID", "ReplicateID")]
+
+  expect_equal(object = actual_3$MP_A,
+               expected = expected_3$MP_A)
+  expect_equal(object = actual_3$MP_B,
+               expected = expected_3$MP_B)
+
+  # Check boxcox-transformations
+  random_boxcox_parameter <- runif(n = 1)
+
+  actual_4 <- transform_data(
+    data = test_cs_data,
+    transformation = paste0("boxcox#", random_boxcox_parameter, collapse = "")
+  )[random_elements_to_be_checked]
+
+  expected_4 <- expected_raw[, list(MP_A = (MP_A ** random_boxcox_parameter - 1) / random_boxcox_parameter,
+                                    MP_B = (MP_B ** random_boxcox_parameter - 1) / random_boxcox_parameter),
+                             by = c("comparison", "SampleID", "ReplicateID")]
+
+  expect_equal(object = actual_4$MP_A,
+               expected = expected_4$MP_A)
+  expect_equal(object = actual_4$MP_B,
+               expected = expected_4$MP_B)
+
+
+
+
 })
 
-actual_6_1 <- transform_data(test_data_6, transformation = "inv#1")
-actual_6_2 <- transform_data(test_data_6, transformation = "SQuARE")
-actual_6_3 <- transform_data(test_data_6, transformation = "cuBEroot")
-actual_6_4 <- transform_data(test_data_6, transformation = "power^to be:3.14")
+# Test if special transformations  result in expected values
+test_that(desc = "Check the special transformation values", code = {
 
-actual_7_1 <- transform_data(test_data_7, transformation = "inv#____1.5")
-actual_7_2 <- transform_data(test_data_7, transformation = "2pOw")
-actual_7_3 <- transform_data(test_data_7, transformation = "log_(2)")
-actual_7_4 <- transform_data(test_data_7, transformation = "ln  <BASE>  3")
+  # Get expected results
+  guv <- function(x) {
+     return((x - min(x, na.rm = TRUE)) / diff(range(x, na.rm = TRUE)))
+  }
 
-expected_6_1 <- copy(test_data_6); expected_6_1$MP_A <- 1/(expected_6_1$MP_A); expected_6_1$MP_B <- 1/(expected_6_1$MP_B)
-expected_6_2 <- copy(test_data_6); expected_6_2$MP_A <- (expected_6_2$MP_A)**2; expected_6_2$MP_B <- (expected_6_2$MP_B)**2
-expected_6_3 <- copy(test_data_6); expected_6_3$MP_A <- (expected_6_3$MP_A)**(1/3); expected_6_3$MP_B <- (expected_6_3$MP_B)**(1/3)
-expected_6_4 <- copy(test_data_6); expected_6_4$MP_A <- (expected_6_4$MP_A)**3.14; expected_6_4$MP_B <- (expected_6_4$MP_B)**3.14
+  expected_unit <- test_cs_data[, list(SampleID = SampleID,
+                                       ReplicateID = ReplicateID,
+                                       MP_A = guv(MP_A),
+                                       MP_B = guv(MP_B)),
+                                by = "comparison"]
+  expected_ba <- test_cs_data[, list(SampleID = SampleID,
+                                     ReplicateID = ReplicateID,
+                                     y = MP_A - MP_B,
+                                     x = (MP_A + MP_B) / 2),
+                              by = "comparison"]
+  names(expected_ba)[match(c("y", "x"), names(expected_ba))] <- c("MP_A", "MP_B")
+  expected_bal <- test_cs_data[, list(SampleID = SampleID,
+                                      ReplicateID = ReplicateID,
+                                      y = log(MP_A) - log(MP_B),
+                                      x = (MP_A + MP_B) / 2),
+                               by = "comparison"]
+  names(expected_bal)[match(c("y", "x"), names(expected_bal))] <- c("MP_A", "MP_B")
 
-expected_7_1 <- copy(test_data_7); expected_7_1$MP_A <- 1/((expected_7_1$MP_A)**1.5); expected_7_1$MP_B <- 1/((expected_7_1$MP_B)**1.5)
-expected_7_2 <- copy(test_data_7); expected_7_2$MP_A <- (expected_7_2$MP_A)**2; expected_7_2$MP_B <- (expected_7_2$MP_B)**2
-expected_7_3 <- copy(test_data_7); expected_7_3$MP_A <- log2(expected_7_3$MP_A); expected_7_3$MP_B <- log2(expected_7_3$MP_B)
-expected_7_4 <- copy(test_data_7); expected_7_4$MP_A <- log(expected_7_4$MP_A, 3L); expected_7_4$MP_B <- log(expected_7_4$MP_B, 3L)
+  # Get actual results
+  actual_unit <- transform_data(test_cs_data, transformation = "unit")
+  actual_ba <- transform_data(test_cs_data, transformation = "ba")
+  actual_bal <- transform_data(test_cs_data, transformation = "bal")
 
-test_that(desc = "Correctness of output for extremely weird transformation input", code = {
-  expect_identical(object = actual_6_1, expected = expected_6_1)
-  expect_identical(object = actual_6_2, expected = expected_6_2)
-  expect_identical(object = actual_6_3, expected = expected_6_3)
-  expect_identical(object = actual_6_4, expected = expected_6_4)
+  # Check if equal
+  expect_equal(object = actual_unit,
+               expected = expected_unit)
+  expect_equal(object = actual_ba,
+               expected = expected_ba)
+  expect_equal(object = actual_bal,
+               expected = expected_bal)
 
-  expect_identical(object = actual_7_1, expected = expected_7_1)
-  expect_identical(object = actual_7_2, expected = expected_7_2)
-  expect_identical(object = actual_7_3, expected = expected_7_3)
-  expect_identical(object = actual_7_4, expected = expected_7_4)
+
+
+
 })
-

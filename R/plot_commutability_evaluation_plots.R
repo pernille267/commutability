@@ -1,199 +1,271 @@
-#' Plots commutability evaluation plots based on ce_data, pb_data and ce_data
+#' @title
+#' Modifies Commutability Evaluation Data Variables
 #'
-#' @param cs_data This is either a \code{list}, \code{data.table} or \code{data.frame} containing mean-of-replicates clinical sample data. Data should be grouped by both \code{comparison} and \code{SampleID}.
-#' @param pb_data This can be a \code{list}, \code{data.table} or \code{data.frame} containing pointwise prediction interval or prediction band data. This data should be grouped by \code{comparison}.
-#' @param ce_data This should be a \code{list}, \code{data.table} or \code{data.frame} that holds prediction interval data along with commutability evaluation data for assessed external quality assessment materials or reference materials. It must be grouped by both \code{comparison} and \code{SampleID}.
-#' @param exclude_rings A \code{logical} value that indicates whether circles, denoting the relative consistency of commutability evaluation conclusions, should be omitted. The default is \code{FALSE}.
-#' @param exclude_cs A \code{logical} value that determines whether to exclude clinical sample data from the plots. The default is \code{FALSE}.
-#' @param plot_theme A \code{character} string specifying the desired plotting theme. Options include 'custom', 'default', 'noklus', 'soft', 'depression', and 'happy'. The default is 'custom', which applies no particular theme to the plots unless specified in \code{additional_arguments}.
-#' @param additional_arguments This is a \code{list} specifying additional arguments to modify the output plot. The default value is \code{NULL}, indicating that the plot will be generated using the default settings. Optional additional arguments can be provided to customize the plot according to specific requirements.
-#' \itemize{
-#'   \item{\code{main_title}: }{Main title of the plot}
-#'   \item{\code{sub_title}: }{Sub title of the plot}
-#'   \item{\code{x_name}: }{Title of the x-axis}
-#'   \item{\code{y_name}: }{Title of the y-axis}
-#'   \item{\code{n_breaks}: }{Number of axis-breaks}
-#'   \item{\code{title_color}: }{Text color of 'main_title'. Default color is \code{'black'}}
-#'   \item{\code{sub_title_color}: }{Text color of 'sub_title'. Default color is \code{'black'}}
-#'   \item{\code{pb_fill:  }}{Fill color of prediction bands. Default fill color is \code{'green'}}
-#'   \item{\code{pb_border}:  }{Color of the border of the prediction bands. Default color is \code{'black'}}
-#'   \item{\code{curve}:  }{Should a curve be included to the clinical samples measurements. Default is \code{FALSE}}
-#'   \item{\code{curve_type}: }{Which type of curve should be included. Only relevant if \code{curve = TRUE}. Possible values are 'equivalence_curve', 'fitted_curve' and 'flexible_curve'}
-#'   \item{\code{curve_color}: }{Color of curve. Only relevant if \code{curve = TRUE}. Default is \code{'black'}.}
-#'   \item{\code{point_shape}: }{Shape of clinical sample points. Possible inputs are 'circle' (default), 'square', 'diamond' and 'triangle'}
-#'   \item{\code{point_size}: }{Size of clinical sample points. Possible inputs are of type \code{double} and must larger than 0. Default is automatically determined}
-#'   \item{\code{point_fill}: }{fill color of clinical sample points. May be a color defined in \code{colors()} or a HEX code}
-#'   \item{\code{point_border}: }{border color of clinical sample points. May be a color defined in \code{colors()} or a HEX code. Default color is \code{'black'}}
-#'   \item{\code{comparison_fill}: }{Fill color for the individual plot labels listing the IVD-MD comparisons. Must be a valid color name or HEX code}
-#'   \item{\code{comparison_text_color}: }{Text color for the individual plot labels listing the IVD-MD comparisons. Must be a valid color name or HEX code}
-#'   \item{\code{hide_prediction_intervals}: }{Should the black prediction intervals for each EQAM be hidden?}
-#'   \item{\code{legend_fill}: }{Fill color for the legend regions. Must be a valid color name or HEX code}
-#'   \item{\code{legend_text_color}: }{Text color for the legends. Must be a valid color name or HEX code}
-#' }
-#' @param testing A \code{logical} value indicating whether the function output should be test-friendly. This parameter is primarily intended for maintainers and not typically modified by end-users. The default value is \code{FALSE}.
+#' @description
+#' Prepare Commutability Evaluaton (CE) data before plotting.
 #'
-#' @return A \code{ggplot2} object that is a grid of plots having dimensions corresponding to the number of unique IVD-MD comparisons
-#' @export
+#' @param ce_data A \code{data.table}.
 #'
-#' @examples print(1)
+#' @return
+#' A \code{data.table}. The \code{ce_data} processed and ready for used in
+#' \code{plot_commutability_evaluation_plots()}.
+#'
+#' @keywords internal
+modify_ce_variables_pcep <- function(ce_data) {
 
-plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclude_rings = FALSE, exclude_cs = FALSE, plot_theme = c("custom", "default", "noklus", "soft", "depression", "happy"), additional_arguments = NULL, testing = FALSE){
-
-
-  MP_A <- MP_B <- MS_A <- MS_B <- SampleID <- dins_conclusion <- pi_conclusion_correctness <- pi_inside <- pi_lwr <- pi_upr <- predictor <- NULL;
-
-  shape_size_mult <- 1.5
-
-  #shape_values <- c("\U25CF", "\U25A0", "\U25C6",
-  #                  "\U25B2", "\U25BC", "\U002A",
-  #                  "\U002B", "\U2606", "\u260E",
-  #                  "\u2660", "\u2663",
-  #                  "\u2601", "\u2602", "\u2603", "\U0001F4AA", "\U0001F44D",
-  #                  "\u2620", "\u2615", "\u2665", "\u2618", "\U0001F44E",
-  #                  "\U0001F600", "\U0001F609", "\U0001F61B", "\U0001F60E",
-  #                  "\U0001F610", "\U0001F4A4", "\U0001F44C", "\u266A", LETTERS)
-
-  shape_values <- c(LETTERS, letters)
-
-  n_samples <- length(unique(ce_data$SampleID))
-
-  if(n_samples < 20){
-    shape_size_mult <- 1
-    shape_values <- c(21:25, 8, 3, 4, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18)
-  }
-
-
-  if(any("dins_conclusion" == names(pb_data))){
-    pb_data$dins_conclusion <- ifelse(pb_data$dins_conclusion == 0, "acceptable", "not acceptable")
-  }
-  else{
-    stop("'dins_conclusion' is missing in pb_data")
-  }
-
-  if(any("dins_conclusion" == names(ce_data))){
-    ce_data$dins_conclusion <- ifelse(ce_data$dins_conclusion == 0, "acceptable", "not acceptable")
-  }
-  else{
-    stop("'dins_conclusion' is missing in ce_data")
-  }
-
-  if(any("pi_inside" == names(ce_data))){
-    ce_data$pi_inside <- ifelse(ce_data$pi_inside == 0, "no", "yes")
-  }
-  else{
-    stop("'pi_inside' is missing in ce_data")
-  }
-
-  if(any("inside_rate" == names(ce_data))){
-    ce_data$pi_conclusion_correctness <- mapply(FUN = function(x, y) if(x == "yes"){y}else{1 - y}, ce_data$pi_inside, ce_data$inside_rate)
-  }
-
-  else{
-    stop("'inside_rate' is missing in ce_data")
-  }
-
-  if(is.null(plot_theme)){
-    plot_theme <- "custom"
-  }
-
-  if(length(plot_theme) > 1){
-    plot_theme <- plot_theme[1]
-  }
-
-  if(is.na(plot_theme)){
-    plot_theme <- "custom"
-  }
-
-  if(!any(plot_theme == c("custom", "default", "noklus", "soft", "depression", "happy"))){
-    plot_theme <- "custom"
-  }
-
-  if(!any(isTRUE(exclude_cs), isFALSE(exclude_cs))){
-    warning(paste0("exclude_cs = '", exclude_cs, "' is not an accepted output. 'exclude_cs' is therefor set to FALSE"))
-    exclude_cs <- FALSE
-  }
-
-  if(!any(isTRUE(exclude_rings), isFALSE(exclude_rings))){
-    warning(paste0("exclude_rings = '", exclude_rings, "' is not an accepted output. 'exclude_rings' is therefor set to FALSE"))
-    exclude_rings <- FALSE
-  }
-
-  if(plot_theme != "custom"){
-    if(any(plot_theme == c("default", "noklus", "soft", "depression", "happy"))){
-      if(plot_theme == "default"){
-        plot_theme <- "default"
-        theme_arguments <- list(title_color = "#097894",
-                                sub_title_color = "#097894",
-                                comparison_fill = "#55CDEC",
-                                comparison_text_color = "#000000",
-                                pb_fill = "#BFE3B4",
-                                pb_border = "#000000",
-                                curve_color = "#552A51",
-                                point_fill = "#0912BC",
-                                point_border = "#000000",
-                                legend_fill = "#F9F9F9",
-                                legend_text_color = "#000000")
+  if (any("dins_conclusion" == names(ce_data))) {
+    # Checks if dins_conclusion is numeric
+    if(is.numeric(ce_data$dins_conclusion)) {
+      unique_dins_conclusion_levels <- unique(ce_data$dins_conclusion)
+      # Checks if dins_conclusion have at most two unique values
+      if (!length(unique_dins_conclusion_levels) <= 2) {
+        stop(
+          "dins_conclusion have more than two unique levels: ",
+          paste(unique_dins_conclusion_levels[1:min(length(unique_dins_conclusion_levels), 5)],
+                collapse = ", "),
+          if (length(unique_dins_conclusion_levels) > 5) {"..."} else {"."},
+          " Ensure that it have one or two unique levels and try again."
+        )
       }
-      else if(plot_theme == "noklus"){
-        plot_theme <- "noklus"
-        theme_arguments <- list(title_color = "#28A745",
-                                sub_title_color = "#28A745",
-                                comparison_fill = "#FFFFFF",
-                                comparison_text_color = "#3DD2FF",
-                                pb_fill = "#8AE4FF",
-                                pb_border = "#000000",
-                                curve_color = "#00300B",
-                                point_fill = "#00E636",
-                                point_border = "#000000",
-                                legend_fill = "#FFFFFF",
-                                legend_text_color = "#28A745")
-      }
-      else if(plot_theme == "soft"){
-        plot_theme <- "soft"
-        theme_arguments <- list(title_color = "#9ADCFF",
-                                sub_title_color = "#9ADCFF",
-                                comparison_fill = "#FFF89A",
-                                comparison_text_color = "#B631D2",
-                                pb_fill = "#FFB2A6",
-                                pb_border = "#FF8673",
-                                curve_color = "#D18CE0",
-                                point_fill = "#9ADCFF",
-                                point_border = "#000000",
-                                legend_fill = "#FFFFFF",
-                                legend_text_color = "#9ADCFF")
-      }
-      else if(plot_theme == "depression"){
-        plot_theme <- "depression"
-        theme_arguments <- list(title_color = "#160040",
-                                sub_title_color = "#4C0070",
-                                comparison_fill = "#160040",
-                                comparison_text_color = "#FFFFFF",
-                                pb_fill = "#79018C",
-                                pb_border = "#370040",
-                                curve_color = "#151515",
-                                point_fill = "#9A0680",
-                                point_border = "#000000",
-                                legend_fill = "#F9F9F9",
-                                legend_text_color = "#6E85B2")
-      }
-      else if(plot_theme == "happy"){
-        plot_theme <- "happy"
-        theme_arguments <- list(title_color = "#36AE7C",
-                                sub_title_color = "#36AE7C",
-                                comparison_fill = "#F9D923",
-                                comparison_text_color = "#EB5353",
-                                pb_fill = "#187498",
-                                pb_border = "#000000",
-                                curve_color = "#151515",
-                                point_fill = "#EB9F53",
-                                point_border = "#EB5353",
-                                legend_fill = "#F9F9F9",
-                                legend_text_color = "#36AE7C")
-      }
+      ce_data$dins_conclusion <- factor(x = ce_data$dins_conclusion,
+                                        levels = c("0", "1"),
+                                        labels = c("acceptable",
+                                                   "not acceptable"),
+                                        ordered = TRUE)
     }
-    else{
-      plot_theme <- "custom"
+    else {
+      stop(
+        "dins_conclusion is not an integer vector, but a ",
+        class(ce_data$dins_conclusion),
+        "."
+      )
     }
+  }
+  else {
+    stop(
+      "dins_conclusion is missing in ce_data. It is mandatory to include it."
+    )
+  }
+
+  if (any("pi_inside" == names(ce_data))) {
+    # Checks if pi_inside is numeric
+    if (is.numeric(ce_data$pi_inside)) {
+      unique_pi_inside_levels <- unique(ce_data$pi_inside)
+      # Checks if pi_inside have at most two unique values
+      if(!length(unique_pi_inside_levels) <= 2) {
+        stop(
+          "pi_inside have more than two unique levels: ",
+          paste(unique_pi_inside_levels[1:min(length(unique_pi_inside_levels), 5)],
+                collapse = ", "),
+          if (length(unique_pi_inside_levels) > 5) {"..."} else {"."},
+          " Ensure that it have one or two unique levels and try again."
+        )
+      }
+      ce_data$pi_inside <- factor(x = ce_data$pi_inside,
+                                  levels = c("1", "0"),
+                                  labels = c("yes", "no"),
+                                  ordered = TRUE)
+    }
+    else {
+      stop(
+        "pi_inside is not an integer vector, but a ",
+        class(ce_data$pi_inside),
+        "."
+      )
+    }
+  }
+  else {
+    stop(
+      "pi_inside is missing in ce_data. It is mandatory to include it."
+    )
+  }
+
+  if (any("inside_rate" == names(ce_data))) {
+
+    # Checks if inside_rate is numeric
+    if (is.numeric(ce_data$inside_rate)) {
+
+      # Checks if inside_rate is between 0 and 1
+      if (!all(ce_data$inside_rate <= 1 & ce_data$inside_rate >= 0, na.rm = TRUE)) {
+        stop(
+          "Some inside_rate values are not within the interval [0, 1]."
+        )
+      }
+
+      ce_data$pi_conclusion_correctness <- sapply(
+        X = seq_len(nrow(ce_data)),
+        FUN = function(row_id) {
+          if (ce_data$pi_inside[row_id] == "yes") {
+            return(ce_data$inside_rate[row_id])
+          }
+          else {
+            return(1 - ce_data$inside_rate[row_id])
+          }
+        },
+        simplify = TRUE
+      )
+
+    }
+
+    else {
+      stop(
+        "inside_rate is not numeric, but a ",
+        class(ce_data$inside_rate),
+        "."
+      )
+    }
+  }
+
+  else{
+    stop(
+      "inside_rate is missing in ce_data. It is mandatory to include it."
+    )
+  }
+
+  return(ce_data)
+
+}
+
+#' @title
+#' Modifies Prediction Band Data Variables
+#'
+#' @description
+#' Prepare Prediction Band (PB) data before plotting.
+#'
+#' @param pb_data A \code{data.table}.
+#'
+#' @return
+#' A \code{data.table}. The \code{pb_data} processed and ready for used in
+#' \code{plot_commutability_evaluation_plots()}.
+#'
+#' @keywords internal
+modify_pb_variables_pcep <- function(pb_data) {
+
+  if (any("dins_conclusion" == names(pb_data))) {
+    # Checks if dins_conclusion is numeric
+    if(is.numeric(pb_data$dins_conclusion)) {
+      unique_dins_conclusion_levels <- unique(pb_data$dins_conclusion)
+      # Checks if dins_conclusion have at most two unique values
+      if (!length(unique_dins_conclusion_levels) <= 2) {
+        stop(
+          "dins_conclusion have more than two unique levels: ",
+          paste(unique_dins_conclusion_levels[1:min(length(unique_dins_conclusion_levels), 5)],
+                collapse = ", "),
+          if (length(unique_dins_conclusion_levels) > 5) {"..."} else {"."},
+          " Ensure that it have one or two unique levels and try again."
+        )
+      }
+      pb_data$dins_conclusion <- factor(x = pb_data$dins_conclusion,
+                                        levels = c("0", "1"),
+                                        labels = c("acceptable",
+                                                   "not acceptable"),
+                                        ordered = TRUE)
+    }
+    else {
+      stop(
+        "dins_conclusion is not an integer vector, but a ",
+        class(pb_data$dins_conclusion),
+        "."
+      )
+    }
+  }
+  else {
+    stop(
+      "dins_conclusion is missing in pb_data. It is mandatory to include it."
+    )
+  }
+
+  return(pb_data)
+
+}
+
+#' @title
+#' Apply Plotting Theme Attributes: PCEP
+#'
+#' @param plot_theme A \code{character} string.
+#' @param additional_arguments A \code{list}.
+#'
+#' @returns
+#' A \code{list}. The modified \code{additional_arguments}.
+#'
+#' @keywords internal
+apply_theme_attributes <- function(plot_theme, additional_arguments) {
+
+  # Get clean plot_theme
+  plot_theme <- switch(plot_theme,
+                       "default" = "default",
+                       "noklus" = "noklus",
+                       "soft" = "soft",
+                       "depression" = "depression",
+                       "happy" = "happy",
+                       "default")
+
+
+
+  if (plot_theme == "default") {
+    theme_arguments <- list(title_color = "#000000",
+                            sub_title_color = "#000000",
+                            comparison_fill = "#00b9e0",
+                            comparison_text_color = "#000000",
+                            pb_fill = "green",
+                            pb_border = "#000000",
+                            curve_color = "#EB5353",
+                            point_fill = "#0912BC",
+                            point_border = "#000000",
+                            legend_fill = "#F9F9F9",
+                            legend_text_color = "#000000")
+  }
+  else if (plot_theme == "noklus") {
+    theme_arguments <- list(title_color = "#000000",
+                            sub_title_color = "#000000",
+                            comparison_fill = "#00b9e0",
+                            comparison_text_color = "#FFFFFF",
+                            pb_fill = "#28A745",
+                            pb_border = "#00b9e0",
+                            curve_color = "#00b9e0",
+                            point_fill = "#00b9e0",
+                            point_border = "#000000",
+                            legend_fill = "#FFFFFF",
+                            legend_text_color = "#000000")
+  }
+  else if (plot_theme == "soft") {
+    theme_arguments <- list(title_color = "#000000",
+                            sub_title_color = "#000000",
+                            comparison_fill = "#FFF89A",
+                            comparison_text_color = "#000000",
+                            pb_fill = "#FFB2A6",
+                            pb_border = "#000000",
+                            curve_color = "#D18CE0",
+                            point_fill = "#9ADCFF",
+                            point_border = "#000000",
+                            legend_fill = "#FFFFFF",
+                            legend_text_color = "#000000")
+  }
+  else if (plot_theme == "depression") {
+    theme_arguments <- list(title_color = "#000000",
+                            sub_title_color = "#4C0070",
+                            comparison_fill = "#000000",
+                            comparison_text_color = "#FFFFFF",
+                            pb_fill = "#D18CE0",
+                            pb_border = "#370040",
+                            curve_color = "#151515",
+                            point_fill = "#4C0070",
+                            point_border = "#000000",
+                            legend_fill = "#F9F9F9",
+                            legend_text_color = "#000000")
+  }
+  else if (plot_theme == "happy") {
+    theme_arguments <- list(title_color = "#36AE7C",
+                            sub_title_color = "#36AE7C",
+                            comparison_fill = "#EB5353",
+                            comparison_text_color = "#000000",
+                            pb_fill = "#FFFF00",
+                            pb_border = "#000000",
+                            curve_color = "#151515",
+                            point_fill = "#EB9F53",
+                            point_border = "#EB5353",
+                            legend_fill = "#F9F9F9",
+                            legend_text_color = "#000000")
   }
 
   if(any(plot_theme == c("default", "noklus", "soft", "depression", "happy"))){
@@ -210,988 +282,752 @@ plot_commutability_evaluation_plots <- function(cs_data, pb_data, ce_data, exclu
     additional_arguments$legend_text_color <- theme_arguments$legend_text_color
   }
 
+  return(additional_arguments)
+
+}
+
+
+#' @title
+#' Update Plotting Attributes: PCEP
+#'
+#' @param additional_arguments A \code{list}.
+#'
+#' @returns
+#' A \code{list}. The modified \code{additional_arguments}.
+#'
+#' @keywords internal
+update_all_attributes <- function(additional_arguments) {
+
+  is_valid_color <- function(color) {
+    valid_color <- FALSE
+    if (!is.character(color)) {
+      return(valid_color)
+    }
+
+    # Check if valid hex color
+    valid_hex <- (stri_length(str = color) == 7) && stri_startswith(str = color,
+                                                                    fixed = "#")
+    # Check if color is among the ones defined in colors()
+    valid_predefined <- any(color == colors())
+
+    if (valid_hex || valid_predefined) {
+      valid_color <- TRUE
+    }
+
+    return(valid_color)
+
+  }
 
   # Default 'additional_arguments'
-  default_main_title <- "Commutability evaluation plots for all unique IVD-MD comparisons"
-  default_sub_title <- NULL
-  default_x_name <- "Measurements along x-axis * - "
-  default_y_name <- "Measurements along y-axis  - *"
-  default_n_breaks <- 6L
-  default_title_color <- "black"
-  default_sub_title_color <- "black"
-  default_pb_fill <- "green"
-  default_pb_border <- "black"
-  default_curve <- FALSE
-  default_type <- "equivalence_curve"
-  default_curve_color <- "gray"
-  default_point_shape <- "circle"
-  default_point_size <- 0.75
-  default_point_fill <- "gray"
-  default_point_border <- "black"
-  default_comparison_fill <- "#5BCEFA"
-  default_comparison_text_color <- "#000000"
-  default_legend_fill <- "#F9F9F9"
-  default_legend_text_color <- "#000000"
-  default_hide_prediction_intervals <- FALSE
+  used_main_title <- "Commutability evaluation plots for all unique IVD-MD comparisons"
+  used_sub_title <- NULL
+  used_x_name <- "Measurements along x-axis * - "
+  used_y_name <- "Measurements along y-axis  - *"
+  used_n_breaks <- 6L
+  used_title_color <- "black"
+  used_sub_title_color <- "black"
+  used_pb_fill <- "green"
+  used_pb_border <- "black"
+  used_curve <- FALSE
+  used_type <- "equivalence_curve"
+  used_curve_color <- "gray"
+  used_point_shape <- "circle"
+  used_point_size <- 0.75
+  used_point_fill <- "gray"
+  used_point_border <- "black"
+  used_comparison_fill <- "#5BCEFA"
+  used_comparison_text_color <- "#000000"
+  used_legend_fill <- "#F9F9F9"
+  used_legend_text_color <- "#000000"
+  used_hide_prediction_intervals <- FALSE
 
+  default_additional_arguments <- list(
+    "main_title" = used_main_title,
+    "sub_title" = used_sub_title,
+    "x_name" = used_x_name,
+    "y_name" = used_y_name,
+    "n_breaks" = used_n_breaks,
+    "title_color" = used_title_color,
+    "sub_title_color" = used_sub_title_color,
+    "pb_fill" = used_pb_fill,
+    "pb_border" = used_pb_border,
+    "curve" = used_curve,
+    "type" = used_type,
+    "curve_color" = used_curve_color,
+    "point_shape" = used_point_shape,
+    "point_size" = used_point_size,
+    "point_fill" = used_point_fill,
+    "point_border" = used_point_border,
+    "comparison_fill" = used_comparison_fill,
+    "comparison_text_color" = used_comparison_text_color,
+    "legend_fill" = used_legend_fill,
+    "legend_text_color" = used_legend_text_color,
+    "hide_prediction_intervals" = used_hide_prediction_intervals
+  )
+
+  # Get given arguments
   given_arguments <- names(additional_arguments)
 
-  if(any("main_title" == given_arguments)){
+  # main_title (main title)
+  if (any("main_title" == given_arguments)) {
     main_title <- additional_arguments$main_title[1]
-
-    if(is.null(main_title)){
+    if (is.null(main_title)) {
       additional_arguments$main_title <- NULL
-      given_arguments <- additional_arguments |> names()
-      default_main_title <- NULL
+      given_arguments <- given_arguments[-match("main_title", given_arguments)]
+      used_main_title <- NULL
     }
-    else if(isTRUE(main_title == "")){
-      additional_arguments$main_title <- NULL
-      given_arguments <- additional_arguments |> names()
-      default_main_title <- NULL
-    }
-    else if(is.character(main_title)){
+    else if (is.character(main_title)) {
       main_title <- main_title
+      if (main_title == "") {
+        additional_arguments$main_title <- NULL
+        given_arguments <- given_arguments[-match("main_title", given_arguments)]
+        used_main_title <- NULL
+      }
     }
     else{
-      warning(paste0("main_title is not of character type, but '", typeof(main_title) ,"'. Default main_title is used instead"))
-      additional_arguments$main_title <- default_main_title
+      warning(
+        "main_title is not a character string, but a ",
+        class(main_title),
+        ". Default main_title is used instead."
+      )
+      additional_arguments$main_title <- used_main_title
     }
   }
-  if(any("sub_title" == given_arguments)){
+
+  # sub_title (sub title)
+  if (any("sub_title" == given_arguments)) {
     sub_title <- additional_arguments$sub_title[1]
-    if(is.null(sub_title) || is.na(sub_title)){
-      additional_arguments$sub_title <- default_sub_title
-      given_arguments <- additional_arguments |> names()
+    if (is.null(sub_title)) {
+      additional_arguments$sub_title <- NULL
+      given_arguments <- given_arguments[-match("sub_title", given_arguments)]
+      used_sub_title <- NULL
     }
-    else if(isTRUE(sub_title == "")){
-      additional_arguments$sub_title <- default_sub_title
-      given_arguments <- additional_arguments |> names()
-    }
-    else if(is.character(sub_title)){
-      additional_arguments$sub_title <- sub_title
+    else if (is.character(sub_title)) {
+      sub_title <- sub_title
+      if (sub_title == "") {
+        additional_arguments$sub_title <- NULL
+        given_arguments <- given_arguments[-match("sub_title", given_arguments)]
+        used_sub_title <- NULL
+      }
     }
     else{
-      warning(paste0("sub_title is not of character type, but '", typeof(sub_title) ,"'. Default sub_title is used instead"))
-      additional_arguments$sub_title <- default_sub_title
-      given_arguments <- additional_arguments |> names()
+      warning(
+        "sub_title is not a character string, but a ",
+        class(sub_title),
+        ". Default sub_title is used instead."
+      )
+      additional_arguments$sub_title <- used_sub_title
     }
   }
 
-  if(any("x_name" == given_arguments)){
+  # x_name (x-axis label)
+  if (any("x_name" == given_arguments)) {
     x_name <- additional_arguments$x_name[1]
-    if(is.character(x_name)){
-      x_name <- x_name
-    }
-    else{
-      warning(paste0("x_name is not of character type, but '", typeof(x_name) ,"'. Default x_name is used instead"))
-      x_name <- "Measurements along x-axis  - *"
+    if (!is.character(x_name)) {
+      warning(
+        "x_name is not a character string, but a ",
+        class(x_name),
+        ". Default x_name is used instead."
+      )
+      additional_arguments$x_name <- used_x_name
     }
   }
-  if(any("y_name" == given_arguments)){
+
+  # y_name (y-axis label)
+  if (any("y_name" == given_arguments)) {
     y_name <- additional_arguments$y_name[1]
-    if(is.character(y_name)){
-      y_name <- y_name
-    }
-    else{
-      warning(paste0("y_name is not of character type, but '", typeof(y_name) ,"'. Default y_name is used instead"))
-      y_name <- "Measurements along y-axis  - *"
+    if (!is.character(y_name)) {
+      warning(
+        "y_name is not a character string, but a ",
+        class(y_name),
+        ". Default y_name is used instead."
+      )
+      additional_arguments$y_name <- used_y_name
     }
   }
-  if(any("n_breaks" == given_arguments)){
+
+  # n_breaks (number of breaks on both axis)
+  if (any("n_breaks" == given_arguments)) {
     n_breaks <- additional_arguments$n_breaks[1]
-    if(is.na(n_breaks) | is.null(n_breaks)){
-      n_breaks <- 6L
-    }
-    if(is.character(n_breaks)){
-      if(stri_detect(str = n_breaks, regex = "[[:digit:]]")){
-        candidate_n_breaks <- stri_replace_all(str = n_breaks, replacement = "", regex = "[^[:digit:]]")
-        if(stri_detect(str = candidate_n_breaks, regex = "[[:digit:]]")){
-          n_breaks <- as.numeric(candidate_n_breaks)
-        }
-        else{
-          warning(paste0("A digit was first found, but it got away..."," :( "," A severe tragedy..."))
+    if (!is.numeric(n_breaks)) {
+      if (is.character(n_breaks)) {
+        n_breaks <- tryCatch(
+          expr = {
+            as.numeric(n_breaks)
+          },
+          error = function(e) NA_real_,
+          warning = function(w) NA_real_
+        )
+        if (is.na(n_breaks)) {
+          warning(
+            "n_breaks is not an integer.",
+            " Default n_breaks is used instead."
+          )
           n_breaks <- 6L
+          additional_arguments$n_breaks <- n_breaks
+        }
+        n_breaks <- as.integer(round(n_breaks))
+
+        if (n_breaks <= 2L || n_breaks >= 50L) {
+          stop(
+            "n_breaks is either too small or too large: ",
+            n_breaks,
+            ". Please choose a value between 3 and 49."
+          )
         }
       }
-      else{
-        warning(paste0("The picked value for n_breaks, ", n_breaks, " , does not even contain any numbers and is therefore not valid. Default value for n_breaks is used instead"))
+      else {
+        warning(
+          "n_breaks is not an integer.",
+          " Default n_breaks is used instead."
+        )
         n_breaks <- 6L
+        additional_arguments$n_breaks <- n_breaks
       }
     }
-    else if(is.integer(n_breaks) | is.numeric(n_breaks)){
-      n_breaks <- n_breaks
-    }
-    else{
-      warning(paste0("The picked value for n_breaks, ", n_breaks, " , is not valid. Default value for n_breaks is used instead"))
-      n_breaks <- 6L
-    }
 
-    additional_arguments$n_breaks <- n_breaks
+    n_breaks <- as.integer(round(n_breaks))
 
-  }
-
-  color_arguments <- c("title_color", "sub_title_color", "pb_fill", "pb_border", "curve_color", "point_fill", "point_border", "comparison_fill", "comparison_text_color", "legend_fill", "legend_text_color")
-
-  for(i in 1:length(color_arguments)){
-
-    if(any(color_arguments[i] == given_arguments)){
-
-      registered_color <- additional_arguments[[which(color_arguments[i] == given_arguments)]][1]
-
-      if(is.na(registered_color) | is.null(registered_color)){
-        if(color_arguments[i] == "title_color"){
-          registered_color <- default_title_color
-        }
-        else if(color_arguments[i] == "sub_title_color"){
-          registered_color <- default_sub_title_color
-        }
-        else if(color_arguments[i] == "pb_fill"){
-          registered_color <- default_pb_fill
-        }
-        else if(color_arguments[i] == "pb_border"){
-          registered_color <- default_pb_border
-        }
-        else if(color_arguments[i] == "curve_color"){
-          registered_color <- default_curve_color
-        }
-        else if(color_arguments[i] == "point_fill"){
-          registered_color <- default_point_fill
-        }
-        else if(color_arguments[i] == "point_border"){
-          registered_color <- default_point_border
-        }
-        else if(color_arguments[i] == "comparison_fill"){
-          registered_color <- default_comparison_fill
-        }
-        else if(color_arguments[i] == "comparison_text_color"){
-          registered_color <- default_comparison_text_color
-        }
-        else if(color_arguments[i] == "legend_fill"){
-          registered_color <- default_legend_fill
-        }
-        else if(color_arguments[i] == "legend_text_color"){
-          registered_color <- default_legend_text_color
-        }
-      }
-
-      if(!(any(registered_color == colors()) | any(registered_color == 1:length(colors())))){
-        if(stri_length(registered_color) == 7 & stri_locate_first_fixed(registered_color, pattern = "#", )[1,1] == 1){
-          test_hex <- stri_sub(registered_color, from = 2, to = 7) |> stri_split_boundaries(type = "character") |> unlist()
-          valid_hex <- all(sapply(test_hex, FUN = function(x) if(stri_detect(x, regex = "[[:digit:]|[abcdefABCDEF]]")){TRUE}else{FALSE}))
-          if(!valid_hex){
-            warning(paste0("The picked color for '", color_arguments, "' , was suspected to be a HEX code, but was not valid. Default fill color is used instead"))
-            if(color_arguments[i] == "title_color"){
-              registered_color <- default_title_color
-            }
-            else if(color_arguments[i] == "sub_title_color"){
-              registered_color <- default_sub_title_color
-            }
-            else if(color_arguments[i] == "pb_fill"){
-              registered_color <- default_pb_fill
-            }
-            else if(color_arguments[i] == "pb_border"){
-              registered_color <- default_pb_border
-            }
-            else if(color_arguments[i] == "curve_color"){
-              registered_color <- default_curve_color
-            }
-            else if(color_arguments[i] == "point_fill"){
-              registered_color <- default_point_fill
-            }
-            else if(color_arguments[i] == "point_border"){
-              registered_color <- default_point_border
-            }
-            else if(color_arguments[i] == "comparison_fill"){
-              registered_color <- default_comparison_fill
-            }
-            else if(color_arguments[i] == "comparison_text_color"){
-              registered_color <- default_comparison_text_color
-            }
-            else if(color_arguments[i] == "legend_fill"){
-              registered_color <- default_legend_fill
-            }
-            else if(color_arguments[i] == "legend_text_color"){
-              registered_color <- default_legend_text_color
-            }
-            else{
-              stop("Something went wrong... How?")
-            }
-          }
-        }
-        else{
-          warning(paste0("The picked color for '", color_arguments[i], "' , is not valid. Default fill color is used instead"))
-          if(color_arguments[i] == "title_color"){
-            registered_color <- default_title_color
-          }
-          else if(color_arguments[i] == "sub_title_color"){
-            registered_color <- default_sub_title_color
-          }
-          else if(color_arguments[i] == "pb_fill"){
-            registered_color <- default_pb_fill
-          }
-          else if(color_arguments[i] == "pb_border"){
-            registered_color <- default_pb_border
-          }
-          else if(color_arguments[i] == "curve_color"){
-            registered_color <- default_curve_color
-          }
-          else if(color_arguments[i] == "point_fill"){
-            registered_color <- default_point_fill
-          }
-          else if(color_arguments[i] == "point_border"){
-            registered_color <- default_point_border
-          }
-          else if(color_arguments[i] == "comparison_fill"){
-            registered_color <- default_comparison_fill
-          }
-          else if(color_arguments[i] == "comparison_text_color"){
-            registered_color <- default_comparison_text_color
-          }
-          else if(color_arguments[i] == "legend_fill"){
-            registered_color <- default_legend_fill
-          }
-          else if(color_arguments[i] == "legend_text_color"){
-            registered_color <- default_legend_text_color
-          }
-          else{
-            stop("Something went wrong... How?")
-          }
-        }
-      }
-      additional_arguments[[which(color_arguments[i] == given_arguments)]] <- registered_color
-    }
-
-  }
-
-  include_line <- 0
-
-  if(any("curve" == given_arguments)){
-    if(any("curve_type" == given_arguments)){
-      if(additional_arguments$curve_type == "equivalence_curve"){
-        include_line <- 1
-      }
-    }
-    else{
-      include_line <- 0
+    if (n_breaks <= 2L || n_breaks >= 50L) {
+      stop(
+        "n_breaks is either too small or too large: ",
+        n_breaks,
+        ". Please choose a value between 3 and 49."
+      )
     }
   }
 
-  include_linear_smooth <- FALSE
+  # Arguments that require colors as input
 
-  if(any("curve" == given_arguments)){
-    if(any("curve_type" == given_arguments)){
-      if(additional_arguments$curve_type == "fitted_curve"){
-        include_linear_smooth <- TRUE
-      }
-    }
-    else{
-      include_linear_smooth <- FALSE
+  # title_color (color of main title font)
+  if (any("title_color" == given_arguments)) {
+    if (!is_valid_color(additional_arguments$title_color)) {
+      warning(
+        "title_color is not a valid color: ",
+        given_arguments$title_color,
+        " . Default title_color is used instead."
+      )
+      additional_arguments$title_color <- used_title_color
     }
   }
 
-  include_flexible_smooth <- FALSE
-
-  if(any("curve" == given_arguments)){
-    if(any("curve_type" == given_arguments)){
-      if(additional_arguments$curve_type == "flexible_curve"){
-        include_flexible_smooth <- TRUE
-      }
-    }
-    else{
-      include_flexible_smooth <- FALSE
-    }
-  }
-  prediction_interval_alpha <- 1
-  if(any("hide_prediction_intervals" == given_arguments)){
-    if(isTRUE(additional_arguments$hide_prediction_intervals)){
-      prediction_interval_alpha <- 0
-    }
-    else{
-      prediction_interval_alpha <- 1
+  # sub_title_color (color of sub title font)
+  if (any("sub_title_color" == given_arguments)) {
+    if (!is_valid_color(additional_arguments$sub_title_color)) {
+      warning(
+        "sub_title_color is not a valid color: ",
+        given_arguments$sub_title_color,
+        " . Default sub_title_color is used instead."
+      )
+      additional_arguments$sub_title_color <- used_sub_title_color
     }
   }
 
-
-  if(!exclude_cs & !exclude_rings){
-
-    if(include_flexible_smooth){
-      ggplot() +
-        geom_ribbon(data = pb_data,
-                    mapping = aes(x = predictor, ymin = pi_lwr, ymax = pi_upr, fill = dins_conclusion),
-                    alpha = 0.5,
-                    color = if(any("pb_border" == given_arguments)){additional_arguments$pb_border}else{default_pb_border},
-                    na.rm = TRUE,
-                    outline.type = "full") +
-        facet_wrap(facets = . ~ comparison, scales = "free") +
-        geom_smooth(data = cs_data,
-                    mapping = aes(x = MP_B, y = MP_A),
-                    color = if(any("curve_color" == given_arguments)){additional_arguments$curve_color}else{default_curve_color},
-                    method = "loess",
-                    se = FALSE,
-                    na.rm = TRUE,
-                    span = 0.95,
-                    linetype = "dotted",
-                    formula = y ~ x) +
-        geom_point(data = cs_data,
-                   mapping = aes(x = MP_B, y = MP_A),
-                   shape = if(any("point_shape" == given_arguments)){if(additional_arguments$point_shape == "circle"){21}else if(additional_arguments$point_shape == "square"){22}else if(additional_arguments$point_shape == "diamond"){23}else if(additional_arguments$point_shape == "triangle"){24}else{21}}else{21},
-                   fill = if(any("point_fill" == given_arguments)){additional_arguments$point_fill}else{default_point_fill},
-                   size = if(any("point_size" == given_arguments)){additional_arguments$point_size}else{default_point_size},
-                   color = if(any("point_border" == given_arguments)){additional_arguments$point_border}else{default_point_border}) +
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3, alpha = 0.3) + theme_bw() +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75, alpha = 0.4) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50, alpha = 0.5) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25, alpha = 0.75) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00, alpha = 0.90) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50, alpha = 1) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50, alpha = 1, color = "black") +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, alpha = pi_conclusion_correctness, color = pi_inside), shape = 1, size = 5, show.legend = FALSE) +
-        labs(title = if(any("main_title" == given_arguments)){additional_arguments$main_title}else{default_main_title},
-             subtitle = if(any("sub_title" == given_arguments)){additional_arguments$sub_title}else{default_sub_title},
-             color = "Inside prediction interval",
-             shape = "Evaluated materials' ID",
-             fill = "Difference in non-selectivity") +
-        scale_x_continuous(name = if(any("x_name" == given_arguments)){additional_arguments$x_name}else{default_x_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_shape_manual(values = shape_values[1:n_samples]) +
-        scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
-        scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
-        scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
-        theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
-                                              color = "#000000",
-                                              linewidth = 1),
-              strip.text = element_text(face = "bold",
-                                        color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
-              legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
-                                               color = "#000000"),
-              legend.key = element_rect(fill = "white", color = "black"),
-              legend.text = element_text(color = if(any("legend_text_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              title = element_text(face = "bold",
-                                   color = if(any("title_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              plot.title = element_text(hjust = 0.5),
-              plot.subtitle = element_text(hjust = 0.5))
+  # pb_fill (fill color of prediction band ribbon)
+  if (any("pb_fill" == given_arguments)) {
+    if (!is_valid_color(additional_arguments$pb_fill)) {
+      warning(
+        "pb_fill is not a valid color: ",
+        given_arguments$pb_fill,
+        " . Default pb_fill is used instead."
+      )
+      additional_arguments$pb_fill <- used_pb_fill
     }
-    else if(include_linear_smooth){
-      ggplot() +
-        geom_ribbon(data = pb_data,
-                    mapping = aes(x = predictor, ymin = pi_lwr, ymax = pi_upr, fill = dins_conclusion),
-                    alpha = 0.5,
-                    color = if(any("pb_border" == given_arguments)){additional_arguments$pb_border}else{default_pb_border},
-                    na.rm = TRUE,
-                    outline.type = "full") +
-        facet_wrap(facets = . ~ comparison, scales = "free") +
-        geom_smooth(data = cs_data,
-                    mapping = aes(x = MP_B, y = MP_A),
-                    alpha = include_linear_smooth,
-                    color = if(any("curve_color" == given_arguments)){additional_arguments$curve_color}else{default_curve_color},
-                    se = FALSE,
-                    na.rm = TRUE,
-                    linetype = "dotted",
-                    method = "lm",
-                    formula = y ~ x) +
-        geom_point(data = cs_data,
-                   mapping = aes(x = MP_B, y = MP_A),
-                   shape = if(any("point_shape" == given_arguments)){if(additional_arguments$point_shape == "circle"){21}else if(additional_arguments$point_shape == "square"){22}else if(additional_arguments$point_shape == "diamond"){23}else if(additional_arguments$point_shape == "triangle"){24}else{21}}else{21},
-                   fill = if(any("point_fill" == given_arguments)){additional_arguments$point_fill}else{default_point_fill},
-                   size = if(any("point_size" == given_arguments)){additional_arguments$point_size}else{default_point_size},
-                   color = if(any("point_border" == given_arguments)){additional_arguments$point_border}else{default_point_border}) +
-
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3  * shape_size_mult, alpha = 0.3) + theme_bw() +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75 * shape_size_mult, alpha = 0.4) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50 * shape_size_mult, alpha = 0.5) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25 * shape_size_mult, alpha = 0.75) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00 * shape_size_mult, alpha = 0.90) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50 * shape_size_mult, alpha = 1) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50 * shape_size_mult, alpha = 1, color = "black") +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, alpha = pi_conclusion_correctness, color = pi_inside), shape = 1, size = 5, show.legend = FALSE) +
-        labs(title = if(any("main_title" == given_arguments)){additional_arguments$main_title}else{default_main_title},
-             subtitle = if(any("sub_title" == given_arguments)){additional_arguments$sub_title}else{default_sub_title},
-             color = "Inside prediction interval",
-             shape = "Evaluated materials' ID",
-             fill = "Difference in non-selectivity") +
-        scale_x_continuous(name = if(any("x_name" == given_arguments)){additional_arguments$x_name}else{default_x_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_shape_manual(values = shape_values[1:n_samples]) +
-        scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
-        scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
-        scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
-        theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
-                                              color = "#000000",
-                                              linewidth = 1),
-              strip.text = element_text(face = "bold",
-                                        color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
-              legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
-                                               color = "#000000"),
-              legend.key = element_rect(fill = "white", color = "black"),
-              legend.text = element_text(color = if(any("legend_text_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              title = element_text(face = "bold",
-                                   color = if(any("title_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              plot.title = element_text(hjust = 0.5),
-              plot.subtitle = element_text(hjust = 0.5))
-    }
-    else{
-      ggplot() +
-        geom_ribbon(data = pb_data,
-                    mapping = aes(x = predictor, ymin = pi_lwr, ymax = pi_upr, fill = dins_conclusion),
-                    alpha = 0.5,
-                    color = if(any("pb_border" == given_arguments)){additional_arguments$pb_border}else{default_pb_border},
-                    na.rm = TRUE,
-                    outline.type = "full") +
-        facet_wrap(facets = . ~ comparison, scales = "free") +
-        geom_abline(slope = 1, intercept = 0,
-                    alpha = include_line,
-                    color = if(any("curve_color" == given_arguments)){additional_arguments$curve_color}else{default_curve_color},
-                    linetype = "dotted") +
-        geom_point(data = cs_data,
-                   mapping = aes(x = MP_B, y = MP_A),
-                   shape = if(any("point_shape" == given_arguments)){if(additional_arguments$point_shape == "circle"){21}else if(additional_arguments$point_shape == "square"){22}else if(additional_arguments$point_shape == "diamond"){23}else if(additional_arguments$point_shape == "triangle"){24}else{21}}else{21},
-                   fill = if(any("point_fill" == given_arguments)){additional_arguments$point_fill}else{default_point_fill},
-                   size = if(any("point_size" == given_arguments)){additional_arguments$point_size}else{default_point_size},
-                   color = if(any("point_border" == given_arguments)){additional_arguments$point_border}else{default_point_border}) +
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3 * shape_size_mult, alpha = 0.3) + theme_bw() +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75 * shape_size_mult, alpha = 0.4) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50 * shape_size_mult, alpha = 0.5) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25 * shape_size_mult, alpha = 0.75) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00 * shape_size_mult, alpha = 0.90) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50 * shape_size_mult, alpha = 1) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50 * shape_size_mult, alpha = 1, color = "black") +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, alpha = pi_conclusion_correctness, color = pi_inside), shape = 1, size = 5, show.legend = FALSE) +
-        labs(title = if(any("main_title" == given_arguments)){additional_arguments$main_title}else{default_main_title},
-             subtitle = if(any("sub_title" == given_arguments)){additional_arguments$sub_title}else{default_sub_title},
-             color = "Inside prediction interval",
-             shape = "Evaluated materials' ID",
-             fill = "Difference in non-selectivity") +
-        scale_x_continuous(name = if(any("x_name" == given_arguments)){additional_arguments$x_name}else{default_x_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_shape_manual(values = shape_values[1:n_samples]) +
-        scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
-        scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
-        scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
-        theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
-                                              color = "#000000",
-                                              linewidth = 1),
-              strip.text = element_text(face = "bold",
-                                        color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
-              legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
-                                               color = "#000000"),
-              legend.key = element_rect(fill = "white", color = "black"),
-              legend.text = element_text(color = if(any("legend_text_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              title = element_text(face = "bold",
-                                   color = if(any("title_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              plot.title = element_text(hjust = 0.5),
-              plot.subtitle = element_text(hjust = 0.5))
-    }
-
-
-  }
-  else if(!exclude_cs & exclude_rings){
-
-
-    if(include_flexible_smooth){
-      ggplot() +
-        geom_ribbon(data = pb_data,
-                    mapping = aes(x = predictor, ymin = pi_lwr, ymax = pi_upr, fill = dins_conclusion),
-                    alpha = 0.5,
-                    color = if(any("pb_border" == given_arguments)){additional_arguments$pb_border}else{default_pb_border},
-                    na.rm = TRUE,
-                    outline.type = "full") +
-        facet_wrap(facets = . ~ comparison, scales = "free") +
-        geom_smooth(data = cs_data,
-                    mapping = aes(x = MP_B, y = MP_A),
-                    alpha = include_flexible_smooth,
-                    color = if(any("curve_color" == given_arguments)){additional_arguments$curve_color}else{default_curve_color},
-                    method = "loess",
-                    se = FALSE,
-                    na.rm = TRUE,
-                    linetype = "dotted",
-                    span = 0.95,
-                    formula = y ~ x) +
-        geom_point(data = cs_data,
-                   mapping = aes(x = MP_B, y = MP_A), na.rm = TRUE,
-                   shape = if(any("point_shape" == given_arguments)){if(additional_arguments$point_shape == "circle"){21}else if(additional_arguments$point_shape == "square"){22}else if(additional_arguments$point_shape == "diamond"){23}else if(additional_arguments$point_shape == "triangle"){24}else{21}}else{21},
-                   fill = if(any("point_fill" == given_arguments)){additional_arguments$point_fill}else{default_point_fill},
-                   size = if(any("point_size" == given_arguments)){additional_arguments$point_size}else{default_point_size},
-                   color = if(any("point_border" == given_arguments)){additional_arguments$point_border}else{default_point_border}) +
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3 * shape_size_mult, alpha = 0.3) + theme_bw() +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75 * shape_size_mult, alpha = 0.4) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50 * shape_size_mult, alpha = 0.5) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25 * shape_size_mult, alpha = 0.75) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00 * shape_size_mult, alpha = 0.90) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50 * shape_size_mult, alpha = 1) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50 * shape_size_mult, alpha = 1, color = "black") +
-        labs(title = if(any("main_title" == given_arguments)){additional_arguments$main_title}else{default_main_title},
-             subtitle = if(any("sub_title" == given_arguments)){additional_arguments$sub_title}else{default_sub_title},
-             color = "Inside prediction interval",
-             shape = "Evaluated materials' ID",
-             fill = "Difference in non-selectivity") +
-        scale_x_continuous(name = if(any("x_name" == given_arguments)){additional_arguments$x_name}else{default_x_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_shape_manual(values = shape_values[1:n_samples]) +
-        scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
-        scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
-        scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
-        theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
-                                              color = "#000000",
-                                              linewidth = 1),
-              strip.text = element_text(face = "bold",
-                                        color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
-              legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
-                                               color = "#000000"),
-              legend.text = element_text(color = if(any("legend_text_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              legend.key = element_rect(fill = "white", color = "black"),
-              title = element_text(face = "bold",
-                                   color = if(any("title_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              plot.title = element_text(hjust = 0.5),
-              plot.subtitle = element_text(hjust = 0.5))
-    }
-    else if(include_linear_smooth){
-      ggplot() +
-        geom_ribbon(data = pb_data,
-                    mapping = aes(x = predictor, ymin = pi_lwr, ymax = pi_upr, fill = dins_conclusion),
-                    alpha = 0.5,
-                    color = if(any("pb_border" == given_arguments)){additional_arguments$pb_border}else{default_pb_border},
-                    na.rm = TRUE,
-                    outline.type = "full") +
-        facet_wrap(facets = . ~ comparison, scales = "free") +
-        geom_smooth(data = cs_data,
-                    mapping = aes(x = MP_B, y = MP_A),
-                    alpha = include_linear_smooth,
-                    color = if(any("curve_color" == given_arguments)){additional_arguments$curve_color}else{default_curve_color},
-                    se = FALSE,
-                    na.rm = TRUE,
-                    linetype = "dotted",
-                    method = "lm",
-                    formula = y ~ x) +
-        geom_point(data = cs_data,
-                   mapping = aes(x = MP_B, y = MP_A), na.rm = TRUE,
-                   shape = if(any("point_shape" == given_arguments)){if(additional_arguments$point_shape == "circle"){21}else if(additional_arguments$point_shape == "square"){22}else if(additional_arguments$point_shape == "diamond"){23}else if(additional_arguments$point_shape == "triangle"){24}else{21}}else{21},
-                   fill = if(any("point_fill" == given_arguments)){additional_arguments$point_fill}else{default_point_fill},
-                   size = if(any("point_size" == given_arguments)){additional_arguments$point_size}else{default_point_size},
-                   color = if(any("point_border" == given_arguments)){additional_arguments$point_border}else{default_point_border}) +
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3 * shape_size_mult, alpha = 0.3) + theme_bw() +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75 * shape_size_mult, alpha = 0.4) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50 * shape_size_mult, alpha = 0.5) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25 * shape_size_mult, alpha = 0.75) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00 * shape_size_mult, alpha = 0.90) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50 * shape_size_mult, alpha = 1) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50 * shape_size_mult, alpha = 1, color = "black") +
-        labs(title = if(any("main_title" == given_arguments)){additional_arguments$main_title}else{default_main_title},
-             subtitle = if(any("sub_title" == given_arguments)){additional_arguments$sub_title}else{default_sub_title},
-             color = "Inside prediction interval",
-             shape = "Evaluated materials' ID",
-             fill = "Difference in non-selectivity") +
-        scale_x_continuous(name = if(any("x_name" == given_arguments)){additional_arguments$x_name}else{default_x_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_shape_manual(values = shape_values[1:n_samples]) +
-        scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
-        scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
-        scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
-        theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
-                                              color = "#000000",
-                                              linewidth = 1),
-              strip.text = element_text(face = "bold",
-                                        color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
-              legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
-                                               color = "#000000"),
-              legend.text = element_text(color = if(any("legend_text_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              legend.key = element_rect(fill = "white", color = "black"),
-              title = element_text(face = "bold",
-                                   color = if(any("title_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              plot.title = element_text(hjust = 0.5),
-              plot.subtitle = element_text(hjust = 0.5))
-    }
-    else{
-      ggplot() +
-        geom_ribbon(data = pb_data,
-                    mapping = aes(x = predictor, ymin = pi_lwr, ymax = pi_upr, fill = dins_conclusion),
-                    alpha = 0.5,
-                    color = if(any("pb_border" == given_arguments)){additional_arguments$pb_border}else{default_pb_border},
-                    na.rm = TRUE,
-                    outline.type = "full") +
-        facet_wrap(facets = . ~ comparison, scales = "free") +
-        geom_abline(slope = 1, intercept = 0,
-                    alpha = include_line,
-                    color = if(any("curve_color" == given_arguments)){additional_arguments$curve_color}else{default_curve_color},
-                    linetype = "dotted") +
-        geom_point(data = cs_data,
-                   mapping = aes(x = MP_B, y = MP_A), na.rm = TRUE,
-                   shape = if(any("point_shape" == given_arguments)){if(additional_arguments$point_shape == "circle"){21}else if(additional_arguments$point_shape == "square"){22}else if(additional_arguments$point_shape == "diamond"){23}else if(additional_arguments$point_shape == "triangle"){24}else{21}}else{21},
-                   fill = if(any("point_fill" == given_arguments)){additional_arguments$point_fill}else{default_point_fill},
-                   size = if(any("point_size" == given_arguments)){additional_arguments$point_size}else{default_point_size},
-                   color = if(any("point_border" == given_arguments)){additional_arguments$point_border}else{default_point_border}) +
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3 * shape_size_mult, alpha = 0.3) + theme_bw() +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75 * shape_size_mult, alpha = 0.4) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50 * shape_size_mult, alpha = 0.5) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25 * shape_size_mult, alpha = 0.75) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00 * shape_size_mult, alpha = 0.90) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50 * shape_size_mult, alpha = 1) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50 * shape_size_mult, alpha = 1, color = "black") +
-        labs(title = if(any("main_title" == given_arguments)){additional_arguments$main_title}else{default_main_title},
-             subtitle = if(any("sub_title" == given_arguments)){additional_arguments$sub_title}else{default_sub_title},
-             color = "Inside prediction interval",
-             shape = "Evaluated materials' ID",
-             fill = "Difference in non-selectivity") +
-        scale_x_continuous(name = if(any("x_name" == given_arguments)){additional_arguments$x_name}else{default_x_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_shape_manual(values = shape_values[1:n_samples]) +
-        scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
-        scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
-        scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
-        theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
-                                              color = "#000000",
-                                              linewidth = 1),
-              strip.text = element_text(face = "bold",
-                                        color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
-              legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
-                                               color = "#000000"),
-              legend.text = element_text(color = if(any("legend_text_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              legend.key = element_rect(fill = "white", color = "black"),
-              title = element_text(face = "bold",
-                                   color = if(any("title_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              plot.title = element_text(hjust = 0.5),
-              plot.subtitle = element_text(hjust = 0.5))
-    }
-
-
-  }
-  else if(exclude_cs & !exclude_rings){
-
-    if(include_flexible_smooth){
-      ggplot() +
-        geom_ribbon(data = pb_data,
-                    mapping = aes(x = predictor, ymin = pi_lwr, ymax = pi_upr, fill = dins_conclusion),
-                    alpha = 0.5,
-                    color = if(any("pb_border" == given_arguments)){additional_arguments$pb_border}else{default_pb_border},
-                    na.rm = TRUE,
-                    outline.type = "full") +
-        facet_wrap(facets = . ~ comparison, scales = "free") +
-        geom_smooth(data = cs_data,
-                    mapping = aes(x = MP_B, y = MP_A),
-                    na.rm = TRUE,
-                    alpha = include_flexible_smooth,
-                    color = if(any("curve_color" == given_arguments)){additional_arguments$curve_color}else{default_curve_color},
-                    method = "loess",
-                    se = FALSE,
-                    linetype = "dotted",
-                    span = 0.95,
-                    formula = y ~ x) +
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3 * shape_size_mult, alpha = 0.3) + theme_bw() +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75 * shape_size_mult, alpha = 0.4) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50 * shape_size_mult, alpha = 0.5) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25 * shape_size_mult, alpha = 0.75) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00 * shape_size_mult, alpha = 0.90) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50 * shape_size_mult, alpha = 1) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50 * shape_size_mult, alpha = 1, color = "black") +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, alpha = pi_conclusion_correctness, color = pi_inside), shape = 1, size = 5, show.legend = FALSE) +
-        labs(title = if(any("main_title" == given_arguments)){additional_arguments$main_title}else{default_main_title},
-             subtitle = if(any("sub_title" == given_arguments)){additional_arguments$sub_title}else{default_sub_title},
-             color = "Inside prediction interval",
-             shape = "Evaluated materials' ID",
-             fill = "Difference in non-selectivity") +
-        scale_x_continuous(name = if(any("x_name" == given_arguments)){additional_arguments$x_name}else{default_x_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_shape_manual(values = shape_values[1:n_samples]) +
-        scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
-        scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
-        scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
-        theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
-                                              color = "#000000",
-                                              linewidth = 1),
-              strip.text = element_text(face = "bold",
-                                        color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
-              legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
-                                               color = "#000000"),
-              legend.key = element_rect(fill = "white", color = "black"),
-              legend.text = element_text(color = if(any("legend_text_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              title = element_text(face = "bold",
-                                   color = if(any("title_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              plot.title = element_text(hjust = 0.5),
-              plot.subtitle = element_text(hjust = 0.5))
-    }
-    else if(include_linear_smooth){
-      ggplot() +
-        geom_ribbon(data = pb_data,
-                    mapping = aes(x = predictor, ymin = pi_lwr, ymax = pi_upr, fill = dins_conclusion),
-                    alpha = 0.5,
-                    color = if(any("pb_border" == given_arguments)){additional_arguments$pb_border}else{default_pb_border},
-                    na.rm = TRUE,
-                    outline.type = "full") +
-        facet_wrap(facets = . ~ comparison, scales = "free") +
-        geom_smooth(data = cs_data,
-                    mapping = aes(x = MP_B, y = MP_A),
-                    na.rm = TRUE,
-                    alpha = include_linear_smooth,
-                    color = if(any("curve_color" == given_arguments)){additional_arguments$curve_color}else{default_curve_color},
-                    se = FALSE,
-                    linetype = "dotted",
-                    method = "lm",
-                    formula = y ~ x) +
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3 * shape_size_mult, alpha = 0.3) + theme_bw() +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75 * shape_size_mult, alpha = 0.4) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50 * shape_size_mult, alpha = 0.5) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25 * shape_size_mult, alpha = 0.75) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00 * shape_size_mult, alpha = 0.90) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50 * shape_size_mult, alpha = 1) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50 * shape_size_mult, alpha = 1, color = "black") +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, alpha = pi_conclusion_correctness, color = pi_inside), shape = 1, size = 5, show.legend = FALSE) +
-        labs(title = if(any("main_title" == given_arguments)){additional_arguments$main_title}else{default_main_title},
-             subtitle = if(any("sub_title" == given_arguments)){additional_arguments$sub_title}else{default_sub_title},
-             color = "Inside prediction interval",
-             shape = "Evaluated materials' ID",
-             fill = "Difference in non-selectivity") +
-        scale_x_continuous(name = if(any("x_name" == given_arguments)){additional_arguments$x_name}else{default_x_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_shape_manual(values = shape_values[1:n_samples]) +
-        scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
-        scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
-        scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
-        theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
-                                              color = "#000000",
-                                              linewidth = 1),
-              strip.text = element_text(face = "bold",
-                                        color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
-              legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
-                                               color = "#000000"),
-              legend.key = element_rect(fill = "white", color = "black"),
-              legend.text = element_text(color = if(any("legend_text_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              title = element_text(face = "bold",
-                                   color = if(any("title_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              plot.title = element_text(hjust = 0.5),
-              plot.subtitle = element_text(hjust = 0.5))
-    }
-    else{
-      ggplot() +
-        geom_ribbon(data = pb_data,
-                    mapping = aes(x = predictor, ymin = pi_lwr, ymax = pi_upr, fill = dins_conclusion),
-                    alpha = 0.5,
-                    color = if(any("pb_border" == given_arguments)){additional_arguments$pb_border}else{default_pb_border},
-                    na.rm = TRUE,
-                    outline.type = "full") +
-        facet_wrap(facets = . ~ comparison, scales = "free") +
-        geom_abline(slope = 1, intercept = 0,
-                    alpha = include_line,
-                    color = if(any("curve_color" == given_arguments)){additional_arguments$curve_color}else{default_curve_color},
-                    linetype = "dotted") +
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3 * shape_size_mult, alpha = 0.3) + theme_bw() +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75 * shape_size_mult, alpha = 0.4) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50 * shape_size_mult, alpha = 0.5) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25 * shape_size_mult, alpha = 0.75) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00 * shape_size_mult, alpha = 0.90) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50 * shape_size_mult, alpha = 1) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50 * shape_size_mult, alpha = 1, color = "black") +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, alpha = pi_conclusion_correctness, color = pi_inside), shape = 1, size = 5, show.legend = FALSE) +
-        labs(title = if(any("main_title" == given_arguments)){additional_arguments$main_title}else{default_main_title},
-             subtitle = if(any("sub_title" == given_arguments)){additional_arguments$sub_title}else{default_sub_title},
-             color = "Inside prediction interval",
-             shape = "Evaluated materials' ID",
-             fill = "Difference in non-selectivity") +
-        scale_x_continuous(name = if(any("x_name" == given_arguments)){additional_arguments$x_name}else{default_x_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_shape_manual(values = shape_values[1:n_samples]) +
-        scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
-        scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
-        scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
-        theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
-                                              color = "#000000",
-                                              linewidth = 1),
-              strip.text = element_text(face = "bold",
-                                        color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
-              legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
-                                               color = "#000000"),
-              legend.key = element_rect(fill = "white", color = "black"),
-              legend.text = element_text(color = if(any("legend_text_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              title = element_text(face = "bold",
-                                   color = if(any("title_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              plot.title = element_text(hjust = 0.5),
-              plot.subtitle = element_text(hjust = 0.5))
-    }
-
   }
 
-  else if(exclude_cs & exclude_rings){
-    if(include_flexible_smooth){
-      ggplot() +
-        geom_ribbon(data = pb_data,
-                    mapping = aes(x = predictor, ymin = pi_lwr, ymax = pi_upr, fill = dins_conclusion),
-                    alpha = 0.5,
-                    color = if(any("pb_border" == given_arguments)){additional_arguments$pb_border}else{default_pb_border},
-                    na.rm = TRUE,
-                    outline.type = "full") +
-        facet_wrap(facets = . ~ comparison, scales = "free") +
-        geom_smooth(data = cs_data,
-                    mapping = aes(x = MP_B, y = MP_A),
-                    alpha = include_flexible_smooth,
-                    color = if(any("curve_color" == given_arguments)){additional_arguments$curve_color}else{default_curve_color},
-                    method = "loess",
-                    se = FALSE,
-                    linetype = "dotted",
-                    span = 0.95,
-                    formula = y ~ x) +
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3 * shape_size_mult, alpha = 0.3) + theme_bw() +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75 * shape_size_mult, alpha = 0.4) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50 * shape_size_mult, alpha = 0.5) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25 * shape_size_mult, alpha = 0.75) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00 * shape_size_mult, alpha = 0.90) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50 * shape_size_mult, alpha = 1) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50 * shape_size_mult, alpha = 1, color = "black") +
-        labs(title = if(any("main_title" == given_arguments)){additional_arguments$main_title}else{default_main_title},
-             subtitle = if(any("sub_title" == given_arguments)){additional_arguments$sub_title}else{default_sub_title},
-             color = "Inside prediction interval",
-             shape = "Evaluated materials' ID",
-             fill = "Difference in non-selectivity") +
-        scale_x_continuous(name = if(any("x_name" == given_arguments)){additional_arguments$x_name}else{default_x_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_shape_manual(values = shape_values[1:n_samples]) +
-        scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
-        scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
-        scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
-        theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
-                                              color = "#000000",
-                                              linewidth = 1),
-              strip.text = element_text(face = "bold",
-                                        color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
-              legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
-                                               color = "#000000"),
-              legend.key = element_rect(fill = "white", color = "black"),
-              legend.text = element_text(color = if(any("legend_text_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              title = element_text(face = "bold",
-                                   color = if(any("title_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              plot.title = element_text(hjust = 0.5),
-              plot.subtitle = element_text(hjust = 0.5))
+  # pb_border (border color of prediction band ribbon)
+  if (any("pb_border" == given_arguments)) {
+    if (!is_valid_color(additional_arguments$pb_border)) {
+      warning(
+        "pb_border is not a valid color: ",
+        given_arguments$pb_border,
+        " . Default pb_border is used instead."
+      )
+      additional_arguments$pb_border <- used_pb_border
     }
-    else if(include_linear_smooth){
-      ggplot() +
-        geom_ribbon(data = pb_data,
-                    mapping = aes(x = predictor, ymin = pi_lwr, ymax = pi_upr, fill = dins_conclusion),
-                    alpha = 0.5,
-                    color = if(any("pb_border" == given_arguments)){additional_arguments$pb_border}else{default_pb_border},
-                    na.rm = TRUE,
-                    outline.type = "full") +
-        facet_wrap(facets = . ~ comparison, scales = "free") +
-        geom_smooth(data = cs_data,
-                    mapping = aes(x = MP_B, y = MP_A),
-                    alpha = include_flexible_smooth,
-                    color = if(any("curve_color" == given_arguments)){additional_arguments$curve_color}else{default_curve_color},
-                    se = FALSE,
-                    linetype = "dotted",
-                    method = "lm",
-                    formula = y ~ x) +
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3 * shape_size_mult, alpha = 0.3) + theme_bw() +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75 * shape_size_mult, alpha = 0.4) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50 * shape_size_mult, alpha = 0.5) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25 * shape_size_mult, alpha = 0.75) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00 * shape_size_mult, alpha = 0.90) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50 * shape_size_mult, alpha = 1) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50 * shape_size_mult, alpha = 1, color = "black") +
-        labs(title = if(any("main_title" == given_arguments)){additional_arguments$main_title}else{default_main_title},
-             subtitle = if(any("sub_title" == given_arguments)){additional_arguments$sub_title}else{default_sub_title},
-             color = "Inside prediction interval",
-             shape = "Evaluated materials' ID",
-             fill = "Difference in non-selectivity") +
-        scale_x_continuous(name = if(any("x_name" == given_arguments)){additional_arguments$x_name}else{default_x_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_shape_manual(values = shape_values[1:n_samples]) +
-        scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
-        scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
-        scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
-        theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
-                                              color = "#000000",
-                                              linewidth = 1),
-              strip.text = element_text(face = "bold",
-                                        color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
-              legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
-                                               color = "#000000"),
-              legend.key = element_rect(fill = "white", color = "black"),
-              legend.text = element_text(color = if(any("legend_text_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              title = element_text(face = "bold",
-                                   color = if(any("title_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              plot.title = element_text(hjust = 0.5),
-              plot.subtitle = element_text(hjust = 0.5))
+  }
+
+  # curve_color (color of curve)
+  if (any("curve_color" == given_arguments)) {
+    if (!is_valid_color(additional_arguments$curve_color)) {
+      warning(
+        "curve_color is not a valid color: ",
+        given_arguments$curve_color,
+        " . Default curve_color is used instead."
+      )
+      additional_arguments$curve_color <- used_curve_color
     }
-    else{
-      ggplot() +
-        geom_ribbon(data = pb_data,
-                    mapping = aes(x = predictor, ymin = pi_lwr, ymax = pi_upr, fill = dins_conclusion),
-                    alpha = 0.5,
-                    color = if(any("pb_border" == given_arguments)){additional_arguments$pb_border}else{default_pb_border},
-                    na.rm = TRUE,
-                    outline.type = "full") +
-        facet_wrap(facets = . ~ comparison, scales = "free") +
+  }
+
+  # point_fill (fill color of clinical sample points)
+  if (any("point_fill" == given_arguments)) {
+    if (!is_valid_color(additional_arguments$point_fill)) {
+      warning(
+        "point_fill is not a valid color: ",
+        given_arguments$point_fill,
+        " . Default point_fill is used instead."
+      )
+      additional_arguments$point_fill <- used_point_fill
+    }
+  }
+
+  # point_border (border color of clinical sample points)
+  if (any("point_border" == given_arguments)) {
+    if (!is_valid_color(additional_arguments$point_border)) {
+      warning(
+        "point_border is not a valid color: ",
+        given_arguments$point_border,
+        " . Default point_border is used instead."
+      )
+      additional_arguments$point_border <- used_point_border
+    }
+  }
+
+  # comparison_fill (fill color of strip IVD-MD comparison labels)
+  if (any("comparison_fill" == given_arguments)) {
+    if (!is_valid_color(additional_arguments$comparison_fill)) {
+      warning(
+        "comparison_fill is not a valid color: ",
+        given_arguments$comparison_fill,
+        " . Default comparison_fill is used instead."
+      )
+      additional_arguments$comparison_fill <- used_comparison_fill
+    }
+  }
+
+  # comparison_text_color (text color of strip IVD-MD comparison labels)
+  if (any("comparison_text_color" == given_arguments)) {
+    if (!is_valid_color(additional_arguments$comparison_text_color)) {
+      warning(
+        "comparison_text_color is not a valid color: ",
+        given_arguments$comparison_text_color,
+        " . Default comparison_text_color is used instead."
+      )
+      additional_arguments$comparison_text_color <- used_comparison_text_color
+    }
+  }
+
+  # legend_fill (fill color of legend background elements)
+  if (any("legend_fill" == given_arguments)) {
+    if (!is_valid_color(additional_arguments$legend_fill)) {
+      warning(
+        "legend_fill is not a valid color: ",
+        given_arguments$legend_fill,
+        " . Default legend_fill is used instead."
+      )
+      additional_arguments$legend_fill <- used_legend_fill
+    }
+  }
+
+  # legend_text_color (fill color of legend background elements)
+  if (any("legend_text_color" == given_arguments)) {
+    if (!is_valid_color(additional_arguments$legend_text_color)) {
+      warning(
+        "legend_text_color is not a valid color: ",
+        given_arguments$legend_text_color,
+        " . Default legend_text_color is used instead."
+      )
+      additional_arguments$legend_text_color <- used_legend_text_color
+    }
+  }
+
+  updated_additional_arguments <- modifyList(x = default_additional_arguments,
+                                             val = additional_arguments,
+                                             keep.null = TRUE)
+
+  return(updated_additional_arguments)
+
+
+}
+
+
+#' @title
+#' Plot Commutability Evaluation Plots For Each Comparison
+#'
+#' @param cs_data A \code{data.table}, \code{list}, or \code{data.frame}. The
+#'                mean-of-replicates (MOR) clinical sample data. Must contain:
+#'                \itemize{
+#'                  \item \code{comparison: } A \code{character} vector.
+#'                        The IVD-MD comparison identifiers. Typically on the
+#'                        form \code{'MP_A - MP_B'}.
+#'                  \item \code{SampleID: } A \code{character} vector. The
+#'                        clinical sample identifiers.
+#'                  \item \code{MP_A: } A \code{numeric} vector. The
+#'                        mean-of-replicates results from IVD-MD \code{MP_A}
+#'                        (response).
+#'                  \item \code{MP_B: } A \code{numeric} vector. The
+#'                        mean-of-replicates results from IVD-MD \code{MP_B}
+#'                        (predictor).
+#'                }
+#' @param pb_data A \code{data.table} or \code{data.frame}. The Prediction Band
+#'                (PB) data. See \code{?do_commutability_evaluation()}.
+#' @param ce_data A \code{data.table} or \code{data.frame}. The Commutability
+#'                Evaluation (CE) data. See
+#'                \code{?do_commutability_evaluation()}.
+#' @param exclude_rings A \code{logical}. If \code{TRUE}, \code{inside_rate}
+#'                      circles are not drawn in the plots.
+#' @param exclude_cs A \code{logical}. If \code{TRUE}, clinical sample
+#'                   mean-of-replicates results are not drawn in the plots.
+#' @param plot_theme A \code{character} string. The desired plotting theme.
+#'                   Options include:
+#'                   \itemize{
+#'                      \item \code{custom: } No predefined theme. Customized
+#'                            theme may be defined by given arguments in
+#'                            \code{additional_arguments}.
+#'                      \item \code{default: } Uses default theme.
+#'                      \item \code{noklus: } Uses Noklus colors.
+#'                      \item \code{soft: } Uses pastel colors.
+#'                      \item \code{depression: } Uses dark hues such as black,
+#'                            gray, and purple.
+#'                      \item \code{happy: } Uses vibrant colors such as orange,
+#'                            red and yellow.
+#'                   }
+#' @param additional_arguments A \code{list}. Additional arguments to modify
+#'                             the appearance of the output plot. The default
+#'                             value is \code{NULL}, indicating that the plot
+#'                             will be generated using the default settings.
+#'                             Possible additional_argument entries include:
+#'                             \itemize{
+#'                                \item \code{main_title: } Main title of the plot
+#'                                \item \code{sub_title: } Sub title of the plot
+#'                                \item \code{x_name: } Title of the x-axis
+#'                                \item \code{y_name: } Title of the y-axis
+#'                                \item \code{n_breaks: } Number of axis-breaks
+#'                                \item \code{title_color: } Text color of 'main_title'. Defaults to
+#'                                      \code{'black'}.
+#'                                \item \code{sub_title_color: } Text color of 'sub_title'. Defaults to
+#'                                      \code{'black'}
+#'                                \item \code{pb_fill:  } Fill color of prediction bands if differences in
+#'                                      non-selectivity is acceptable. Defaults to \code{'green'}.
+#'                                \item \code{pb_border: } Color of the border of the prediction bands.
+#'                                      Defaults to \code{'black'}.
+#'                                \item \code{curve: } Should a additional curve be drawn based on either
+#'                                      the clinical sample measurements or something else. defaults to
+#'                                      \code{FALSE}.
+#'                                \item \code{curve_type: } The curve type to draw. Relvant if
+#'                                      \code{curve = TRUE}. Possible choices are limited to
+#'                                      \code{'equivalence_curve'}, \code{'fitted_curve'} and
+#'                                      \code{'flexible_curve'}.
+#'                                \item \code{curve_color: } The curve color. Relevant if
+#'                                      \code{curve = TRUE}. Defaults to \code{'black'}.
+#'                                \item \code{point_shape: } The desired shape of clinical sample points.
+#'                                      Possible choices include: \code{'circle'} (default), \code{'square'},
+#'                                      \code{'diamond'} and \code{'triangle'}.
+#'                                \item \code{point_size: } A \code{double} larger than \code{0}. The size
+#'                                      (in pts) of drawn clinical sample points. Default is selected by
+#'                                      \code{ggplot()}.
+#'                                \item \code{point_fill: } The fill color of the clinical sample points.
+#'                                \item \code{point_border: } The border color of clinical sample points.
+#'                                \item \code{comparison_fill: } The fill color for the IVD-MD comparison
+#'                                      strip labels.
+#'                                \item \code{comparison_text_color: } The text color for the IVD-MD
+#'                                      comparison strip labels.
+#'                                \item \code{hide_prediction_intervals: } If \code{TRUE}, pointwise
+#'                                      prediction intervals for evaluated material are not drawn.
+#'                                \item \code{legend_fill: } The fill color for the legend background.
+#'                                      Defaults to \code{'white'}.
+#'                                \item \code{legend_text_color: } The text color for the legend font.
+#'                                      Defaults to \code{'black'}.
+#'                              }
+#'
+#' @param testing A \code{logical} value. If \code{TRUE} (not recommended), the
+#'                output will be in a form that allows testing of the output.
+#'                Primarly used for debugging and should not be used by
+#'                end-users.
+#'
+#' @return A \code{ggplot2} object.
+#' @export
+#'
+#' @examples print(1)
+
+plot_commutability_evaluation_plots <- function(cs_data,
+                                                pb_data,
+                                                ce_data,
+                                                exclude_rings = FALSE,
+                                                exclude_cs = FALSE,
+                                                plot_theme = c("custom", "default", "noklus", "soft", "depression", "happy"),
+                                                additional_arguments = NULL,
+                                                testing = FALSE){
+
+
+  # Binding global variables
+  MP_A <- MP_B <- SampleID <- SampleIDID <-dins_conclusion <- NULL
+  pi_conclusion_correctness <- pi_inside <- pi_lwr <- NULL
+  pi_upr <- predictor <- prediction <- NULL
+
+  # Initialize
+  use_shapes <- TRUE
+  shape_size_mult <- 1.5
+
+  if (length(unique(ce_data$SampleID)) > 6) {
+    shape_size_mult <- 1
+    if(length(unique(ce_data$SampleID)) > 9) {
+      shape_size_mult <- 1.25
+    }
+    use_shapes <- FALSE
+    unique_SampleIDs <- unique(ce_data$SampleID)
+    unique_SampleIDIDs <- seq_len(length.out = length(unique_SampleIDs))
+    ce_data[, SampleIDID := unique_SampleIDIDs[match(SampleID, unique_SampleIDs)]]
+  }
+
+  # Get updated ce_data ready for plotting
+  ce_data <- modify_ce_variables_pcep(ce_data = ce_data)
+
+  # Get updated pb_data ready for plotting
+  pb_data <- modify_pb_variables_pcep(pb_data = pb_data)
+
+  # Apply theme
+  additional_arguments <- apply_theme_attributes(plot_theme = plot_theme,
+                                                 additional_arguments = additional_arguments)
+
+  # Update attributes
+  additional_arguments <- update_all_attributes(additional_arguments = additional_arguments)
+
+  # Check exclude_cs argument
+  if (!is.logical(exclude_cs)) {
+    warning(
+      "exclude_cs is expected to be either TRUE or FALSE, not ",
+      exclude_cs,
+      ". Uses default value (FALSE) instead."
+    )
+    exclude_cs <- FALSE
+  }
+
+  if (is.na(exclude_cs)) {
+    warning(
+      "exclude_cs is expected to be either TRUE or FALSE, not ",
+      exclude_cs,
+      ". Uses default value (FALSE) instead."
+    )
+    exclude_cs <- FALSE
+  }
+
+  # Check exclude_rings argument
+  if (!is.logical(exclude_rings)) {
+    warning(
+      "exclude_rings is expected to be either TRUE or FALSE, not ",
+      exclude_rings,
+      ". Uses default value (FALSE) instead."
+    )
+    exclude_rings <- FALSE
+  }
+
+  if (is.na(exclude_rings)) {
+    warning(
+      "exclude_rings is expected to be either TRUE or FALSE, not ",
+      exclude_rings,
+      ". Uses default value (FALSE) instead."
+    )
+    exclude_rings <- FALSE
+  }
+
+  cs_point_shape <- switch(additional_arguments$point_shape,
+                           "circle" = 21,
+                           "square" = 22,
+                           "diamond" = 23,
+                           "triangle" = 24,
+                           24)
+
+  out_plot <- ggplot() +
+    geom_ribbon(data = pb_data,
+                mapping = aes(x = predictor,
+                              ymin = pi_lwr,
+                              ymax = pi_upr,
+                              fill = dins_conclusion),
+                alpha = 0.5,
+                color = additional_arguments$pb_border,
+                na.rm = TRUE,
+                outline.type = "full") +
+    facet_wrap(facets = . ~ comparison,
+               scales = "free")
+
+
+  if (additional_arguments$curve) {
+    if (additional_arguments$curve_type == "equivalence_curve") {
+      out_plot <- out_plot +
         geom_abline(slope = 1,
                     intercept = 0,
-                    alpha = include_line,
-                    color = if(any("curve_color" == given_arguments)){additional_arguments$curve_color}else{default_curve_color},
-                    linetype = "dotted") +
-        geom_segment(data = ce_data, mapping = aes(x = MS_B, xend = MS_B, y = pi_lwr, yend = pi_upr), alpha = prediction_interval_alpha, arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc"))) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 3 * shape_size_mult, alpha = 0.3) + theme_bw() +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.75 * shape_size_mult, alpha = 0.4) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.50 * shape_size_mult, alpha = 0.5) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.25 * shape_size_mult, alpha = 0.75) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 2.00 * shape_size_mult, alpha = 0.90) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, color = pi_inside, shape = SampleID), size = 1.50 * shape_size_mult, alpha = 1) +
-        geom_point(data = ce_data, mapping = aes(x = MS_B, y = MS_A, shape = SampleID), size = 0.50 * shape_size_mult, alpha = 1, color = "black") +
-        labs(title = if(any("main_title" == given_arguments)){additional_arguments$main_title}else{default_main_title},
-             subtitle = if(any("sub_title" == given_arguments)){additional_arguments$sub_title}else{default_sub_title},
-             color = "Inside prediction interval",
-             shape = "Evaluated materials' ID",
-             fill = "Difference in non-selectivity") +
-        scale_x_continuous(name = if(any("x_name" == given_arguments)){additional_arguments$x_name}else{default_x_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_y_continuous(name = if(any("y_name" == given_arguments)){additional_arguments$y_name}else{default_y_name},
-                           n.breaks = if(any("n_breaks" == given_arguments)){additional_arguments$n_breaks}else{default_n_breaks}) +
-        scale_shape_manual(values = shape_values[1:n_samples]) +
-        scale_fill_manual(values = c("acceptable" = if(any("pb_fill" == given_arguments)){additional_arguments$pb_fill}else{default_pb_fill}, "not acceptable" = "gray")) +
-        scale_color_manual(values = c("yes" = "#1994DC", "no" = "#DC1932")) +
-        scale_alpha_binned(name = "Conclusion correctness", limits = c(0, 1), n.breaks = 30, range = c(0, 1)) +
-        theme(strip.background = element_rect(fill = if(any("comparison_fill" == given_arguments)){additional_arguments$comparison_fill}else{default_comparison_fill},
-                                              color = "#000000",
-                                              linewidth = 1),
-              strip.text = element_text(face = "bold",
-                                        color = if(any("comparison_text_color" == given_arguments)){additional_arguments$comparison_text_color}else{default_comparison_text_color}),
-              legend.background = element_rect(fill = if(any("legend_fill" == given_arguments)){additional_arguments$legend_fill}else{default_legend_fill},
-                                               color = "#000000"),
-              legend.key = element_rect(fill = "white", color = "black"),
-              legend.text = element_text(color = if(any("legend_text_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              title = element_text(face = "bold",
-                                   color = if(any("title_color" == given_arguments)){additional_arguments$legend_text_color}else{default_legend_text_color}),
-              plot.title = element_text(hjust = 0.5),
-              plot.subtitle = element_text(hjust = 0.5))
+                    color = additional_arguments$curve_color,
+                    linetype = "twodash")
     }
-
+    else if (additional_arguments$curve_type == "fitted_curve") {
+      out_plot <- out_plot +
+        geom_line(mapping = aes(x = predictor,
+                                y = prediction),
+                  color = additional_arguments$curve_color,
+                  linetype = "twodash")
+    }
+    else if (additional_arguments$curve_type == "smooth_curve") {
+      out_plot <- out_plot +
+        geom_smooth(data = cs_data,
+                    mapping = aes(x = MP_B,
+                                  y = MP_A),
+                    color = additional_arguments$curve_color,
+                    method = "loess",
+                    se = FALSE,
+                    na.rm = TRUE,
+                    span = 0.95,
+                    linetype = "twodash",
+                    formula = y ~ x)
+    }
   }
+
+  if (!exclude_cs) {
+    out_plot <- out_plot +
+      geom_point(data = cs_data,
+                 mapping = aes(x = MP_B,
+                               y = MP_A),
+                 shape = cs_point_shape,
+                 fill = additional_arguments$point_fill,
+                 size = additional_arguments$point_size,
+                 color = additional_arguments$point_border,
+                 na.rm = TRUE)
+  }
+
+  if (!additional_arguments$hide_prediction_intervals) {
+    out_plot <- out_plot +
+      geom_segment(data = ce_data,
+                   mapping = aes(x = MP_B,
+                                 xend = MP_B,
+                                 y = pi_lwr,
+                                 yend = pi_upr),
+                   arrow = arrow(angle = 90, ends = "both", length = unit(x = 0.025, units = "npc")))
+  }
+
+  if (use_shapes) {
+    out_plot <- out_plot +
+      geom_point(data = ce_data,
+                 mapping = aes(x = MP_B,
+                               y = MP_A,
+                               color = pi_inside,
+                               shape = SampleID),
+                 size = shape_size_mult * (1 + sqrt(shape_size_mult) * 0.6),
+                 alpha = 0.4) +
+      geom_point(data = ce_data,
+                 mapping = aes(x = MP_B,
+                               y = MP_A,
+                               color = pi_inside,
+                               shape = SampleID),
+                 size = shape_size_mult * (1 + sqrt(shape_size_mult) * 0.5),
+                 alpha = 0.5) +
+      geom_point(data = ce_data,
+                 mapping = aes(x = MP_B,
+                               y = MP_A,
+                               color = pi_inside,
+                               shape = SampleID),
+                 size = shape_size_mult * (1 + sqrt(shape_size_mult) * 0.25),
+                 alpha = 0.75) +
+      geom_point(data = ce_data,
+                 mapping = aes(x = MP_B,
+                               y = MP_A,
+                               color = pi_inside,
+                               shape = SampleID),
+                 size = shape_size_mult * (1 + sqrt(shape_size_mult) * 0.10),
+                 alpha = 0.90) +
+      geom_point(data = ce_data,
+                 mapping = aes(x = MP_B,
+                               y = MP_A,
+                               color = pi_inside,
+                               shape = SampleID),
+                 size = shape_size_mult) +
+      geom_point(data = ce_data,
+                 mapping = aes(x = MP_B,
+                               y = MP_A,
+                               shape = SampleID),
+                 size = 0.50,
+                 color = "black")
+  }
+
+  else {
+    out_plot <- out_plot +
+      geom_point(data = ce_data,
+                 mapping = aes(x = MP_B,
+                               y = MP_A,
+                               color = pi_inside),
+                 size = shape_size_mult * 2) +
+      geom_text(data = ce_data,
+                mapping = aes(x = MP_B,
+                              y = MP_A,
+                              label = SampleIDID),
+                color = "black",
+                size = 5,
+                size.unit = "pt")
+  }
+
+  if (!exclude_rings) {
+    out_plot <- out_plot +
+      geom_point(data = ce_data,
+                 mapping = aes(x = MP_B,
+                               y = MP_A,
+                               alpha = pi_conclusion_correctness,
+                               color = pi_inside),
+                 shape = 1,
+                 size = shape_size_mult * (1 + sqrt(shape_size_mult) * 2),
+                 show.legend = FALSE)
+  }
+
+  if (use_shapes) {
+    out_plot <- out_plot +
+      labs(title = additional_arguments$main_title,
+           subtitle = additional_arguments$sub_title,
+           color = "Inside prediction interval",
+           shape = "Evaluated materials' ID",
+           fill = "Differences in non-selectivity")
+  }
+  else {
+    out_plot <- out_plot +
+      labs(title = additional_arguments$main_title,
+           subtitle = additional_arguments$sub_title,
+           color = "Inside prediction interval",
+           fill = "Differences in non-selectivity")
+  }
+
+  out_plot <- out_plot +
+    scale_x_continuous(name = additional_arguments$x_name,
+                       n.breaks = additional_arguments$n_breaks) +
+    scale_y_continuous(name = additional_arguments$y_name,
+                       n.breaks = additional_arguments$n_breaks) +
+    scale_fill_manual(values = c("acceptable" = additional_arguments$pb_fill,
+                                 "not acceptable" = "gray")) +
+    scale_color_manual(values = c("yes" = "#1994DC",
+                                  "no" = "#DC1932"))
+
+  if (!exclude_rings) {
+    out_plot <- out_plot +
+      scale_alpha_binned(name = "Conclusion correctness",
+                         limits = c(0, 1),
+                         breaks = c(0.25, 0.50, 0.75, 0.90, 1),
+                         labels = c("extremely low",
+                                    "low",
+                                    "medium",
+                                    "high",
+                                    "extremely high"),
+                         range = c(0, 1))
+  }
+
+  out_plot <- out_plot +
+    theme_bw() +
+    theme(plot.title = element_text(face = "bold",
+                                    hjust = 0.5,
+                                    color = additional_arguments$title_color),
+          plot.subtitle = element_text(face = "bold",
+                                       hjust = 0.5,
+                                       color = additional_arguments$sub_title_color),
+          strip.background = element_rect(fill = additional_arguments$comparison_fill,
+                                          color = "black",
+                                          linewidth = 1),
+          strip.text = element_text(face = "bold",
+                                    color = additional_arguments$comparison_text_color),
+          legend.background = element_rect(fill = additional_arguments$legend_fill,
+                                           color = "black"),
+          legend.key = element_rect(fill = additional_arguments$legend_fill,
+                                    color = "black"),
+          legend.text = element_text(color = additional_arguments$legend_text_color))
+
+
+  return(out_plot)
+
+
 }
 
 

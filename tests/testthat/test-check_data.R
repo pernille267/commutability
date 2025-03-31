@@ -1,343 +1,212 @@
 library(testthat)
-library(commutability)
 library(readxl)
-suppressWarnings(library(data.table, quietly = TRUE))
+library(data.table)
 library(fasteqa)
 
+# Testing check_data
+
+# General datasets
 test_data_1 <- read_excel("~/Packages/datasets to be tested on/W..MCV2020_CS.xlsx")
 test_data_2 <- read_excel("~/Packages/datasets to be tested on/HDLC.CS.FILTERED.xlsx")
-test_data_3 <- test_data_2[,c("SampleID", "ReplicateID", "Ortho CD Vitros", "Siemens Advia")]
-test_data_4 <- test_data_2[,c("SampleID", "ReplicateID",
-                              "Ortho CD Vitros", "Siemens Advia", "Beckman AU")]
 
-test_data_5 <- test_data_1
-test_data_5$SampleID[c(1,3,9,11,12,15)] <- NA
-test_data_5$ReplicateID[c(1,2,5,8)] <- NA
+setDT(test_data_1); setDT(test_data_2)
 
-test_data_6 <- test_data_1
-names(test_data_6)[1:2] <- c("smpl","repl")
-test_data_7 <- test_data_1
-names(test_data_7)[1:2] <- c("sm","rep")
-test_data_8 <- test_data_1
-names(test_data_8)[1:2] <- c("CS_ID","Replicate_ID")
-test_data_9 <- test_data_1
-names(test_data_9)[1:2] <- c("xample","rfreplicatex")
-test_data_10 <- test_data_1
-names(test_data_10)[1:2] <- c("x","r_efclicate")
-test_data_11 <- test_data_2[,-which(names(test_data_2) == "Ortho CD Vitros")]
+# Checking if valid datasets are considered valid
+test_that(desc = "Test valid datasets", code = {
 
-test_data_12 <- test_data_1
-test_data_12$SampleID[c(1,2,3,7,8,9,10,11,12,15,19,20,21,22,31,32,33,34,55,59,61,66,70,71,72)] <- NA
+  # Check if datasets are considered valid even if SampleID and ReplicateID
+  # are not exact
 
-test_data_13 <- test_data_1
-test_data_13$ReplicateID[c(1,2,3,7,8,9,10,11,12,15,19,20,21,22,31,32,33,34,55,59,61,66,70,71,72)] <- NA
+  alternative_names_1 <- c("smpl", "repl")
+  alternative_names_2 <- c("pasientid", "repeatedid")
+  alternative_names_3 <- c("CS...", "dePLicatEID")
 
-test_data_14 <- test_data_1
-test_data_14$SampleID[c(1,2,3,7,8,9,10,11,34,55,59,61,66,70,71,72)] <- NA
-test_data_14$ReplicateID[c(12,15,19,20,21,22,31,32,33)] <- NA
+  test_data_ugly_ID_columns_1 <- copy(test_data_1)
+  test_data_ugly_ID_columns_2 <- copy(test_data_2)
+  test_data_ugly_ID_columns_3 <- copy(test_data_2)[, -("Ortho CD Vitros")]
 
-test_data_15 <- test_data_2
-setorder(test_data_15, SampleID, ReplicateID)
-test_data_15$`Roche Cobas`[1:60] <- NA
-test_data_15$`Ortho CD Vitros`[98] <- "<. "
+  names(test_data_ugly_ID_columns_1)[1:2] <- alternative_names_1
+  names(test_data_ugly_ID_columns_2)[1:2] <- alternative_names_2
+  names(test_data_ugly_ID_columns_3)[1:2] <- alternative_names_3
 
-check_data(test_data_15)
+  actual_1 <- check_data(test_data_ugly_ID_columns_1)
+  actual_2 <- check_data(test_data_ugly_ID_columns_2)
+  actual_3 <- check_data(test_data_ugly_ID_columns_3)
 
-actual_1 <- check_data(test_data_1,1)
-actual_2 <- check_data(test_data_2,1)
-actual_3 <- check_data(test_data_3,1)
-actual_4 <- check_data(test_data_4,1)
-actual_5 <- check_data(test_data_5,1)
-actual_6 <- check_data(test_data_6,1)
-actual_7 <- check_data(test_data_7,1)
-actual_8 <- check_data(test_data_8,1)
-actual_9 <- check_data(test_data_9,1)
-actual_10 <- check_data(test_data_10,1)
-actual_11 <- check_data(test_data_11,1)
-actual_12 <- check_data(test_data_12,1)
-actual_13 <- check_data(test_data_13,1)
-actual_14 <- check_data(test_data_14,1)
-actual_15 <- check_data(test_data_15,1)
+  # Expected to satisfy validity tests
+  expect_true(object = all(unlist(actual_1$validity)))
+  expect_true(object = all(unlist(actual_2$validity)))
+  expect_true(object = all(unlist(actual_3$validity)))
 
-expected_1_for_computer_checks <- list("valid_mandatory_id_columns" = TRUE,
-                                       "valid_numeric_columns" = TRUE,
-                                       "valid_number_nas" = TRUE,
-                                       "valid_number_remaining_numeric" = TRUE,
-                                       "perfect_number_nas_SampleID" = TRUE,
-                                       "perfect_number_nas_ReplicateID" = TRUE,
-                                       "acceptable_number_nas_SampleID" = TRUE,
-                                       "acceptable_number_nas_ReplicateID" = TRUE)
+  # Expected scores
+  expect_equal(object = actual_1$score, expected = 8)
+  expect_equal(object = actual_2$score, expected = 0)
+  expect_equal(object = actual_3$score, expected = 5)
 
-expected_2_for_computer_checks <- list("valid_mandatory_id_columns" = TRUE,
-                                       "valid_numeric_columns" = TRUE,
-                                       "valid_number_nas" = FALSE,
-                                       "valid_number_remaining_numeric" = TRUE,
-                                       "perfect_number_nas_SampleID" = TRUE,
-                                       "perfect_number_nas_ReplicateID" = TRUE,
-                                       "acceptable_number_nas_SampleID" = TRUE,
-                                       "acceptable_number_nas_ReplicateID" = TRUE)
+  # Expected badges
+  expect_true(actual_1$badge == "perfect")
+  expect_true(actual_2$badge == "extremely poor")
+  expect_true(actual_3$badge == "acceptable")
 
-expected_3_for_computer_checks <- list("valid_mandatory_id_columns" = TRUE,
-                                       "valid_numeric_columns" = TRUE,
-                                       "valid_number_nas" = FALSE,
-                                       "valid_number_remaining_numeric" = FALSE,
-                                       "perfect_number_nas_SampleID" = TRUE,
-                                       "perfect_number_nas_ReplicateID" = TRUE,
-                                       "acceptable_number_nas_SampleID" = TRUE,
-                                       "acceptable_number_nas_ReplicateID" = TRUE)
 
-expected_4_for_computer_checks <- list("valid_mandatory_id_columns" = TRUE,
-                                       "valid_numeric_columns" = TRUE,
-                                       "valid_number_nas" = FALSE,
-                                       "valid_number_remaining_numeric" = TRUE,
-                                       "perfect_number_nas_SampleID" = TRUE,
-                                       "perfect_number_nas_ReplicateID" = TRUE,
-                                       "acceptable_number_nas_SampleID" = TRUE,
-                                       "acceptable_number_nas_ReplicateID" = TRUE)
-
-expected_5_for_computer_checks <- list("valid_mandatory_id_columns" = TRUE,
-                                       "valid_numeric_columns" = TRUE,
-                                       "valid_number_nas" = TRUE,
-                                       "valid_number_remaining_numeric" = TRUE,
-                                       "perfect_number_nas_SampleID" = TRUE,
-                                       "perfect_number_nas_ReplicateID" = TRUE,
-                                       "acceptable_number_nas_SampleID" = TRUE,
-                                       "acceptable_number_nas_ReplicateID" = TRUE)
-
-expected_6_for_computer_checks <- list("valid_mandatory_id_columns" = TRUE,
-                                       "valid_numeric_columns" = TRUE,
-                                       "valid_number_nas" = TRUE,
-                                       "valid_number_remaining_numeric" = TRUE,
-                                       "perfect_number_nas_SampleID" = TRUE,
-                                       "perfect_number_nas_ReplicateID" = TRUE,
-                                       "acceptable_number_nas_SampleID" = TRUE,
-                                       "acceptable_number_nas_ReplicateID" = TRUE)
-
-expected_7_for_computer_checks <- list("valid_mandatory_id_columns" = FALSE,
-                                       "valid_numeric_columns" = NA,
-                                       "valid_number_nas" = NA,
-                                       "valid_number_remaining_numeric" = NA,
-                                       "perfect_number_nas_SampleID" = NA,
-                                       "perfect_number_nas_ReplicateID" = NA,
-                                       "acceptable_number_nas_SampleID" = NA,
-                                       "acceptable_number_nas_ReplicateID" = NA)
-
-expected_8_for_computer_checks <- list("valid_mandatory_id_columns" = TRUE,
-                                       "valid_numeric_columns" = TRUE,
-                                       "valid_number_nas" = TRUE,
-                                       "valid_number_remaining_numeric" = TRUE,
-                                       "perfect_number_nas_SampleID" = TRUE,
-                                       "perfect_number_nas_ReplicateID" = TRUE,
-                                       "acceptable_number_nas_SampleID" = TRUE,
-                                       "acceptable_number_nas_ReplicateID" = TRUE)
-
-expected_9_for_computer_checks <- list("valid_mandatory_id_columns" = FALSE,
-                                       "valid_numeric_columns" = NA,
-                                       "valid_number_nas" = NA,
-                                       "valid_number_remaining_numeric" = NA,
-                                       "perfect_number_nas_SampleID" = NA,
-                                       "perfect_number_nas_ReplicateID" = NA,
-                                       "acceptable_number_nas_SampleID" = NA,
-                                       "acceptable_number_nas_ReplicateID" = NA)
-
-expected_10_for_computer_checks <- list("valid_mandatory_id_columns" = FALSE,
-                                        "valid_numeric_columns" = NA,
-                                        "valid_number_nas" = NA,
-                                        "valid_number_remaining_numeric" = NA,
-                                        "perfect_number_nas_SampleID" = NA,
-                                        "perfect_number_nas_ReplicateID" = NA,
-                                        "acceptable_number_nas_SampleID" = NA,
-                                        "acceptable_number_nas_ReplicateID" = NA)
-
-expected_11_for_computer_checks <- list("valid_mandatory_id_columns" = TRUE,
-                                        "valid_numeric_columns" = TRUE,
-                                        "valid_number_nas" = TRUE,
-                                        "valid_number_remaining_numeric" = TRUE,
-                                        "perfect_number_nas_SampleID" = TRUE,
-                                        "perfect_number_nas_ReplicateID" = TRUE,
-                                        "acceptable_number_nas_SampleID" = TRUE,
-                                        "acceptable_number_nas_ReplicateID" = TRUE)
-
-expected_12_for_computer_checks <- list("valid_mandatory_id_columns" = TRUE,
-                                        "valid_numeric_columns" = TRUE,
-                                        "valid_number_nas" = TRUE,
-                                        "valid_number_remaining_numeric" = TRUE,
-                                        "perfect_number_nas_SampleID" = FALSE,
-                                        "perfect_number_nas_ReplicateID" = FALSE,
-                                        "acceptable_number_nas_SampleID" = TRUE,
-                                        "acceptable_number_nas_ReplicateID" = TRUE)
-
-expected_13_for_computer_checks <- list("valid_mandatory_id_columns" = TRUE,
-                                        "valid_numeric_columns" = TRUE,
-                                        "valid_number_nas" = TRUE,
-                                        "valid_number_remaining_numeric" = TRUE,
-                                        "perfect_number_nas_SampleID" = FALSE,
-                                        "perfect_number_nas_ReplicateID" = FALSE,
-                                        "acceptable_number_nas_SampleID" = TRUE,
-                                        "acceptable_number_nas_ReplicateID" = TRUE)
-
-expected_14_for_computer_checks <- list("valid_mandatory_id_columns" = TRUE,
-                                        "valid_numeric_columns" = TRUE,
-                                        "valid_number_nas" = TRUE,
-                                        "valid_number_remaining_numeric" = TRUE,
-                                        "perfect_number_nas_SampleID" = FALSE,
-                                        "perfect_number_nas_ReplicateID" = FALSE,
-                                        "acceptable_number_nas_SampleID" = TRUE,
-                                        "acceptable_number_nas_ReplicateID" = TRUE)
-
-expected_15_for_computer_checks <- list("valid_mandatory_id_columns" = TRUE,
-                                        "valid_numeric_columns" = FALSE,
-                                        "valid_number_nas" = FALSE,
-                                        "valid_number_remaining_numeric" = TRUE,
-                                        "perfect_number_nas_SampleID" = TRUE,
-                                        "perfect_number_nas_ReplicateID" = TRUE,
-                                        "acceptable_number_nas_SampleID" = TRUE,
-                                        "acceptable_number_nas_ReplicateID" = TRUE)
-
-expected_1_for_human_validity_checks <- "perfect"
-expected_2_for_human_validity_checks <- "questionable"
-expected_3_for_human_validity_checks <- "not acceptable"
-expected_4_for_human_validity_checks <- "questionable"
-expected_5_for_human_validity_checks <- "perfect"
-expected_6_for_human_validity_checks <- "perfect"
-expected_7_for_human_validity_checks <- "not acceptable"
-expected_8_for_human_validity_checks <- "perfect"
-expected_9_for_human_validity_checks <- "not acceptable"
-expected_10_for_human_validity_checks <- "not acceptable"
-expected_11_for_human_validity_checks <- "perfect"
-expected_12_for_human_validity_checks <- "acceptable"
-expected_13_for_human_validity_checks <- "acceptable"
-expected_14_for_human_validity_checks <- "acceptable"
-expected_15_for_human_validity_checks <- "questionable"
-
-test_that(desc = "Testing for computer checks", code = {
-  expect_identical(actual_1$for_computer_checks, expected_1_for_computer_checks)
-  expect_identical(actual_2$for_computer_checks, expected_2_for_computer_checks)
-  expect_identical(actual_3$for_computer_checks, expected_3_for_computer_checks)
-  expect_identical(actual_4$for_computer_checks, expected_4_for_computer_checks)
-  expect_identical(actual_5$for_computer_checks, expected_5_for_computer_checks)
-  expect_identical(actual_6$for_computer_checks, expected_6_for_computer_checks)
-  expect_identical(actual_7$for_computer_checks, expected_7_for_computer_checks)
-  expect_identical(actual_8$for_computer_checks, expected_8_for_computer_checks)
-  expect_identical(actual_9$for_computer_checks, expected_9_for_computer_checks)
-  expect_identical(actual_10$for_computer_checks, expected_10_for_computer_checks)
-  expect_identical(actual_11$for_computer_checks, expected_11_for_computer_checks)
-  expect_identical(actual_12$for_computer_checks, expected_12_for_computer_checks)
-  expect_identical(actual_13$for_computer_checks, expected_13_for_computer_checks)
-  expect_identical(actual_14$for_computer_checks, expected_14_for_computer_checks)
-  expect_identical(actual_15$for_computer_checks, expected_15_for_computer_checks)
 })
 
-test_that(desc = "Testing for human validity checks", code = {
-  expect_equal(actual_1$for_human$`validity of input data is :`[1], expected_1_for_human_validity_checks)
-  expect_equal(actual_2$for_human$`validity of input data is :`[1], expected_2_for_human_validity_checks)
-  expect_equal(actual_3$for_human$`validity of input data is :`[1], expected_3_for_human_validity_checks)
-  expect_equal(actual_4$for_human$`validity of input data is :`[1], expected_4_for_human_validity_checks)
-  expect_equal(actual_5$for_human$`validity of input data is :`[1], expected_5_for_human_validity_checks)
-  expect_equal(actual_6$for_human$`validity of input data is :`[1], expected_6_for_human_validity_checks)
-  expect_equal(actual_7$for_human$`validity of input data is :`[1], expected_7_for_human_validity_checks)
-  expect_equal(actual_8$for_human$`validity of input data is :`[1], expected_8_for_human_validity_checks)
-  expect_equal(actual_9$for_human$`validity of input data is :`[1], expected_9_for_human_validity_checks)
-  expect_equal(actual_10$for_human$`validity of input data is :`[1], expected_10_for_human_validity_checks)
-  expect_equal(actual_11$for_human$`validity of input data is :`[1], expected_11_for_human_validity_checks)
-  expect_equal(actual_12$for_human$`validity of input data is :`[1], expected_12_for_human_validity_checks)
-  expect_equal(actual_13$for_human$`validity of input data is :`[1], expected_13_for_human_validity_checks)
-  expect_equal(actual_14$for_human$`validity of input data is :`[1], expected_14_for_human_validity_checks)
-  expect_equal(actual_15$for_human$`validity of input data is :`[1], expected_15_for_human_validity_checks)
+# Checking datasets with invalid ID columns
+test_that(desc = "Test datasets with invalid ID columns", code = {
+
+  # Not recongnized SampleID and ReplicateID
+  alternative_names_1 <- c("syktpasientproveda",
+                           "erdettereplikateller?")
+
+  # Not recongnized SampleID, but ReplicateID is valid
+  alternative_names_2 <- c("superduperpasienterosv",
+                           sample(typo_suggestions()$ReplicateID, size = 1))
+
+  # Valid SampleID, but ReplicateID is not recongnized
+  alternative_names_3 <- c(sample(typo_suggestions()$SampleID, size = 1),
+                           "ultrareplikatmåler")
+
+  test_data_invalid_ID_columns_1 <- copy(test_data_1)
+  test_data_invalid_ID_columns_2 <- copy(test_data_1)
+  test_data_invalid_ID_columns_3 <- copy(test_data_1)
+
+  names(test_data_invalid_ID_columns_1)[1:2] <- alternative_names_1
+  names(test_data_invalid_ID_columns_2)[1:2] <- alternative_names_2
+  names(test_data_invalid_ID_columns_3)[1:2] <- alternative_names_3
+
+  # Expect that mandatory ID columns test to fail
+  expect_true(object = !check_data(test_data_invalid_ID_columns_1)$validity$valid_mandatory_id_columns)
+  expect_true(object = !check_data(test_data_invalid_ID_columns_2)$validity$valid_mandatory_id_columns)
+  expect_true(object = !check_data(test_data_invalid_ID_columns_3)$validity$valid_mandatory_id_columns)
+
+  # Only numeric columns present
+  test_data_invalid_ID_columns_4 <- copy(test_data_1)
+  test_data_invalid_ID_columns_4 <- test_data_invalid_ID_columns_4[, -c("SampleID", "ReplicateID")]
+
+  # Expect that mandatory ID columns test to fail
+  expect_true(object = !check_data(test_data_invalid_ID_columns_4)$validity$valid_mandatory_id_columns)
+
 })
 
-expected_exact_2 <- list("exclude_these_numeric_columns" = "Ortho CD Vitros",
-                         "NA_indices_of_SampleID" = NA,
-                         "NA_indices_of_ReplicateID" = NA,
-                         "NA_indices_must_exclude" = NA)
+# Checking datasets with invalid numeric columns
+test_that(desc = "Test datasets with invalid numeric columns", code = {
 
-expected_exact_4 <- list("exclude_these_numeric_columns" = "Ortho CD Vitros",
-                         "NA_indices_of_SampleID" = NA,
-                         "NA_indices_of_ReplicateID" = NA,
-                         "NA_indices_must_exclude" = NA)
+  # One column is character
+  test_data_one_nonnumeric_column <- copy(test_data_1)
+  test_data_one_nonnumeric_column[, Advia := as.character(Advia)]
+  actual_1 <- check_data(test_data_one_nonnumeric_column)
 
-expected_exact_5 <- list("exclude_these_numeric_columns" = NA,
-                         "NA_indices_of_SampleID" = as.integer(c(1, 3, 9, 11, 12, 15)),
-                         "NA_indices_of_ReplicateID" = as.integer(c(1, 2, 5, 8)),
-                         "NA_indices_must_exclude" = as.integer(c(1, 2, 3, 5, 8, 9, 11, 12, 15)))
+  # Expect that Advia should be converted to numeric
+  expect_equal(object = actual_1$repair$convert_these_methods_to_numeric,
+               expected = "Advia")
 
-expected_exact_12 <- list("exclude_these_numeric_columns" = NA,
-                         "NA_indices_of_SampleID" = as.integer(c(1,2,3,7,8,9,10,11,12,15,19,20,21,22,31,32,33,34,55,59,61,66,70,71,72)),
-                         "NA_indices_of_ReplicateID" = NA,
-                         "NA_indices_must_exclude" = as.integer(c(1,2,3,7,8,9,10,11,12,15,19,20,21,22,31,32,33,34,55,59,61,66,70,71,72)))
+  # Two columns are character
+  test_data_two_nonnumeric_column <- copy(test_data_one_nonnumeric_column)
+  test_data_two_nonnumeric_column[, ABXmicros := as.character(ABXmicros)]
 
-expected_exact_13 <- list("exclude_these_numeric_columns" = NA,
-                          "NA_indices_of_SampleID" = NA,
-                          "NA_indices_of_ReplicateID" = as.integer(c(1,2,3,7,8,9,10,11,12,15,19,20,21,22,31,32,33,34,55,59,61,66,70,71,72)),
-                          "NA_indices_must_exclude" = as.integer(c(1,2,3,7,8,9,10,11,12,15,19,20,21,22,31,32,33,34,55,59,61,66,70,71,72)))
+  actual_2 <-  check_data(test_data_two_nonnumeric_column)
 
-expected_exact_14 <- list("exclude_these_numeric_columns" = NA,
-                          "NA_indices_of_SampleID" = as.integer(c(1,2,3,7,8,9,10,11,34,55,59,61,66,70,71,72)),
-                          "NA_indices_of_ReplicateID" = as.integer(c(12,15,19,20,21,22,31,32,33)),
-                          "NA_indices_must_exclude" = as.integer(c(1,2,3,7,8,9,10,11,12,15,19,20,21,22,31,32,33,34,55,59,61,66,70,71,72)))
+  # Expect that valid_numeric_columns test to fail
+  expect_equal(object = actual_2$repair$convert_these_methods_to_numeric,
+               expected = c("Advia", "ABXmicros"))
 
-expected_exact_15 <- list("exclude_these_numeric_columns" = c("Roche Cobas", "Ortho CD Vitros"),
-                          "NA_indices_of_SampleID" = NA,
-                          "NA_indices_of_ReplicateID" = NA,
-                          "NA_indices_must_exclude" = NA)
-
-
-
-
-test_that(desc = "Testing for computer information", code = {
-  expect_true(all(unlist(lapply(actual_1$for_computer_information, is.na))))
-  expect_true(sum(unlist(lapply(actual_2$for_computer_information, is.na)))==3)
-  expect_true(all(unlist(lapply(actual_3$for_computer_information, is.na))))
-  expect_true(sum(unlist(lapply(actual_4$for_computer_information, is.na)))==3)
-  expect_true(sum(unlist(lapply(actual_5$for_computer_information, is.na)))==1)
-  expect_true(all(unlist(lapply(actual_6$for_computer_information, is.na))))
-  expect_true(all(unlist(lapply(actual_7$for_computer_information, is.na))))
-  expect_true(all(unlist(lapply(actual_8$for_computer_information, is.na))))
-  expect_true(all(unlist(lapply(actual_9$for_computer_information, is.na))))
-  expect_true(all(unlist(lapply(actual_10$for_computer_information, is.na))))
-  expect_true(all(unlist(lapply(actual_11$for_computer_information, is.na))))
-  expect_true(sum(unlist(lapply(actual_12$for_computer_information, is.na)))==2)
-  expect_true(sum(unlist(lapply(actual_13$for_computer_information, is.na)))==2)
-  expect_true(sum(unlist(lapply(actual_14$for_computer_information, is.na)))==1)
-  expect_true(sum(unlist(lapply(actual_15$for_computer_information, is.na)))==3)
-  expect_identical(actual_2$for_computer_information, expected_exact_2)
-  expect_identical(actual_4$for_computer_information, expected_exact_4)
-  expect_identical(actual_5$for_computer_information, expected_exact_5)
-  expect_identical(actual_12$for_computer_information, expected_exact_12)
-  expect_identical(actual_13$for_computer_information, expected_exact_13)
-  expect_identical(actual_14$for_computer_information, expected_exact_14)
-  expect_identical(actual_15$for_computer_information, expected_exact_15)
 })
 
-run_times <- microbenchmark::microbenchmark(check_data(data = test_data_1),
-                                            check_data(data = test_data_2),
-                                            check_data(data = test_data_3),
-                                            check_data(data = test_data_4),
-                                            check_data(data = test_data_5),
-                                            check_data(data = test_data_6),
-                                            check_data(data = test_data_7),
-                                            check_data(data = test_data_8),
-                                            check_data(data = test_data_9),
-                                            check_data(data = test_data_10),
-                                            check_data(data = test_data_11),
-                                            check_data(data = test_data_12),
-                                            check_data(data = test_data_13),
-                                            check_data(data = test_data_14),
-                                            check_data(data = test_data_15),
-                                            times = 2e2)
-run_times <- setDT(as.list(run_times))
-run_times_list <- split(x = run_times, by = "expr")
-run_times_list <- lapply(X = run_times_list, function(x) x$time / 1e6)
+# Checking datasets with invalid number of NA values
+test_that(desc = "Test datasets with invalid number of NA values", code = {
 
-all_max_under <- lapply(X = run_times_list, function(x) any(sort(x)[190:200] < 100))
-all_min_under <- lapply(X = run_times_list, function(x) any(sort(x)[1:10] < 10))
-all_median_under <- lapply(X = run_times_list, function(x) median(x) < 50)
+  # Checking in numeric columns
+  test_data_excessive_NA_values <- copy(test_data_2)
+  test_data_excessive_NA_values$`Ortho CD Vitros`[c(2:6,
+                                                    35:39,
+                                                    68:72)] <- NA_real_
 
-test_that(desc = "Testing performance", code = {
-  expect_true(all(unlist(all_max_under)))
-  expect_true(all(unlist(all_min_under)))
-  expect_true(all(unlist(all_median_under)))
+  actual_1 <- check_data(test_data_excessive_NA_values)
+  expect_true(object = !actual_1$validity$valid_number_nas)
+  expect_equal(object = actual_1$badge, expected = "not acceptable")
+
+  # Checking if correct IDs are recommended to take away in repair
+  test_data_ID_NA_values <- copy(test_data_1)
+  test_data_ID_NA_values$SampleID[c(1, 9, 17)] <- NA
+  test_data_ID_NA_values$ReplicateID[c(8, 9, 16)] <- NA
+
+  expected_to_remove <- c(1, 8, 9, 16, 17)
+  expected_to_keep <- setdiff(1:72, expected_to_remove)
+
+  actual_1 <- check_data(test_data_ID_NA_values)
+
+  expect_equal(object = actual_1$repair$keep_these_ID_columns_ids,
+               expected = expected_to_keep)
+
+  # A more complex situation
+  test_data_numeric_and_ID_NA_values <- copy(test_data_ID_NA_values)
+  test_data_numeric_and_ID_NA_values[7:8, 3:6] <- NA_real_
+  test_data_numeric_and_ID_NA_values[24, c(4, 6)] <- NA_real_
+
+  expected_ID_IDs_to_keep <- expected_to_keep
+  expected_numeric_IDs_to_keep <- setdiff(1:67, 6)
+
+  actual_2 <- check_data(test_data_numeric_and_ID_NA_values)
+
+  expect_equal(object = actual_2$repair$keep_these_ID_columns_ids,
+               expected = expected_ID_IDs_to_keep)
+  expect_equal(object = actual_2$repair$keep_these_numeric_columns_ids,
+               expected = expected_numeric_IDs_to_keep)
+
+
+
+
 })
+
+# Checking datasets with invalid number of numeric columns after potential repair
+test_that(desc = "Test datasets with invalid number of remaining numeric columns", code = {
+
+  # Check if data is invalid if fewer than two numeric columns are left after repair
+  test_data_too_few_remaining_numeric_columns <- copy(test_data_2)[, c("SampleID",
+                                                                       "ReplicateID",
+                                                                       "Siemens Vista",
+                                                                       "Ortho CD Vitros")]
+
+  actual_1 <- check_data(test_data_too_few_remaining_numeric_columns)
+
+  expect_true(object = !actual_1$validity$valid_number_remaining_numeric)
+  expect_equal(object = actual_1$badge, expected = "not acceptable")
+
+})
+
+# Testing repair_data
+
+# Check if the correct repairs are made
+test_that(desc = "Testing of correct repairs are made", code = {
+
+  test_data_repair_1 <- copy(test_data_1)
+  test_data_repair_2 <- copy(test_data_2)
+
+  actual_1 <- repair_data(test_data_repair_1, include_repair_summary = TRUE)$repair_summary
+  actual_2 <- repair_data(test_data_repair_2, include_repair_summary = TRUE)$repair_summary
+
+  expect_equal(object = actual_1$`ID columns`,
+               expected = c("correct", "correct", "same as before"))
+  expect_equal(object = actual_1$`numeric column order`,
+               expected = c("not alphabetic", "alphabetic", "to alphabetic"))
+  expect_equal(object = actual_1$`score`,
+               expected = c(8, 8, 0))
+  expect_equal(object = actual_1$`badge`,
+               expected = c("perfect", "perfect", "same as before"))
+
+  expect_equal(object = actual_2$`ID columns`,
+               expected = c("correct", "correct", "same as before"))
+  expect_equal(object = actual_2$`numeric column order`,
+               expected = c("not alphabetic", "alphabetic", "to alphabetic"))
+  expect_equal(object = actual_2$`score`,
+               expected = c(0, 5, 5))
+  expect_equal(object = actual_2$`badge`,
+               expected = c("extremely poor", "acceptable", "improved"))
+
+
+})
+
+
 
 
 

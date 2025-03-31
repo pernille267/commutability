@@ -2,7 +2,7 @@
 % Please edit documentation in R/estimate_zeta_data.R
 \name{estimate_zeta_data}
 \alias{estimate_zeta_data}
-\title{All calculations regarding zeta}
+\title{All Necessary Inference On \eqn{\hat{\zeta}}}
 \usage{
 estimate_zeta_data(
   data,
@@ -12,41 +12,127 @@ estimate_zeta_data(
   M = 0,
   N = 10000L,
   zeta_critical = NA,
+  method = c("ols", "ss", "ssw"),
   invalid_NA = FALSE
 )
 }
 \arguments{
-\item{data}{A \code{data.table}, \code{data.frame}, or \code{list}. It represents clinical sample data, grouped by 'comparison' (IVD-MD comparisons). The data structure should be arranged by 'comparison' and must include the following columns: \code{comparison}, \code{SampleID}, \code{ReplicateID}, \code{MP_A}, and \code{MP_B}.}
-
-\item{B}{An \code{integer} value greater than or equal to 50. It represents the number of bootstrap replicates for estimating bootstrap confidence intervals. The default value is set at 2e3L (i.e., 2,000), a typical setting for bootstrap confidence intervals. Assign \code{B} to \code{NULL} or \code{NA} to skip estimating bootstrap confidence intervals and return only the point estimates of zeta.}
-
-\item{type}{A \code{character} string that specifies the type of bootstrap confidence interval. Four types are supported:
+\item{data}{A \code{data.table}, \code{data.frame}, or \code{list}.
+The CS data. Must contain the following variables:
 \itemize{
-  \item{\code{normal}: }{Standard normal bootstrap confidence interval.}
-  \item{\code{basic}: }{Basic bootstrap confidence interval.}
-  \item{\code{percentile}: }{Percentile bootstrap confidence interval.}
-  \item{\code{BCa}: }{Bias and skewness-corrected bootstrap confidence interval embedding the Jackknife (leave-one-out) method.}
+   \item \code{comparison: } A \code{character} vector. The
+         comparison identifiers. Typically on the form
+         \code{'MP_A - MP_B'}.
+   \item \code{SampleID: } A \code{character} vector. The sample
+         identifiers for the clinical samples.
+   \item \code{ReplicateID: } A \code{character} vector. The
+         replicated measurement identifiers.
+   \item \code{MP_A: } A \code{numeric} vector. The observed
+         measurement results from IVD-MD \code{MP_A} (response).
+   \item \code{MP_B: } A \code{numeric} vector. The observed
+         measurement results from IVD-MD \code{MP_A} (predictor).
 }}
 
-\item{level}{A \code{double} value between 0 and 1 representing the confidence level for the bootstrap confidence interval. The default level is set at 0.95 (95 percent).}
+\item{B}{An \code{integer}. Must be larger than or equal to \code{50}. The
+Number of bootstrap replicates used to estimate bootstrap
+confidence intervals for \eqn{\zeta}. Defaults to \code{2e3L}
+(2,000). If \code{NULL}, estimated confidence intervals are not
+calculated.}
 
-\item{M}{A \code{double} value equal to or larger than 0 that indicates what value of \code{M} (acceptable average relative increase in pointwise prediction interval widths due to DINS) should be used to simulate an upper zeta value when \code{zeta_critical} is not specified (i.e., is \code{NULL}, \code{NA}, or not numeric).}
+\item{type}{A \code{character} string. Determines the bootstrap method to
+ apply for estimating the confidence intervals:
+ \itemize{
+    \item \code{normal: } Standard normal bootstrap confidence
+                          interval.
+    \item \code{basic: } Basic bootstrap confidence interval.
+    \item \code{percentile: } Percentile bootstrap confidence
+                              interval.
+    \item \code{BCa: } Bias- and skewness-corrected bootstrap
+                       confidence interval.
+}}
 
-\item{N}{A \code{integer} value equal to or larger than 1 that indicates the number of IVD-MD comparison-wise zeta values to be simulated to approximate \code{zeta_critical} when it is not specified (i.e., is \code{NULL}, \code{NA}, or not numeric). The default value is 1e4L (i.e., 10,000).}
+\item{level}{A \code{double}. Must be between \code{0} and \code{1}. The
+desired nominal confidence level for the bootstrap estimated
+confidence intervals. The default is \code{0.95} (\eqn{95\%}).}
 
-\item{zeta_critical}{A \code{double} value. Its default value is \code{NA}, which triggers a Monte Carlo simulation based on your average study design across all IVD-MD comparisons to obtain a suitable upper zeta value. Both \code{M} and \code{N} must be specified for a valid upper limit determination.}
+\item{M}{A \code{double}. Must be larger than \code{0}. The maximum
+acceptable relative increase in pointwise prediction interval width
+attribute to differences in non-selectivity. Relevant if
+\code{zeta_critical} is \code{NA} or \code{NULL}. Defaults to
+\code{0}.}
 
-\item{invalid_NA}{A \code{logical} value. If set to TRUE, the function will return \code{NA} for zeta when encountering invalid input or computation errors instead of raising an error. While this is not generally recommended due to the risk of masking potential issues, it can be useful in certain scenarios where uninterrupted execution is a priority.}
+\item{N}{An \code{integer}. Must be larger than \code{100L}. The number of
+simulated \eqn{\hat{\zeta}} values used to approximate
+\code{zeta_critical} values. Only relevant if \code{zeta_critical}
+is \code{NA} or \code{NULL}. Defaults to \code{1e4L}}
+
+\item{zeta_critical}{A \code{double}. The maximum value \eqn{\hat{\zeta}}
+can take before an IVD-MD is considered to have
+excessive differences in non-selectivity. If \code{NA}
+(default) or \code{NULL}, \code{zeta_critical} is
+approximated using Monte Carlo simulations.}
+
+\item{method}{A \code{character} string. The regression method used to
+estimate \eqn{\zeta}. Can be \code{'ols'}, \code{'ss'} or
+\code{'ssw'}.}
+
+\item{invalid_NA}{\code{logical} value. If \code{TRUE} (not recommended),
+return \code{NA} rather than throwing an error if
+something goes wrong.}
 }
 \value{
-A \code{data.table} that contains the following columns: \code{comparison}, \code{zeta}, \code{lwr}, \code{upr}, \code{zeta_critical}, and \code{zeta_conclusion}.
+A \code{data.table}. Contains the following columns:
+\itemize{
+ \item \code{comparison: } See \code{data}.
+ \item \code{zeta: } A \code{double}. Point estimate of \eqn{\zeta}.
+ \item \code{lwr: } A \code{double}. Lower boundary of calculated bootstrap
+       confidence interval of \eqn{\zeta}.
+ \item \code{upr: } A \code{double}. Upper boundary of calculated bootstrap
+       confidence interval of \eqn{\zeta}.
+ \item \code{zeta_critical: } A \code{double}. Always rounded to \code{2}
+       decimals. Either the value given in \code{zeta_critical} or
+       approximated values. The utilized maximum value \eqn{\hat{\zeta}} can
+       take before a IVD-MD pair is deemed to have excessive differences in
+       non-selectivity.
+ \item \code{zeta_conclusion: } An \code{integer}. Equivalent to
+       \code{dins_conclusion} used elsewhere. It is \code{1} if
+       \code{zeta} > \code{zeta_critical}. Otherwise, \code{0}.
+}
 }
 \description{
-This function processes the zeta data for each unique pair of IVD-MDs in the provided \code{data}. The output format is compatible with the \code{merge_results()} function of the \code{fasteqa} package, facilitating downstream operations.
+Obtains all necessary information on \eqn{\hat{\zeta}} for each
+unique IVD-MD pair (\code{comparison}) in \code{data}.
+}
+\details{
+A wrapper function for calculating relevant statistics on \eqn{\zeta}.
+This function is an important part of \code{do_commutability_evaluation()}.
 }
 \examples{
-\dontrun{
-  library(commutability)
-  print(1)
-}
+# Required packages
+library(smooth.commutability)
+library(fasteqa)
+library(data.table)
+
+# Reproducibility
+set.seed(99)
+
+# Get example data from smooth.commutability package
+test_crp_cs_data <- copy(crp_cs_data)
+
+# Calculate inference data on zeta
+estimated_zeta_data <- estimate_zeta_data(data = test_crp_cs_data,
+                                          B = 500L,
+                                          type = "BCa",
+                                          level = 0.95,
+                                          zeta_critical = 3.24,
+                                          method = "ols",
+                                          invalid_NA = FALSE)
+# Round results
+estimated_zeta_data$zeta <- round(estimated_zeta_data$zeta, 2L)
+estimated_zeta_data$lwr <- round(estimated_zeta_data$lwr, 2L)
+estimated_zeta_data$upr <- round(estimated_zeta_data$upr, 2L)
+
+# Present results
+print(estimated_zeta_data)
+
 }

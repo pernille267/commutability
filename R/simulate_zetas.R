@@ -1,45 +1,124 @@
-#' Monte Carlo Simulations for the Estimator of zeta
+#' Simulate a Point Estimate of \eqn{\zeta}
 #'
-#' Simulate statistics of the zeta estimator using Monte Carlo methods.
+#' @description
+#' This function simulates \eqn{\hat{\zeta}} once based on \code{parameters}.
+#' It is almost exclusively used internally within the more comprehensive
+#' \code{simulate_zetas()} function.
 #'
-#' @param n An \code{integer} equal to or larger than 1, specifying the number of zeta value simulations for each replication of the target \code{statistic}.
-#' @param parameters A \code{list}, \code{data.table}, or \code{data.frame} with simulation parameters. Refer to \code{?simulate_eqa_data} for detailed options and descriptions.
-#' @param statistic An \code{R function} applied to the simulated zeta values or a \code{character} string selecting from predefined options to approximate various statistics of the estimated zeta value. Valid character strings are:
-#' \itemize{
-#'   \item \code{none}: Outputs the raw simulated values.
-#'   \item \code{all}: Computes the first four moments and the following percentiles: 1st, 2.5th, 5th, 10th, 25th, 50th, 75th, 90th, 95th, 97.5th, and 99th.
-#'   \item \code{all2}: Computes the first four moments and the 1st and 99th percentiles.
-#'   \item \code{moments}: Computes the first four moments.
-#'   \item \code{moments12}: Computes the first two moments.
-#'   \item \code{moments34}: Computes the third and fourth moments.
-#'   \item \code{quantiles}: Computes the following percentiles: 1st, 2.5th, 5th, 10th, 25th, 50th, 75th, 90th, 95th, 97.5th, and 99th.
-#'   \item \code{quantiles2}: Computes the following percentiles: 1st, 25th, 50th, 75th, and 99th.
-#'   \item \code{quartiles}: Computes the 25th, 50th, and 75th percentiles (i.e., the quartiles).
-#' }
-#' @param m An \code{integer} ≥ 1, indicating the number of replications for the \code{statistic}. If \code{m > 1}, \code{n} zeta values are simulated \code{m} times. For each set of \code{n} simulated values, the \code{statistic} is computed, yielding \code{m} replications. Be cautious: large \code{n} and \code{m} values significantly impact computation time. It is advised not to let n times m exceed \code{1e7L} to prevent excessive runtimes.
-#' @param attach A non-missing \code{logical} value. If \code{TRUE} (default), the computed statistic(s) for the zeta value are added to the \code{parameters} object for easy reference.
-#' @param probs A \code{double} between 0 and 1. Relevant when \code{statistic} is \code{quantile}. For example, to simulate the 99th percentile of zeta's estimator, set \code{statistic = "quantile"} and \code{probs = 0.99}.
-#' @param simplify A non-missing \code{logical} value. If \code{TRUE}, the output will be attempted to be simplified. If \code{attach} is \code{TRUE} and \code{simplify} is \code{TRUE} the output will be always be simplified to a \code{data.table} object. On the other hand, if \code{attach} is \code{FALSE} the output will only be simplified to a \code{data.table} if several statistics are simulated, and simplified to a vector if only one statistic is simulated.
+#' @param parameters A \code{list}, \code{data.table}, or \code{data.frame}.
+#'                   The simulation parameters. See \code{?sim_eqa_data()} for
+#'                   available options and general guidance.
 #'
-#' @return A \code{list} either with both the input parameters and simulated statistics for zeta's estimator or just the simulated statistics, based on the \code{attach} option.
+#' @param simulation_indices A \code{numeric} vector. Kept available for the
+#'                           \code{boot()} method. See the \code{boot-package}.
+#'
+#' @details
+#' Given the values found in \code{parameters}, one value of \eqn{\hat{\zeta}}
+#' is simulated. This is typically not a function end-users should use directly
+#' but rather a helper-function for the considerably more comprehensive and
+#' useful \code{simulate_zetas()}. The second argument
+#' \code{simulation_indices} have no actual function. It is required because
+#' the \code{boot-package} requires it in its methods but it is never actually
+#' used.
+#'
+#' @return
+#' A \code{double}. The simulated \eqn{\hat{\zeta}} value.
+#'
 #' @export
 #'
 #' @examples
-#' # Simulate 100 standard deviations of zeta's estimator with 'eta' = 5 (heteroscedasticity).
-#' # Simulations use a design with 'n' = 20 clinical samples and 'R' = 4 replicates.
-#' simulate_zetas(n = 100,
-#'                parameters = list(n = 20, R = 4, eta = 5, eta0 = 1),
-#'                statistic = sd,
-#'                attach = TRUE)
+#' # Simulate a zeta value for a pair of IVD-MDs susceptible to random DINS
+#' simulate_zeta(parameters = list(n = 25, R = 3, prop = 0.05, mmax = 5))
 #'
-#' # Simulate 1 99th percentiles of zeta's estimator with 'prop' = 0.15 and
-#' # 'mmax' = 10 (random DINS).
-#' # Simulations use a design with n = 25 clinical samples and R = 3 replicates.
-#' simulate_zetas(n = 1000,
-#'                parameters = list(n = 25, R = 3, prop = 0.15, mmax = 10),
-#'                statistic = quantile,
-#'                attach = TRUE,
-#'                probs = 0.99)
+#' # Simulate a zeta value for a pair of IVD-MDs susceptible to upper systematic DINS
+#' simulate_zeta(parameters = list(n = 20, R = 4, qpos = 1, qran = 0.2, mmax = 5))
+
+simulate_zeta <- function(parameters, simulation_indices){
+  return(estimate_zeta_ols(data = sim_eqa_data(parameters = parameters,
+                                               type = 0L,
+                                               AR = TRUE))$zeta)
+}
+
+#' Monte Carlo Simulations of \eqn{\hat{\zeta}}
+#'
+#' @description
+#' Simulate statistics or a sample of \eqn{\hat{\zeta}} values. In practice,
+#' \code{n} \eqn{\hat{\zeta}} values are simulated \eqn{m} times, and for each
+#' of the \code{m} samples, an individual or a set of statistics are estimated.
+#'
+#' @param n An \code{integer}. Must be larger than or equal to \code{1}. The
+#'          desired number of simulated \eqn{\hat{\zeta}} values for each
+#'          replication of the target \code{statistic}(s).
+#' @param parameters A \code{list}, \code{data.table}, or \code{data.frame}.
+#'                   The simulation parameters. Refer to
+#'                   \code{?sim_eqa_data} for more information.
+#' @param statistic A \code{function} or \code{character} string. The desired
+#'                  statistic to approximate using the \code{n} simulated
+#'                  \eqn{\hat{\zeta}} values. If passed as a \code{character}
+#'                  string, it must be one of the following:
+#' \itemize{
+#'   \item \code{'none': } Returns simulated samples of \eqn{\hat{\zeta}}
+#'         values. Thus, no statistic is calculated.
+#'   \item \code{'all': } Approximates the \code{mean}, \code{variance},
+#'         \code{skewness}, \code{kurtosis}, and the following percentiles:
+#'         1st, 2.5th, 5th, 10th, 25th, 50th, 75th, 90th, 95th, 97.5th, and 99th.
+#'   \item \code{'all2': } Approximates the \code{mean}, \code{variance},
+#'         \code{skewness}, \code{kurtosis}, and the 1st and 99th percentiles.
+#'   \item \code{'moments': } Approximates the \code{mean}, \code{variance},
+#'         \code{skewness} and \code{kurtosis}.
+#'   \item \code{'moments12': } Approximates the \code{mean} and
+#'         \code{variance}.
+#'   \item \code{'moments34': } Approximates the \code{skewness} and
+#'         \code{kurtosis}.
+#'   \item \code{'quantiles': } Approximates the following percentiles: 1st,
+#'         2.5th, 5th, 10th, 25th, 50th, 75th, 90th, 95th, 97.5th, and 99th.
+#'   \item \code{'quantiles2': } Approximates the following percentiles: 1st,
+#'         25th, 50th, 75th, and 99th.
+#'   \item \code{'quartiles': } Approximates the three quartiles: the 25th,
+#'         50th, and 75th percentiles.
+#' }
+#' @param m An \code{integer} \eqn{\geq 1}. The number of replicated
+#'          approximations of \code{statistic}. It is not advisable to let
+#'          \code{m} \eqn{\times} \code{n} \eqn{\geq 1e7}, due to unacceptable
+#'          computation times.
+#' @param attach A non-missing \code{logical} value. If \code{TRUE} (default),
+#'               the approximated statistic(s) are merged with
+#'               \code{parameters} allowing a direct mapping between simulation
+#'               parameters and approximated statistic(s).
+#' @param probs A \code{double} \eqn{\in} \code{[0, 1]}. Only relevant if
+#'              \code{statistic = quantile(...)}.
+#' @param simplify A non-missing \code{logical} value. If \code{TRUE}, the
+#'                 output is attempted to be converted into a simplified
+#'                 format. Typically results in a \code{data.table} object
+#'                 or a \code{vector}, depending on \code{attach}.
+#'
+#' @return A \code{list}, \code{data.table} or \code{numeric} vector.
+#' @export
+#'
+#' @examples
+#' # Required packages
+#' library(fasteqa)
+#' library(data.table)
+#'
+#' # Approximate the standard deviation of the point estimate of zeta
+#'
+#' # Simulation parameters (data with heteroscedasticity)
+#' sim_pars <- list(n = 20,
+#'                  R = 4,
+#'                  cvx = 0.01,
+#'                  cvy = 0.02,
+#'                  cil = 5,
+#'                  ciu = 90,
+#'                  eta = 5,
+#'                  eta0 = 1)
+#'
+#' # Simulated standard deviation based on 100 simulated point estimates of zeta
+#' sd_zeta_hat <- simulate_zetas(n = 100,
+#'                               parameters = sim_pars,
+#'                               statistic = sd,
+#'                               attach = TRUE)
+#'
+#' print(sd_zeta_hat)
 
 simulate_zetas <- function(n, parameters, statistic = median, m = 1L, attach = TRUE, probs = 0.99, simplify = FALSE){
 
@@ -328,8 +407,8 @@ simulate_zetas <- function(n, parameters, statistic = median, m = 1L, attach = T
       else if(statistic == "all"){
         result_list <- apply(result_list, 2, function(x) list("mean" = mean(x, na.rm = TRUE),
                                                               "sd" = sd(x, na.rm = TRUE),
-                                                              "skewness" = skewness(x, na.rm = TRUE),
-                                                              "kurtosis" = kurtosis(x, na.rm = TRUE),
+                                                              "skewness" = skewness(x),
+                                                              "kurtosis" = kurtosis(x),
                                                               "1%" = quantile(x, probs = 0.01, names = FALSE, na.rm = TRUE),
                                                               "2.5%" = quantile(x, probs = 0.025, names = FALSE, na.rm = TRUE),
                                                               "5%" = quantile(x, probs = 0.05, names = FALSE, na.rm = TRUE),
@@ -348,8 +427,8 @@ simulate_zetas <- function(n, parameters, statistic = median, m = 1L, attach = T
       else if(statistic == "all2"){
         result_list <- apply(result_list, 2, function(x) list("mean" = mean(x, na.rm = TRUE),
                                                               "sd" = sd(x, na.rm = TRUE),
-                                                              "skewness" = skewness(x, na.rm = TRUE),
-                                                              "kurtosis" = kurtosis(x, na.rm = TRUE),
+                                                              "skewness" = skewness(x),
+                                                              "kurtosis" = kurtosis(x),
                                                               "1%" = quantile(x, probs = 0.01, names = FALSE, na.rm = TRUE),
                                                               "99%" = quantile(x, probs = 0.99, names = FALSE, na.rm = TRUE)))
         result_list <- result_list[[1]]
@@ -357,8 +436,8 @@ simulate_zetas <- function(n, parameters, statistic = median, m = 1L, attach = T
       else if(statistic == "moments"){
         result_list <- apply(result_list, 2, function(x) list("mean" = mean(x, na.rm = TRUE),
                                                               "sd" = sd(x, na.rm = TRUE),
-                                                              "skewness" = skewness(x, na.rm = TRUE),
-                                                              "kurtosis" = kurtosis(x, na.rm = TRUE)))
+                                                              "skewness" = skewness(x),
+                                                              "kurtosis" = kurtosis(x)))
         result_list <- result_list[[1]]
       }
       else if(statistic == "moments12"){
@@ -367,8 +446,8 @@ simulate_zetas <- function(n, parameters, statistic = median, m = 1L, attach = T
         result_list <- result_list[[1]]
       }
       else if(statistic == "moments34"){
-        result_list <- apply(result_list, 2, function(x) list("skewness" = skewness(x, na.rm = TRUE),
-                                                              "kurtosis" = kurtosis(x, na.rm = TRUE)))
+        result_list <- apply(result_list, 2, function(x) list("skewness" = skewness(x),
+                                                              "kurtosis" = kurtosis(x)))
         result_list <- result_list[[1]]
       }
       else if(statistic == "quantiles"){
@@ -471,8 +550,8 @@ simulate_zetas <- function(n, parameters, statistic = median, m = 1L, attach = T
     if(statistic == "all"){
       result_list <- lapply(result_list, function(x) list("mean" = mean(x, na.rm = TRUE),
                                                           "sd" = sd(x, na.rm = TRUE),
-                                                          "skewness" = skewness(x, na.rm = TRUE),
-                                                          "kurtosis" = kurtosis(x, na.rm = TRUE),
+                                                          "skewness" = skewness(x),
+                                                          "kurtosis" = kurtosis(x),
                                                           "1%" = quantile(x, probs = 0.01, names = FALSE, na.rm = TRUE),
                                                           "2.5%" = quantile(x, probs = 0.025, names = FALSE, na.rm = TRUE),
                                                           "5%" = quantile(x, probs = 0.05, names = FALSE, na.rm = TRUE),
@@ -489,8 +568,8 @@ simulate_zetas <- function(n, parameters, statistic = median, m = 1L, attach = T
     else if(statistic == "all2"){
       result_list <- lapply(result_list, function(x) list("mean" = mean(x, na.rm = TRUE),
                                                           "sd" = sd(x, na.rm = TRUE),
-                                                          "skewness" = skewness(x, na.rm = TRUE),
-                                                          "kurtosis" = kurtosis(x, na.rm = TRUE),
+                                                          "skewness" = skewness(x),
+                                                          "kurtosis" = kurtosis(x),
                                                           "1%" = quantile(x, probs = 0.01, names = FALSE, na.rm = TRUE),
                                                           "99%" = quantile(x, probs = 0.99, names = FALSE, na.rm = TRUE)))
     }
@@ -498,8 +577,8 @@ simulate_zetas <- function(n, parameters, statistic = median, m = 1L, attach = T
     else if(statistic == "moments"){
       result_list <- lapply(result_list, function(x) list("mean" = mean(x, na.rm = TRUE),
                                                           "sd" = sd(x, na.rm = TRUE),
-                                                          "skewness" = skewness(x, na.rm = TRUE),
-                                                          "kurtosis" = kurtosis(x, na.rm = TRUE)))
+                                                          "skewness" = skewness(x),
+                                                          "kurtosis" = kurtosis(x)))
     }
 
     else if(statistic == "moments12"){
@@ -508,8 +587,8 @@ simulate_zetas <- function(n, parameters, statistic = median, m = 1L, attach = T
     }
 
     else if(statistic == "moments34"){
-      result_list <- lapply(result_list, function(x) list("skewness" = skewness(x, na.rm = TRUE),
-                                                          "kurtosis" = kurtosis(x, na.rm = TRUE)))
+      result_list <- lapply(result_list, function(x) list("skewness" = skewness(x),
+                                                          "kurtosis" = kurtosis(x)))
     }
 
     else if(statistic == "quantiles"){

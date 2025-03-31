@@ -2,41 +2,88 @@
 % Please edit documentation in R/perform_assessment_tests.R
 \name{perform_assessment_tests}
 \alias{perform_assessment_tests}
-\title{Perform linear model assessment tests}
+\title{Perform Linear Model Assessment Tests}
 \usage{
 perform_assessment_tests(
   data,
   B = 200L,
   method = "fg",
+  robust = TRUE,
   level = 0.95,
-  include_rejection_rates = TRUE,
-  simultaneous_testing = TRUE,
-  na_rm = FALSE,
-  silence = 1L
+  adjust_p_value = TRUE,
+  holm = TRUE,
+  output = "visual"
 )
 }
 \arguments{
-\item{data}{A \code{data.table}, \code{list}, or \code{data.frame} containing the clinical sample data, grouped by 'comparison', 'SampleID' and 'ReplicateID'. All replicated measurements must be included in the data for accurate computation of imprecision estimates.}
+\item{data}{A \code{data.table}, \code{list}, or \code{data.frame}.
+Must contain the clinical sample data with variables:
+\itemize{
+   \item \code{comparison: } A \code{character} vector. The
+         comparison identifiers. Typically on the form
+         \code{'MP_A - MP_B'}.
+   \item \code{SampleID: } A \code{character} vector. The sample
+         identifiers for the clinical samples.
+   \item \code{ReplicateID: } A \code{character} vector. The
+         replicated measurement identifiers.
+   \item \code{MP_A: } A \code{numeric} vector. The observed
+         measurement results from IVD-MD \code{MP_A} (response).
+   \item \code{MP_B: } A \code{numeric} vector. The observed
+         measurement results from IVD-MD \code{MP_A} (predictor).
+}}
 
-\item{B}{An \code{integer} representing the number of bootstrap replicates used in calculating the rejection rates of assessment tests. A value of 1 or more is required when \code{include_rejection_rates} is set to \code{TRUE}. If \code{include_rejection_rates} is \code{FALSE}, this parameter is ignored. Please avoid setting \code{B} to an integer above 100,000 due to the resulting intensive computational time.}
+\item{B}{An \code{integer}. Must be larger than \code{10}. The number of
+bootstrap replicates used to estimate the rejection rate for each
+test. See details.}
 
-\item{method}{A \code{character} string that specifies the linear regression model for calculating residuals in the Shapiro-Wilk normality tests. The possible options are \code{'fg'} (default), \code{'clsi'}, and \code{'ols'}. The \code{'fg'} option uses Deming regression as defined by Fuller & Gillard, \code{'clsi'} uses Deming regression according to the CLSI EP14 standard, and \code{'ols'} uses ordinary least squares regression. This parameter does not affect the Breusch-Pagan homoscedasticity tests.}
+\item{method}{A \code{character} string. The desired model for calculating
+residuals that is used in the Shapiro-Wilk normality test. The
+possible options are \code{'fg'} (default), \code{'clsi'},
+\code{'ols'}, \code{'ss'} and \code{'ssw'}. The Breusch-Pagan
+tests will always use \code{'ols'}, so take care interpreting
+the Breusch-Pagan test results under non-linearity.}
 
-\item{level}{A \code{double} value (between 0 and 1) that represents 1 - significance level of the assessment tests. The default value is \code{0.95}, corresponding to a test significance level of \code{0.05}.}
+\item{robust}{A \code{logical} value. If \code{TRUE} (default), the Koenker
+version of the Breusch-Pagan test is used for testing for
+variance inhomogeneity.}
 
-\item{include_rejection_rates}{This \code{logical} parameter, when set to \code{TRUE} (default), includes the assessment test rejection rates in the output. If set to \code{FALSE}, the function will bypass any bootstrap estimation and exclude rejection rates from the output.}
+\item{level}{A \code{double}. Must be between \code{0} and \code{1}. The
+corresponding non-adjusted test significance levels are given
+by \eqn{\alpha = 1 - \mathrm{level}}.}
 
-\item{simultaneous_testing}{This \code{logical} parameter, when set to \code{TRUE} (default), triggers correction for multiple testing. Conversely, when set to \code{FALSE}, 1 - level is applied uniformly for all assessment tests without considering multiple testing.}
+\item{adjust_p_value}{A \code{logical} value. If \code{TRUE} (default),
+non-adjusted p-values are Bonferroni-adjusted to
+keep the familiy-wise significance level equal to
+\eqn{1 - \mathrm{level}} for each test.}
 
-\item{na_rm}{A non-missing \code{logical} value. If set to \code{TRUE}, the function will discard \code{NA} values from \code{data} before performing assessment test calculations.}
+\item{holm}{A \code{logical} value. If \code{TRUE}, non-adjusted p-values
+are Holm-Bonferroni corrected. Otherwise (default), the
+non-adjusted p-values are Bonferroni corrected. Only relevant
+if \code{adjust_p_value} is \code{TRUE}. Note:
+\code{rejection_rate} will not account for Holm-Bonferroni
+correction.}
 
-\item{silence}{This \code{integer} parameter controls the verbosity of the function. If \code{silence} is 1 or more, verbose output is disabled. If \code{silence} is less than 1, verbose output is enabled.}
+\item{output}{A \code{character} string. If \code{'visual'} (default), the
+output is formatted in a clean way. However, it is not
+optimal to use for further calculations.}
 }
 \value{
-A \code{data.table} with columns 'comparison', 'test_name', 'test', 'p.value', and 'conclusion' showing the results of the performed assessment tests. If \code{include_rejection_rates} is set to \code{TRUE} and \code{B} is an integer value of 1 or more, an additional column 'rejection_rate' is included in the output.
+A \code{data.table} with columns:
+\itemize{
+ \item \code{comparison: } See \code{data}.
+ \item \code{test_name: } A \code{character} vector. The test names.
+ \item \code{p.value: } A \code{numeric} vector. The raw or adjusted
+       p-values.
+ \item \code{conclusion: } A \code{character} vector. The conclusion based
+       on each test.
+ \item \code{rejection_rate: } A \code{numeric} vector. The proportion of
+       resampled test statistics that resulted in rejected of the null.
+       Will only appear if \code{B} is an integer larger than \code{10}.
+}
 }
 \description{
-Perform linear model assessment tests
+Perform normality and homoscedasticity tests for each IVD-MD comparison
+in \code{data}.
 }
 \examples{
 print(1)

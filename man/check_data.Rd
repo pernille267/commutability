@@ -2,22 +2,32 @@
 % Please edit documentation in R/check_data.R
 \name{check_data}
 \alias{check_data}
-\title{check data}
+\title{Check if Data is Suitable for Further Use in This Package}
 \usage{
-check_data(data, silence = 1, type = "cs")
+check_data(data, type = "cs")
 }
 \arguments{
-\item{data}{\code{list} or \code{data table} that is the data that we wish to validate}
+\item{data}{A \code{data.table}, \code{list} or \code{data.frame}. The
+dataset to be validated.}
 
-\item{silence}{\code{integer} - results be printed. Default is \code{1}, which signifies no}
-
-\item{type}{\code{character} - Is the data clinical sample data or external quality assessment material data. Set \code{type = "cs"} (default) for the former and \code{type = "eqam"} for the latter}
+\item{type}{A \code{character} string. The type of \code{data} must be
+one of the following:
+\itemize{
+   \item \code{'cs': } \code{data} is treated as clinical sample
+         data.
+   \item \code{'eqam': } \code{data} is treated as evaluated
+         material data.
+}
+The suitability requirements for \code{data} will depend on
+\code{type}. For example, there are different requirements for
+clinical sample data and external quality assessment material
+data.}
 }
 \value{
-A \code{list} of validation results
+A \code{list} of length \code{3}.
 }
 \description{
-check data
+Check if Data is Suitable for Further Use in This Package
 }
 \examples{
 print(1)
