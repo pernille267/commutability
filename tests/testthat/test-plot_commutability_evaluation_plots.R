@@ -108,8 +108,8 @@ test_that(desc = "Check stuff 2", code = {
   # Repair and transform data
   test_cs_data_2 <- repair_data(test_cs_data_2, type = "cs")
   test_eq_data_2 <- repair_data(test_eq_data_2, type = "eqam")
-  test_cs_data_2 <- transform_data(get_comparison_data(data = test_cs_data_2, reference = "Thermo"))
-  test_eq_data_2 <- transform_data(get_comparison_data(data = test_eq_data_2, reference = "Thermo"))
+  test_cs_data_2 <- transform_data(get_comparison_data(data = test_cs_data_2, reference = "TetraCore"))
+  test_eq_data_2 <- transform_data(get_comparison_data(data = test_eq_data_2, reference = "TetraCore"))
 
   # Mor data
   test_mor_cs_data_2 <- na.omit(test_cs_data_2)[, fun_of_replicates(.SD), by = comparison]

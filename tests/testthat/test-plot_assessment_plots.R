@@ -6,7 +6,7 @@ library(smooth.commutability)
 
 test_cs_data <- copy(crp_cs_data)
 
-plot_assessment_plots(data = get_comparison_data(commutability_cs_data, reference = "Thermo"),
+plot_assessment_plots(data = get_comparison_data(commutability_cs_data, reference = "TetraCore"),
                       method = "ols",
                       plot_theme = "default",
                       additional_arguments = list(loess_span = 0.95,

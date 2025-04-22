@@ -339,8 +339,8 @@ get_normality_test_results <- function(data,
           bmor_data <- fun_of_replicates(bdata)
           bresiduals <- tryCatch(
             expr = {
-              residuals_eqa(data = mor_data,
-                            imprecision_estimates = impr_data,
+              residuals_eqa(data = bmor_data,
+                            imprecision_estimates = bimpr_data,
                             method = method,
                             studentize = TRUE,
                             unit_sd = FALSE,
@@ -624,7 +624,7 @@ bonferroni_to_holm <- function(data, level, n_sim_tests = 10) {
   data <- copy(data)
 
   # Update p.values and conclusions
-  data[, p.value := p.value / m * (m - order(p.value) + 1)]
+  data[, p.value := p.adjust(p.value / m, method = "holm")]
   data[, conclusion := ifelse(p.value < 1 - level, "reject", "not reject")]
 
   return(data)

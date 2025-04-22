@@ -10,7 +10,7 @@ import(pbapply)
 import(boot)
 import(fasteqa)
 import(smooth.commutability)
-importFrom("stats", "quantile", "IQR", "qqplot", "dnorm", "rnorm", "qnorm", "shapiro.test", "na.omit", "median", "qtukey", "sd", "var", "nlm")
+importFrom("stats", "quantile", "IQR", "qqplot", "dnorm", "rnorm", "qnorm", "shapiro.test", "na.omit", "median", "qtukey", "sd", "var", "nlm", "p.adjust")
 importFrom("grDevices", "colors", "nclass.FD")
 importFrom("data.table", ":=")
 
